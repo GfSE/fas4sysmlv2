@@ -1,37 +1,27 @@
-%   Copyright 2022 Gesellschaft für Systems Engineering e.V. (GfSE)
-%   Licensed under the Apache License, Version 2.0 (the "License");
-%   you may not use this file except in compliance with the License.
-%   You may obtain a copy of the License at
-%       http://www.apache.org/licenses/LICENSE-2.0  
-%   Unless required by applicable law or agreed to in writing, software
-%   distributed under the License is distributed on an "AS IS" BASIS,
-%   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-%   See the License for the specific language governing permissions and
-%   limitations under the License.
+%   Copyright 2022 Gesellschaft fÃ¼r Systems Engineering e.V. (GfSE)
+%Â Â  Licensed under the Apache License, Version 2.0 (the "License");
+%Â Â  you may not use this file except in compliance with the License.
+%Â Â  You may obtain a copy of the License at
+%Â Â Â Â Â Â  http://www.apache.org/licenses/LICENSE-2.0  
+%Â Â  Unless required by applicable law or agreed to in writing, software
+%Â Â  distributed under the License is distributed on an "AS IS" BASIS,
+%Â Â  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+%Â Â  See the License for the specific language governing permissions and
+%Â Â  limitations under the License.
 
 
-% This is code for GNU Octave with the "symbolic" toolbox installed
+% This is code for GNU Octave 
 % The input comes via a file written from OpenOffice, with graphical information about the use case activities and their flows.
-%
-% Based on: Lamm, J.G.: "Eine schlanke Formel für den Kern der FAS-Methode, zur einfachen Werkzeug-
-% Umsetzung der Methode", in Koch, W.; Wilke, D.; Dreiseitel, S.; Kaffenberger, R. (Eds.): Tag des Systems Engineering – 
-% Paderborn 16.-18. November 2022, Gesellschaft für Systems Engineering e.V. (GfSE Verlag), Bremen, Germany, 2022, pp. 127-131	
 
 function fas_frontend(cFileName,cPath)
-
 	setenv('PYTHONPATH',cPath);
 	setenv('PATH',cPath);
 	clc
-
 	[clActivitiesAndObjectFlows, clFunctionalGroups] = 	ParseActivityModel(cFileName);
-	
 	ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups); 
 endfunction
-    
-    
- function ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups) 
-
-   
+        
+function ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups) 
      %%% Process Activities and Object Flows
      clLinesToParse =  clActivitiesAndObjectFlows;
      clDomainObjects = {};
@@ -42,12 +32,8 @@ endfunction
         sLineToParse = clLinesToParse{nIndex};
         [clDomainObjects,clActivities,mMatrixO] = UpdateMatrixWithFlow(clDomainObjects,clActivities,mMatrixO, sLineToParse);
      end
-     
-
-     
-
     
-    %%% Process Functional Groupings
+     %%% Process Functional Groupings
      clLinesToParse =  clFunctionalGroups;  
      N = length(clLinesToParse);
      clGroupNames = cell(N,1);
@@ -56,17 +42,12 @@ endfunction
         [sGroupName, clGroup] = parseGroupLine(sLineToParse);
         clGroupName{n,1}=sGroupName;
      end
-     
-     
-    
       
-      PrintActivityDefinitionsInSysML(mMatrixO ,clActivities);
-      PrintFlowsInSysML(mMatrixO ,clActivities);
+     PrintActivityDefinitionsInSysML(mMatrixO ,clActivities);
+     PrintFlowsInSysML(mMatrixO ,clActivities);
 endfunction
 
 function PrintActivityDefinitionsInSysML(O,clActivities)
-    
-    
     for nText = 1:length(clActivities)      
       disp(['action def ' clActivities{nText} ' {']);
       for nIn=1:length(clActivities)
@@ -93,11 +74,7 @@ function PrintActivityDefinitionsInSysML(O,clActivities)
     end
 endfunction
    
-    
-  
-function PrintFlowsInSysML(O,clActivities)
-  
-    
+function PrintFlowsInSysML(O,clActivities) 
     clOutput =cell(length(clActivities)*length(clActivities)*3+10,1);
     disp('action def OverallUseCase {');
     
@@ -122,7 +99,6 @@ function PrintFlowsInSysML(O,clActivities)
     
 endfunction
 
-    
 function [clDomainObjects,clActivities,mMatrixO] = UpdateMatrixWithFlow(clDomainObjects,clActivities,mMatrixO, sLineToParse)
     [sSourceObject,sFlow,sTargetObject] = parseFlowLine(sLineToParse);
      clActivities = UpdateUniqueContentCellArray (clActivities, sSourceObject);
@@ -480,6 +456,3 @@ function sCurrentFlowName = SubFlow(sFlowString,nPort)
         end
       end
  endfunction
-
-      
-      
