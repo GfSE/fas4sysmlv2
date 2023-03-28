@@ -1,22 +1,20 @@
-%   Copyright 2022 Gesellschaft für Systems Engineering e.V. (GfSE)
-%   Licensed under the Apache License, Version 2.0 (the "License");
-%   you may not use this file except in compliance with the License.
-%   You may obtain a copy of the License at
-%       http://www.apache.org/licenses/LICENSE-2.0  
-%   Unless required by applicable law or agreed to in writing, software
-%   distributed under the License is distributed on an "AS IS" BASIS,
-%   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-%   See the License for the specific language governing permissions and
-%   limitations under the License.
+%   Copyright 2022 Gesellschaft fuer Systems Engineering e.V. (GfSE)
+%   Licensed under the Apache License, Version 2.0 (the "License");
+%   you may not use this file except in compliance with the License.
+%   You may obtain a copy of the License at
+%        http://www.apache.org/licenses/LICENSE-2.0  
+% � Unless required by applicable law or agreed to in writing, software
+%   distributed under the License is distributed on an "AS IS" BASIS,
+%   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+%   See the License for the specific language governing permissions and
+%   limitations under the License.
 
 
 % This is code for GNU Octave 
 % The input comes via a file written from OpenOffice, with graphical information about the use case activities and their flows.
 
-function fas_frontend(cFileName,cPath)
-	setenv('PYTHONPATH',cPath);
-	setenv('PATH',cPath);
-	clc
+function [clActivitiesAndObjectFlows, clFunctionalGroups] = fas_frontend(cFileName,cPath)
+  clc;
 	[clActivitiesAndObjectFlows, clFunctionalGroups] = 	ParseActivityModel(cFileName);
 	ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups); 
 endfunction
