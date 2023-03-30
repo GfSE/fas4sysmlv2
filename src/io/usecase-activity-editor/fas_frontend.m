@@ -14,7 +14,6 @@
 % The input comes via a file written from OpenOffice, with graphical information about the use case activities and their flows.
 
 function [clActivitiesAndObjectFlows, clFunctionalGroups] = fas_frontend(cFileName,cPath)
-  clc;
 	[clActivitiesAndObjectFlows, clFunctionalGroups] = 	ParseActivityModel(cFileName);
 	ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups); 
 endfunction
@@ -33,28 +32,56 @@ function ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups)
     
      %%% Process Functional Groupings
      clLinesToParse =  clFunctionalGroups;  
-     N = length(clLinesToParse);
-     clGroupNames = cell(N,1);
+     N=length(clLinesToParse);
+     M=length(mMatrixO);
+     mMatrixG = zeros(N,M);
+
+     clGroupName = cell(N,1);
      for n = 1:N
         sLineToParse = clLinesToParse{n};
         [sGroupName, clGroup] = parseGroupLine(sLineToParse);
         clGroupName{n,1}=sGroupName;
+        for m=1:M
+          if GetIndexOfStringInCellArray(clGroup,clActivities{m}) > 0
+            mMatrixG(n,m) = 1;
+          endif
+        end
      end
       
-     PrintActivityDefinitionsInSysML(mMatrixO ,clActivities);
-     PrintFlowsInSysML(mMatrixO ,clActivities);
+     disp(['   package UseCaseActivities{']);
+     PrintActivityDefinitionsInSysML(mMatrixO, clActivities);
+     PrintFlowsInSysML(mMatrixO, clActivities);
+     disp(['   }']);
+     disp(['   package FunctionalGroups{']);
+     PrintFunctionalGroupsInSysML(clGroupName ,clActivities, mMatrixG);
+     disp(['   }']);
+endfunction
+
+function PrintFunctionalGroupsInSysML(clGroupName,clActivities, mMatrixG);
+     N=size(mMatrixG,1);
+     M=size(mMatrixG,2);
+     for n = 1:N
+        disp(['      package ' clGroupName{n} '{']);
+        for m=1:M
+          if mMatrixG(n,m) > 0
+            disp(['         import ' clActivities{m} ';']);
+          endif
+        end
+        disp('      }');
+
+     end
 endfunction
 
 function PrintActivityDefinitionsInSysML(O,clActivities)
     for nText = 1:length(clActivities)      
-      disp(['action def ' clActivities{nText} ' {']);
+      disp(['      action def ' clActivities{nText} ' {']);
       for nIn=1:length(clActivities)
           if ~isequal(O{nIn,nText},'')
                sFlowString=strtrim(O{nIn,nText});
                for nParam = 1:(length(strfind(sFlowString,'+'))+1)
                  sCurrentFlowName = SubFlow(sFlowString,nParam);
                  sInput = sCurrentFlowName;
-                 disp(['   in ' sInput ';']);
+                 disp(['         in ' sInput ';']);
                end
           endif
       end
@@ -64,20 +91,20 @@ function PrintActivityDefinitionsInSysML(O,clActivities)
                for nParam = 1:(length(strfind(sFlowString,'+'))+1)
                  sCurrentFlowName = SubFlow(sFlowString,nParam);
                  sOutput = sCurrentFlowName; 
-                 disp(['   out ' sOutput ';']);
+                 disp(['         out ' sOutput ';']);
                end
           endif
       end
-      disp(['}']);
+      disp(['      }']);
     end
 endfunction
    
 function PrintFlowsInSysML(O,clActivities) 
     clOutput =cell(length(clActivities)*length(clActivities)*3+10,1);
-    disp('action def OverallUseCase {');
+    disp('      action def OverallUseCase {');
     
     for nText = 1:length(clActivities)      
-      disp(['   action a' num2str(nText) ':' clActivities{nText} ';']);
+      disp(['         action a' num2str(nText) ':' clActivities{nText} ';']);
     end
   
     for n1=1:length(clActivities) 
@@ -87,13 +114,13 @@ function PrintFlowsInSysML(O,clActivities)
                for nParam = 1:(length(strfind(sFlowString,'+'))+1)
                  sInput = SubFlow(sFlowString,nParam);
                  sResult = sInput;
-                 disp(['   flow from a' num2str(n1) '.' sResult ' to a'  num2str(n2) '.' sInput ';']);
+                 disp(['         flow from a' num2str(n1) '.' sResult ' to a'  num2str(n2) '.' sInput ';']);
                end
           endif
       end
     end  
 
-    disp(['}']);
+    disp(['      }']);
     
 endfunction
 
