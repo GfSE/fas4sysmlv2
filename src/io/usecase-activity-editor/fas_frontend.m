@@ -51,9 +51,9 @@ function ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups)
      disp(['   package UseCaseActivities{']);
      PrintActivityDefinitionsInSysML(mMatrixO, clActivities);
      PrintFlowsInSysML(mMatrixO, clActivities);
-     disp(['   }']);
-     disp(['   package FunctionalGroups{']);
+     disp(['      package FunctionalGroups{']);
      PrintFunctionalGroupsInSysML(clGroupName ,clActivities, mMatrixG);
+     disp(['      }']);
      disp(['   }']);
 endfunction
 
@@ -61,13 +61,13 @@ function PrintFunctionalGroupsInSysML(clGroupName,clActivities, mMatrixG);
      N=size(mMatrixG,1);
      M=size(mMatrixG,2);
      for n = 1:N
-        disp(['      package ' clGroupName{n} '{']);
+        disp(['         package ' clGroupName{n} '{']);
         for m=1:M
           if mMatrixG(n,m) > 0
-            disp(['         import ' clActivities{m} ';']);
+            disp(['            import ' clActivities{m} ';']);
           endif
         end
-        disp('      }');
+        disp('         }');
 
      end
 endfunction
