@@ -27,11 +27,12 @@ function test_fas_frontend(cFileName,cPath)
 	setenv('PATH',cPath);
   dummy = sym('0'); %Ensure that the symbolic toolbox initialization prompt is displayed before "clc"
 	clc
-	close all
 
+  disp('package JukeboxModel{')
 	[clActivitiesAndObjectFlows, clFunctionalGroups] = 	fas_frontend(cFileName,cPath);
   RunFas(clActivitiesAndObjectFlows, clFunctionalGroups); %% Use fas-as-a-formula to test the obtained data 
-	
+	disp('}')
+  
 endfunction
     
     
@@ -59,7 +60,7 @@ function RunFas(clActivitiesAndObjectFlows, clFunctionalGroups)
      clLinesToParse =  clFunctionalGroups;  
      N = length(clLinesToParse);
      mSymbolicMatrixG = ones(N,M)*sym('0');
-     clGroupNames = cell(N,1);
+     clGroupName = cell(N,1);
      for n = 1:N
         sLineToParse = clLinesToParse{n};
         [sGroupName, clGroup] = parseGroupLine(sLineToParse);
@@ -93,7 +94,7 @@ function PrintFunctionalArchitecture(F,clFunctionalBlockNames)
     
     cSysMLstring = '';
     
-    cSysMLstring = ['part functionalSystem{' sprintf('\r\n')];
+    cSysMLstring = ['   part FunctionalSystem{' sprintf('\r\n')];
 
     
     
@@ -101,7 +102,7 @@ function PrintFunctionalArchitecture(F,clFunctionalBlockNames)
     clTargetPortNames = cell(length(F),length(F));
     for nBlock = 1: length(F)  
       cCurrentBlock = clFunctionalBlockNames{nBlock};
-      cSysMLstring = [cSysMLstring '   part ' cCurrentBlock '{' sprintf('\r\n')];
+      cSysMLstring = [cSysMLstring '      part ' cCurrentBlock '{' sprintf('\r\n')];
         iPortNo = 0;
         for nPortOut = 1: length(F);
           if F(nBlock,nPortOut)!= sym('0') 
@@ -111,7 +112,7 @@ function PrintFunctionalArchitecture(F,clFunctionalBlockNames)
               for nPort=1:iNumPorts
                 iPortNo = iPortNo +1;
                 cPortName = ['p'  num2str(iPortNo)];
-                cSysMLstring = [cSysMLstring '      port ' cPortName ';' sprintf('\r\n')];
+                cSysMLstring = [cSysMLstring '         port ' cPortName ';' sprintf('\r\n')];
                 clPortCell{1,nPort}=cPortName;
               end
               clSourcePortNames{nBlock,nPortOut}=clPortCell;
@@ -125,13 +126,13 @@ function PrintFunctionalArchitecture(F,clFunctionalBlockNames)
               for nPort=1:iNumPorts
                 iPortNo = iPortNo +1;
                 cPortName = ['p'  num2str(iPortNo)];
-                cSysMLstring = [cSysMLstring '      port ' cPortName ';' sprintf('\r\n')];
+                cSysMLstring = [cSysMLstring '         port ' cPortName ';' sprintf('\r\n')];
                 clPortCell{1,nPort}=cPortName;
               end
               clTargetPortNames{nPortIn,nBlock}=clPortCell;
           end
         end      
-      cSysMLstring = [cSysMLstring '   }' sprintf('\r\n')];
+      cSysMLstring = [cSysMLstring '      }' sprintf('\r\n')];
     end
     
 
@@ -150,8 +151,8 @@ function PrintFunctionalArchitecture(F,clFunctionalBlockNames)
               clTargetPorts = clTargetPortNames{nBlock1, nBlock2};
               for nPort = 1:length(clSourcePorts)
                 sCurrentFlowName = SubFlow(sFlowName,nPort);
-                cSysMLstring = [cSysMLstring '   flow of ' sCurrentFlowName ' from ' clFunctionalBlockNames{nBlock1} '.' clSourcePorts{1,nPort} ' to ' clFunctionalBlockNames{nBlock2} '.' clTargetPorts{1, nPort} ';' sprintf('\r\n')];
-                cItemString = [cItemString 'item def ' sCurrentFlowName ';' sprintf('\r\n')];
+                cSysMLstring = [cSysMLstring '      flow of ' sCurrentFlowName ' from ' clFunctionalBlockNames{nBlock1} '.' clSourcePorts{1,nPort} ' to ' clFunctionalBlockNames{nBlock2} '.' clTargetPorts{1, nPort} ';' sprintf('\r\n')];
+                cItemString = [cItemString '   item def ' sCurrentFlowName ';' sprintf('\r\n')];
               end
            endif
       end
@@ -159,7 +160,7 @@ function PrintFunctionalArchitecture(F,clFunctionalBlockNames)
     
      
       
-   cSysMLstring = [cSysMLstring '}' sprintf('\r\n') cItemString ];
+   cSysMLstring = [cSysMLstring '   }' sprintf('\r\n') cItemString ];
    
    disp(cSysMLstring);
 
