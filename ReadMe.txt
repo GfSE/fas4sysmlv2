@@ -10,13 +10,20 @@
    limitations under the License.
    
    
-   This project will create a so-called "FAS plugin" (see [1]), to work with any SysML v2 tool via the SysML v2 API.
-   The plugin will be based on the "FAS-as-a-formula" approch (see [2]).
+   This project will create a so-called "FAS plugin" (see [1]), to work 
+   with any SysML v2 tool via the SysML v2 API. The plugin will be based 
+   on the "FAS-as-a-formula" approch (see [2]).
    
-   [1] T. Weilkiens, J. G. Lamm, S. Roth, and M. Walker, Model-Based System Architecture, 
-       Second Edition (Wiley Series in Systems Engineering and Management), Wiley, 2022.
+   [1] T. Weilkiens, J. G. Lamm, S. Roth, and M. Walker, Model-Based 
+       System Architecture, Second Edition (Wiley Series in Systems Engineering 
+       and Management), Wiley, 2022.
        
-   [2] Lamm, J.G.: "Eine schlanke Formel für den Kern der FAS-Methode, zur einfachen Werkzeug-
-   Umsetzung der Methode", in Koch, W.; Wilke, D.; Dreiseitel, S.; Kaffenberger, R. (Eds.): 
-   Tag des Systems Engineering - Paderborn 16.-18. November 2022, Gesellschaft für Systems Engineering e.V. 
-   (GfSE Verlag), Bremen, Germany, 2022, pp. 127-131 (in German)
+   [2] Lamm, J.G.: "A lean formula for the core of the FAS method, enabling 
+       easy and simple tool support for the method" - English summary of the 
+       following original work in German: Lamm, J.G.: "Eine schlanke Formel für 
+       den Kern der FAS-Methode, zur einfachen Werkzeug-Umsetzung der Methode", 
+       in Koch, W.; Wilke, D.; Dreiseitel, S.; Kaffenberger, R. (Eds.): Tag des 
+       Systems Engineering - Paderborn 16.-18. November 2022, Gesellschaft für 
+       Systems Engineering e.V. (GfSE Verlag), Bremen, Germany, 2022, pp. 127-131 
+       (original paper in German - English summary available here: 
+       https://github.com/GfSE/fas4sysmlv2/blob/main/doc/tech-docs/fas/FAS-as-a-formula-2022.odt)
