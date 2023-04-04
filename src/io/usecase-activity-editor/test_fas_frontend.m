@@ -28,7 +28,7 @@ function test_fas_frontend(cFileName,cPath)
   dummy = sym('0'); %Ensure that the symbolic toolbox initialization prompt is displayed before "clc"
 	clc
 
-  disp('package JukeboxModel{')
+  disp('package FunctionalModel{')
 	[clActivitiesAndObjectFlows, clFunctionalGroups] = 	fas_frontend(cFileName,cPath);
   RunFas(clActivitiesAndObjectFlows, clFunctionalGroups); %% Use fas-as-a-formula to test the obtained data 
 	disp('}')
