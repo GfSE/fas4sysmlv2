@@ -40,15 +40,23 @@ function test_fas_frontend(cFileName,cPath)
   cSysMLString = [cSysMLString RunFas(clActivitiesAndObjectFlows, clFunctionalGroups)]; %% Use fas-as-a-formula to test the obtained data 
 	cSysMLString=[cSysMLString '}' sprintf('\r\n')];
   cNotebookFile=DumpJupyterNotebook(cSysMLString);
+  disp('Done.');
+  disp('Visualizing the result ...');
+  cHtmlFile = strrep(cNotebookFile,'.ipynb','.html');
+  setenv('PATH',cOldPath);
   if isunix
-    clc;
-    disp(cSysMLString)
+    cSilencer='>/dev/null 2>&1';
+    system(['jupyter nbconvert --to html --execute ' cNotebookFile ' --output=' cHtmlFile ' ' cSilencer]);
+    [status,output]=system(['firefox ' cHtmlFile ' ' cSilencer]);
+    if status > 0
+       [status,output] = system(['chrome ' cHtmlFile ' ' cSilencer]);
+    end
+    if status > 0
+       clc;
+       disp(cSysMLString)
+    end
   else
-    disp('Done.');
-    disp('Visualizing the result ...');
-    cHtmlFile = strrep(cNotebookFile,'.ipynb','.html');
     cSilencer='>nul 2>&1';
-    setenv('PATH',cOldPath);
     system(['jupyter nbconvert --to html --execute ' cNotebookFile ' --output=' cHtmlFile ' ' cSilencer]);
     system(cHtmlFile);
   end
