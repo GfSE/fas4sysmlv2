@@ -158,6 +158,12 @@ function PrintFunctionalArchitecture(F,clFunctionalBlockNames)
       end
     end
     
+    %% Trace Functional Blocks to Functional Groups
+    for nBlock = 1: length(F)
+        sCurrentName = clFunctionalBlockNames{nBlock};
+        cItemString = [cItemString '   dependency from FunctionalSystem::' sCurrentName ' to UseCaseActivities::FunctionalGroups::' sCurrentName ';' sprintf('\r\n')];
+    end
+    
      
       
    cSysMLstring = [cSysMLstring '   }' sprintf('\r\n') cItemString ];
