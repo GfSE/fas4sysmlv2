@@ -29,20 +29,23 @@ function test_fas_frontend(cFileName,cPath)
   end
   dummy = sym('0'); %Ensure that the symbolic toolbox initialization prompt is displayed before "clc"
 	clc
-
-  disp('package FunctionalModel{')
-	[clActivitiesAndObjectFlows, clFunctionalGroups] = 	fas_frontend(cFileName,cPath);
-  RunFas(clActivitiesAndObjectFlows, clFunctionalGroups); %% Use fas-as-a-formula to test the obtained data 
-	disp('}')
-  
+  disp('Computing ...');
+	[clActivitiesAndObjectFlows, clFunctionalGroups,cSysMLString] = 	fas_frontend(cFileName,cPath);
+  clc;
+  cSysMLString=['package FunctionalModel{' sprintf('\r\n') cSysMLString];
+  disp('Computing ...');
+  cSysMLString = [cSysMLString RunFas(clActivitiesAndObjectFlows, clFunctionalGroups)]; %% Use fas-as-a-formula to test the obtained data 
+	cSysMLString=[cSysMLString '}' sprintf('\r\n')];
+  DumpJupyterNotebook(cSysMLString);
+  clc;
+  disp(cSysMLString)
 endfunction
     
     
  
-function RunFas(clActivitiesAndObjectFlows, clFunctionalGroups) 
+function cSysMLString=RunFas(clActivitiesAndObjectFlows, clFunctionalGroups) 
 
     
-   
      %%% Process Activities and Object Flows
      clLinesToParse =  clActivitiesAndObjectFlows;
      clDomainObjects = {};
@@ -83,15 +86,36 @@ function RunFas(clActivitiesAndObjectFlows, clFunctionalGroups)
      clFunctionalBlockNames = clGroupName;
      
      %%% Print the functional architecture
-     PrintFunctionalArchitecture(F,clFunctionalBlockNames);
+     cSysMLString = RenderFunctionalArchitecture(F,clFunctionalBlockNames);
+     
 endfunction     
      
     
-    
-
+function DumpJupyterNotebook(cSysMLString)
+  cNotebookFile = 'FunctionalModel.ipynb';
+  FID1=fopen('test_visuallly.ipynb','r');
+  FID2=fopen(cNotebookFile,'w');
+  tline = fgetl(FID1);
+  while ischar(tline)
+    matches = strfind(tline, '"<Paste SysMLv2 code here>"');
+    num = length(matches);
+    if num > 0
+      cCommaBlankAndQuotationMark=[',' sprintf('\r\n') '    "'];
+      cCodedSysML=['    "' strrep(cSysMLString,sprintf('\r\n'),['\\n"' cCommaBlankAndQuotationMark])];   
+      %Remove final comma, blank and quotation mark 
+      cCodedSysML = cCodedSysML(1: (length(cCodedSysML)-length(cCommaBlankAndQuotationMark)));
+      fprintf(FID2, [cCodedSysML sprintf('\r\n')]);
+    else
+      fprintf(FID2,[strrep(strrep(tline,'%','%%'),'\','\\') sprintf('\r\n')]);
+    end
+    tline = fgetl(FID1);  
+  end
+  fclose(FID1);
+  fclose(FID2);
+endfunction
      
      
-function PrintFunctionalArchitecture(F,clFunctionalBlockNames)
+function cSysMLstring=RenderFunctionalArchitecture(F,clFunctionalBlockNames)
 
     
     cSysMLstring = '';
@@ -170,7 +194,7 @@ function PrintFunctionalArchitecture(F,clFunctionalBlockNames)
       
    cSysMLstring = [cSysMLstring '   }' sprintf('\r\n') cItemString ];
    
-   disp(cSysMLstring);
+
 
    
 endfunction
