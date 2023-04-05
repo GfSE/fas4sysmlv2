@@ -274,47 +274,12 @@ function [sGroupName, clGroup] = parseGroupLine (sLine)
     end
   endfunction
   
- function [s,clEntries] = ScanListfromWebsite(sUrl, sWordToExclude)
-
-   clEntries = {};
-   for nCount =1:length(sUrl)
-     sUrlString = sUrl{nCount};
-    [s, success, message] = urlread (sUrlString);
-    sDelim='filename": "';
-    POS = strfind(s,sDelim);
-
-    nScans = length (POS);
-
-    for nScan = 1:nScans
-      sCurrentScan='';
-      sForScan =  s(POS(nScan):length(s));
-      %sForScan(8:15)
-      nLen = length (sForScan);
-      for nLetter = (1+length(sDelim)):nLen
-        cLetter = sForScan(nLetter);
-        if cLetter=='"'
-          sCurrentScan=strrep(sCurrentScan,'.paper','');
-          if 0==length(strfind(sCurrentScan,'Placeholder'))
-            clEntriesNew = cell(1+length(clEntries),1);
-            for nCopy = 1:length(clEntries)
-              clEntriesNew{nCopy}=clEntries{nCopy};
-            end
-            clEntriesNew{length(clEntriesNew)}=sCurrentScan;
-            clEntries = clEntriesNew;
-          endif
-          break
-        else
-          sCurrentScan =[sCurrentScan cLetter];
-        endif
-      end
-    end    
-  end
-endfunction
+ 
 
 
 function [clActivitiesAndObjectFlows, clFunctionalGroups] = ParseActivityModel (cFileName)
     [clGroupNames, clGroupPositionVectors clActivityNames, clActivityPositionVectors,clConnectorNames,clConnectorPositionVectors]= ParseopenOfficeExportFile(cFileName);
-    rTolerancePixels = 5;
+    rTolerancePixels = 20;
     clActivitiesAndObjectFlows = CreateActivitiesAndObjectFlows(clActivityNames, clActivityPositionVectors,clConnectorNames,clConnectorPositionVectors, rTolerancePixels);
     clFunctionalGroups = CreateFunctionalGroups(clActivityNames, clActivityPositionVectors, clGroupNames,  clGroupPositionVectors);
 endfunction  
