@@ -13,13 +13,16 @@
 % This is code for GNU Octave 
 % The input comes via a file written from OpenOffice, with graphical information about the use case activities and their flows.
 
-function [clActivitiesAndObjectFlows, clFunctionalGroups] = fas_frontend(cFileName,cPath)
+function [clActivitiesAndObjectFlows, clFunctionalGroups, cSysMLString] = fas_frontend(cFileName,cPath)
 	[clActivitiesAndObjectFlows, clFunctionalGroups] = 	ParseActivityModel(cFileName);
-	ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups); 
+	cSysMLString = ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups); 
+  disp(cSysMLString);
 endfunction
         
-function ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups) 
+function cSysMLString = ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups) 
      %%% Process Activities and Object Flows
+     cSysMLString='';
+     cLF = sprintf('\r\n');
      clLinesToParse =  clActivitiesAndObjectFlows;
      clDomainObjects = {};
      clActivities = {};
@@ -48,40 +51,45 @@ function ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups)
         end
      end
       
-     disp(['   package UseCaseActivities{']);
-     PrintActivityDefinitionsInSysML(mMatrixO, clActivities);
-     PrintFlowsInSysML(mMatrixO, clActivities);
-     disp(['      package FunctionalGroups{']);
-     PrintFunctionalGroupsInSysML(clGroupName ,clActivities, mMatrixG);
-     disp(['      }']);
-     disp(['   }']);
+     cSysMLString=[cSysMLString '   package UseCaseActivities{' cLF];
+     cSysMLString = [cSysMLString RenderActivityDefinitionsInSysML(mMatrixO, clActivities)];
+     cSysMLString = [cSysMLString RenderFlowsInSysML(mMatrixO, clActivities)];
+     cSysMLString = [cSysMLString '      package FunctionalGroups{' cLF];
+     cSysMLString = [cSysMLString RenderFunctionalGroupsInSysML(clGroupName ,clActivities, mMatrixG)];
+     cSysMLString=[cSysMLString '      }' cLF];
+     cSysMLString=[cSysMLString '   }' cLF];
 endfunction
 
-function PrintFunctionalGroupsInSysML(clGroupName,clActivities, mMatrixG);
+function cSysMLString=RenderFunctionalGroupsInSysML(clGroupName,clActivities, mMatrixG);
+     cSysMLString='';
+     cLF = sprintf('\r\n');
      N=size(mMatrixG,1);
      M=size(mMatrixG,2);
      for n = 1:N
-        disp(['         package ' clGroupName{n} '{']);
+        cSysMLString=[cSysMLString '         package ' clGroupName{n} '{' cLF];
         for m=1:M
           if mMatrixG(n,m) > 0
-            disp(['            import ' clActivities{m} ';']);
+            cSysMLString=[cSysMLString '            import ' clActivities{m} ';' cLF];
           endif
         end
-        disp('         }');
+        cSysMLString=[cSysMLString '         }' cLF];
 
      end
 endfunction
 
-function PrintActivityDefinitionsInSysML(O,clActivities)
+function cSysMLString=RenderActivityDefinitionsInSysML(O,clActivities)
+     cSysMLString='';
+     cLF = sprintf('\r\n');
+
     for nText = 1:length(clActivities)      
-      disp(['      action def ' clActivities{nText} ' {']);
+      cSysMLString=[cSysMLString '      action def ' clActivities{nText} ' {' cLF];
       for nIn=1:length(clActivities)
           if ~isequal(O{nIn,nText},'')
                sFlowString=strtrim(O{nIn,nText});
                for nParam = 1:(length(strfind(sFlowString,'+'))+1)
                  sCurrentFlowName = SubFlow(sFlowString,nParam);
                  sInput = sCurrentFlowName;
-                 disp(['         in ' sInput ';']);
+                 cSysMLString=[cSysMLString '         in ' sInput ';' cLF];
                end
           endif
       end
@@ -91,20 +99,23 @@ function PrintActivityDefinitionsInSysML(O,clActivities)
                for nParam = 1:(length(strfind(sFlowString,'+'))+1)
                  sCurrentFlowName = SubFlow(sFlowString,nParam);
                  sOutput = sCurrentFlowName; 
-                 disp(['         out ' sOutput ';']);
+                 cSysMLString = [cSysMLString '         out ' sOutput ';' cLF];
                end
           endif
       end
-      disp(['      }']);
+      cSysMLString=[cSysMLString '      }' cLF];
     end
 endfunction
    
-function PrintFlowsInSysML(O,clActivities) 
+function cSysMLString=RenderFlowsInSysML(O,clActivities) 
+    cSysMLString='';
+    cLF = sprintf('\r\n');
+     
     clOutput =cell(length(clActivities)*length(clActivities)*3+10,1);
-    disp('      action def OverallUseCase {');
+    cSysMLString=[cSysMLString '      action def OverallUseCase {' cLF];
     
     for nText = 1:length(clActivities)      
-      disp(['         action a' num2str(nText) ':' clActivities{nText} ';']);
+      cSysMLString=[cSysMLString '         action a' num2str(nText) ':' clActivities{nText} ';' cLF];
     end
   
     for n1=1:length(clActivities) 
@@ -114,13 +125,13 @@ function PrintFlowsInSysML(O,clActivities)
                for nParam = 1:(length(strfind(sFlowString,'+'))+1)
                  sInput = SubFlow(sFlowString,nParam);
                  sResult = sInput;
-                 disp(['         flow from a' num2str(n1) '.' sResult ' to a'  num2str(n2) '.' sInput ';']);
+                 cSysMLString=[cSysMLString '         flow from a' num2str(n1) '.' sResult ' to a'  num2str(n2) '.' sInput ';' cLF];
                end
           endif
       end
     end  
 
-    disp(['      }']);
+    cSysMLString=[cSysMLString '      }' cLF];
     
 endfunction
 
