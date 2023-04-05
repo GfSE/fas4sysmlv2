@@ -23,8 +23,10 @@
 
 function test_fas_frontend(cFileName,cPath)
 	pkg load symbolic;
-  setenv('PYTHONPATH',cPath);
-	setenv('PATH',cPath);
+  if ~isequal(cPath,'')
+    setenv('PYTHONPATH',cPath);
+	  setenv('PATH',cPath);
+  end
   dummy = sym('0'); %Ensure that the symbolic toolbox initialization prompt is displayed before "clc"
 	clc
 
