@@ -36,9 +36,18 @@ function test_fas_frontend(cFileName,cPath)
   disp('Computing ...');
   cSysMLString = [cSysMLString RunFas(clActivitiesAndObjectFlows, clFunctionalGroups)]; %% Use fas-as-a-formula to test the obtained data 
 	cSysMLString=[cSysMLString '}' sprintf('\r\n')];
-  DumpJupyterNotebook(cSysMLString);
-  clc;
-  disp(cSysMLString)
+  cNotebookFile=DumpJupyterNotebook(cSysMLString);
+  if isunix
+    clc;
+    disp(cSysMLString)
+  else
+    disp('Done.');
+    disp('Visualizing the result ...');
+    cHtmlFile = strrep(cNotebookFile,'.ipynb','.html');
+    cSilencer='>nul 2>&1';
+    system(['jupyter nbconvert --to html --execute ' cNotebookFile ' --output=' cHtmlFile ' ' cSilencer]);
+    system(cHtmlFile);
+  end
 endfunction
     
     
@@ -91,7 +100,7 @@ function cSysMLString=RunFas(clActivitiesAndObjectFlows, clFunctionalGroups)
 endfunction     
      
     
-function DumpJupyterNotebook(cSysMLString)
+function cNotebookFile=DumpJupyterNotebook(cSysMLString)
   cNotebookFile = 'FunctionalModel.ipynb';
   FID1=fopen('test_visuallly.ipynb','r');
   FID2=fopen(cNotebookFile,'w');
