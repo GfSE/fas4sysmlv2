@@ -19,7 +19,9 @@
 %
 % Based on: Lamm, J.G.: "Eine schlanke Formel für den Kern der FAS-Methode, zur einfachen Werkzeug-
 % Umsetzung der Methode", in Koch, W.; Wilke, D.; Dreiseitel, S.; Kaffenberger, R. (Eds.): Tag des Systems Engineering – 
-% Paderborn 16.-18. November 2022, Gesellschaft für Systems Engineering e.V. (GfSE Verlag), Bremen, Germany, 2022, pp. 127-131	
+% Paderborn 16.-18. November 2022, Gesellschaft für Systems Engineering e.V. (GfSE Verlag), Bremen, Germany, 2022, pp. 127-131
+% 
+% English Translation of the above paper: https://github.com/GfSE/fas4sysmlv2/blob/main/doc/tech-docs/fas/FAS-as-a-formula-2022.odt	
 
 function test_fas_frontend(cFileName,cPath)
 	pkg load symbolic;
@@ -69,6 +71,7 @@ function cSysMLString=RunFas(clActivitiesAndObjectFlows, clFunctionalGroups)
      end
      
     O = mSymbolicMatrixO;
+    display(O)
     M=length(O);
 
     
@@ -88,10 +91,16 @@ function cSysMLString=RunFas(clActivitiesAndObjectFlows, clFunctionalGroups)
         end
      end
      G = mSymbolicMatrixG;
+     display(G)
      
      %%% Compute the functional architecture via FAS-as-a-formula
      F = G*O*G';
-     
+     disp('---------------------------------');
+     disp('Applying FAS-as-a-formula:')
+     % Explanation of "FAS-as-a-formula": https://github.com/GfSE/fas4sysmlv2/blob/main/doc/tech-docs/fas/FAS-as-a-formula-2022.odt"
+     disp('F = G*O*G''');
+     disp('---------------------------------');
+     display(F)
      
      %%% FAS method says that names of functional blocks are equal to names of functional groups
      clFunctionalBlockNames = clGroupName;
