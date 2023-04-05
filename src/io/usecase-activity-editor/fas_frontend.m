@@ -279,7 +279,7 @@ function [sGroupName, clGroup] = parseGroupLine (sLine)
 
 function [clActivitiesAndObjectFlows, clFunctionalGroups] = ParseActivityModel (cFileName)
     [clGroupNames, clGroupPositionVectors clActivityNames, clActivityPositionVectors,clConnectorNames,clConnectorPositionVectors]= ParseopenOfficeExportFile(cFileName);
-    rTolerancePixels = 20;
+    rTolerancePixels = 50;
     clActivitiesAndObjectFlows = CreateActivitiesAndObjectFlows(clActivityNames, clActivityPositionVectors,clConnectorNames,clConnectorPositionVectors, rTolerancePixels);
     clFunctionalGroups = CreateFunctionalGroups(clActivityNames, clActivityPositionVectors, clGroupNames,  clGroupPositionVectors);
 endfunction  
