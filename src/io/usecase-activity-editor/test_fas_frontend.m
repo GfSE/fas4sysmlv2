@@ -23,6 +23,7 @@
 
 function test_fas_frontend(cFileName,cPath)
 	pkg load symbolic;
+  cOldPath = getenv('PATH');
   if ~isequal(cPath,'')
     setenv('PYTHONPATH',cPath);
 	  setenv('PATH',cPath);
@@ -45,6 +46,7 @@ function test_fas_frontend(cFileName,cPath)
     disp('Visualizing the result ...');
     cHtmlFile = strrep(cNotebookFile,'.ipynb','.html');
     cSilencer='>nul 2>&1';
+    setenv('PATH',cOldPath);
     system(['jupyter nbconvert --to html --execute ' cNotebookFile ' --output=' cHtmlFile ' ' cSilencer]);
     system(cHtmlFile);
   end
