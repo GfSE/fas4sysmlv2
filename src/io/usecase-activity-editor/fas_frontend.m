@@ -11,6 +11,11 @@
 
 
 % This is code for GNU Octave 
+%
+% The code in this file has been translated into python: fas_frontend.py
+% It is still in use for "test_" functions. 
+% This file will be removed, once the "test_" functions are translated to python. 
+%
 % The input comes via a file written from OpenOffice, with graphical information about the use case activities and their flows.
 
 function [clActivitiesAndObjectFlows, clFunctionalGroups, cSysMLString] = fas_frontend(cFileName,cPath)
