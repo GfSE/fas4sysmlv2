@@ -14,6 +14,7 @@
 # The input comes via a file written from OpenOffice, with graphical information about the use case activities and their flows.
 
 
+import sys
 
 
 def RenderFunctionalGroupsInSysML(clGroupName,clActivities, mMatrixG):
@@ -410,14 +411,16 @@ def  fas_frontend(cFileName,cPath):
   
      return clActivitiesAndObjectFlows, clFunctionalGroups, cSysMLString
         
-import sys
- 
-cFileName = sys.argv[1]
-## Path is legacy
-cPath = ''
 
-clActivitiesAndObjectFlows, clFunctionalGroups, cSysMLString = fas_frontend(cFileName,cPath)
+def main(): 
+    cFileName = sys.argv[1]
+    ## Path is legacy
+    cPath = ''
 
+    clActivitiesAndObjectFlows, clFunctionalGroups, cSysMLString = fas_frontend(cFileName,cPath)
+
+if __name__ == "__main__":
+    main()
 
 
 

@@ -26,6 +26,7 @@
 
 
 from fas_frontend import *
+from write_fas_input import DumpJupyterNotebook
 from sympy import *
 import sys
 import os
@@ -197,35 +198,13 @@ def RunFas(clActivitiesAndObjectFlows, clFunctionalGroups):
     
      return cSysMLString    
 
-def DumpJupyterNotebook(cWorkingFolder, cSysMLString):
-     cNotebookFile = cWorkingFolder + 'FunctionalModel.ipynb';
-     FID1=open(cWorkingFolder + 'test_visuallly.ipynb','r');
-     FID2=open(cNotebookFile,'w');
-     for tline in FID1:
-         num = tline.find('"<Paste SysMLv2 code here>"')
-         if num > -1:
-             cCommaBlankAndQuotationMark=',' + '\r\n' + '    "'
-             cCodedSysML='    "' + cSysMLString.replace('\r\n','\\n"' + cCommaBlankAndQuotationMark)   
-             #Remove final comma, blank and quotation mark 
-             cCodedSysML = cCodedSysML[:(len(cCodedSysML)-len(cCommaBlankAndQuotationMark))]
-             FID2.write(cCodedSysML )
-         else:
-             FID2.write(tline)
-     FID1.close()
-     FID2.close()
-     return cNotebookFile
- 
-  
-
-
-
 
 
 init_printing(use_unicode=False)
 cFileName = sys.argv[1]
 cWorkingFolder = sys.argv[2]
 
-clActivitiesAndObjectFlows, clFunctionalGroups, cSysMLString = fas_frontend(cFileName,cPath)
+clActivitiesAndObjectFlows, clFunctionalGroups, cSysMLString = fas_frontend(cFileName,'')
 
 #Clear screen
 if  platform.system()!='Windows':
@@ -239,7 +218,7 @@ cSysMLString = 'package FunctionalModel{' + '\r\n' + cSysMLString
 ## Use fas-as-a-formula to test the obtained data 
 cSysMLString = cSysMLString + RunFas(clActivitiesAndObjectFlows, clFunctionalGroups)
 cSysMLString = cSysMLString + '}' + '\r\n'
-cNotebookFile = DumpJupyterNotebook(cWorkingFolder, cSysMLString)
+cNotebookFile = DumpJupyterNotebook(cWorkingFolder + 'FunctionalModel.ipynb', cWorkingFolder + 'test_visuallly.ipynb',cSysMLString)
 print('Done.');
 print('Visualizing the result ...');
 cHtmlFile = cNotebookFile.replace('.ipynb','.html')
