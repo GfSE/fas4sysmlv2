@@ -56,14 +56,14 @@ def  ReadPositions(FID,numpos,iLineIndex):
       
 def Readname(FID,iLineIndex):
      sName = ''
-     while len(sName)==0:
+     iLineIndexNew = iLineIndex
+     while len(sName)==0 and iLineIndexNew < len(FID):
          sName=''
-         sLine = FID[iLineIndex]
-         iLineIndexNew = iLineIndex + 1
+         sLine = FID[iLineIndexNew]
+         iLineIndexNew = iLineIndexNew + 1
          sName = sLine.strip()
  
-     return sName, iLineIndexNew
-        
+     return sName, iLineIndexNew        
 def  My_GrowCellArray(clOld, newEntry):
      clNew = ['' for col in range((len(clOld)+1))]
      for nCopy in range(len(clOld)):
