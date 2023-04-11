@@ -128,23 +128,21 @@ def  CreateFunctionalGroups(clActivityNames, clActivityPositionVectors, clGroupN
      return clFunctionalGroups 
  
 def isConnected (vConnectorXY, vActivityPositions, rTolerancePixels):
-     false = 0
-     true = 1
-     bret = false;
+     bret = False;
      if (vConnectorXY[0] > (vActivityPositions[0] - rTolerancePixels)) and (vConnectorXY[0] < (vActivityPositions[2] + rTolerancePixels)):
          #Top line of activity rectangle
          if vConnectorXY[1] > (vActivityPositions[1] - rTolerancePixels) and vConnectorXY[1] < (vActivityPositions[1] + rTolerancePixels):
-             bret = true
+             bret = True
          #Bottom line of activity rectangle
          if vConnectorXY[1] > (vActivityPositions[3] - rTolerancePixels) and vConnectorXY[1] < (vActivityPositions[3] + rTolerancePixels):
-             bret = true;
+             bret = True;
      if vConnectorXY[1] > (vActivityPositions[1] - rTolerancePixels) and vConnectorXY[1] < (vActivityPositions[3] + rTolerancePixels):
          # Left line of activity rectangle
          if vConnectorXY[0] > (vActivityPositions[0] - rTolerancePixels) and vConnectorXY[0] < (vActivityPositions[0] + rTolerancePixels):
-             bret = true;
+             bret = True;
          # Right line of activity rectangle
          if vConnectorXY[0] > (vActivityPositions[2] - rTolerancePixels) and vConnectorXY[0] < (vActivityPositions[2] + rTolerancePixels):
-             bret = true;
+             bret = True;
         
      
      return bret
@@ -415,7 +413,8 @@ def  fas_frontend(cFileName,cPath):
 import sys
  
 cFileName = sys.argv[1]
-cPath = sys.argv[2]
+## Path is legacy
+cPath = ''
 
 clActivitiesAndObjectFlows, clFunctionalGroups, cSysMLString = fas_frontend(cFileName,cPath)
 
