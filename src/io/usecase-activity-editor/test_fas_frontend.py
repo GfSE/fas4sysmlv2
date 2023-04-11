@@ -244,7 +244,7 @@ cHtmlFile = cNotebookFile.replace('.ipynb','.html')
 if  platform.system()!='Windows':
      cSilencer='>/dev/null 2>&1'
      os.system('jupyter nbconvert --to html --execute ' + cNotebookFile + ' --output=' + cHtmlFile + ' ' + cSilencer);
-     status=waitstatus_to_exitcode(os.system('firefox ' + cHtmlFile + ' ' + cSilencer))
+     status=os.waitstatus_to_exitcode(os.system('firefox ' + cHtmlFile + ' ' + cSilencer))
      if status > 0:
          os.system('chrome ' + cHtmlFile + ' ' + cSilencer)
    
