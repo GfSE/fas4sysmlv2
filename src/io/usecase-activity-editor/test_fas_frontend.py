@@ -227,7 +227,7 @@ clActivitiesAndObjectFlows, clFunctionalGroups, cSysMLString = fas_frontend(cFil
 
 #Clear screen
 if  platform.system()!='Windows':
-	os.system('clear')
+	print('\033[2J\033[H\033[3J')
 else:
 	os.system('cls')
 
