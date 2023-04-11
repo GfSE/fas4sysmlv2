@@ -68,29 +68,31 @@ def RenderFunctionalArchitecture(F,clFunctionalBlockNames):
          iPortNo = 0
          for nPortOut in range(F.shape[0]):
              if F[nBlock,nPortOut]!= 0: 
-                 sFlowName = str(F[nBlock,nPortOut])
-                 iNumPorts = max(1,sFlowName.strip().count('+')+1)
-                 clPortCell = ['' for col in range(iNumPorts)]
-                 for nPort in range(iNumPorts):
-                    iPortNo = iPortNo  + 1
-                    cPortName = 'p' + str(iPortNo)
-                    cSysMLstring = cSysMLstring + '         port ' + cPortName + ';' + '\r\n'
-                    clPortCell[nPort]=cPortName
+                 if nPortOut != nBlock:
+                     sFlowName = str(F[nBlock,nPortOut])
+                     iNumPorts = max(1,sFlowName.strip().count('+')+1)
+                     clPortCell = ['' for col in range(iNumPorts)]
+                     for nPort in range(iNumPorts):
+                         iPortNo = iPortNo  + 1
+                         cPortName = 'p' + str(iPortNo)
+                         cSysMLstring = cSysMLstring + '         port ' + cPortName + ';' + '\r\n'
+                         clPortCell[nPort]=cPortName
             
-                 clSourcePortNames[nBlock][nPortOut]=clPortCell
+                         clSourcePortNames[nBlock][nPortOut]=clPortCell
                  
          for nPortIn in range(F.shape[0]):
              if F[nPortIn, nBlock]!= 0: 
-                 sFlowName = str(F[nPortIn,nBlock])
-                 iNumPorts = max(1,sFlowName.strip().count('+')+1)
-                 clPortCell = ['' for col in range(iNumPorts)]
-                 for nPort in range(iNumPorts):
-                    iPortNo = iPortNo + 1
-                    cPortName = 'p' + str(iPortNo)
-                    cSysMLstring = cSysMLstring + '         port ' + cPortName + ';' + '\r\n'
-                    clPortCell[nPort]=cPortName
+                 if nPortIn != nBlock:
+                     sFlowName = str(F[nPortIn,nBlock])
+                     iNumPorts = max(1,sFlowName.strip().count('+')+1)
+                     clPortCell = ['' for col in range(iNumPorts)]
+                     for nPort in range(iNumPorts):
+                         iPortNo = iPortNo + 1
+                         cPortName = 'p' + str(iPortNo)
+                         cSysMLstring = cSysMLstring + '         port ' + cPortName + ';' + '\r\n'
+                         clPortCell[nPort]=cPortName
                
-             clTargetPortNames[nPortIn][nBlock]=clPortCell
+                         clTargetPortNames[nPortIn][nBlock]=clPortCell
          cSysMLstring = cSysMLstring + '      }' + '\r\n'
    
     
