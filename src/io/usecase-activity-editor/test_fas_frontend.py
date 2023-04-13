@@ -203,6 +203,7 @@ def RunFas(clActivitiesAndObjectFlows, clFunctionalGroups):
 init_printing(use_unicode=False)
 cFileName = sys.argv[1]
 cWorkingFolder = sys.argv[2]
+cWorkingFolder = cWorkingFolder.replace('"','').strip()
 
 clActivitiesAndObjectFlows, clFunctionalGroups, cSysMLString = fas_frontend(cFileName,'')
 

@@ -43,6 +43,7 @@ def DumpJupyterNotebook(cWorkingFolderAndOutputFile, cWorkingFolderAndInputFile,
 def main():
      cFileName = sys.argv[1]
      cWorkingFolder = sys.argv[2]
+     cWorkingFolder = cWorkingFolder.replace('"','').strip()
 
      clActivitiesAndObjectFlows, clFunctionalGroups, cSysMLString = fas_frontend(cFileName,'')
 
