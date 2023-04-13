@@ -16,6 +16,8 @@
 #
 # The code wraps around fas_frontend() to test that function.
 #
+# Call: python test_fas_frontend.py <file name of input file from OpenOffice> <folder name of working folder> [<expected hash of SysMLv2 string to test against>]
+#
 # The input comes via a file written from OpenOffice, with graphical information about the use case activities and their flows.
 #
 # Based on: Lamm, J.G.: "Eine schlanke Formel fuer den Kern der FAS-Methode, zur einfachen Werkzeug-
@@ -23,6 +25,8 @@
 # Paderborn 16.-18. November 2022, Gesellschaft fuer Systems Engineering e.V. (GfSE Verlag), Bremen, Germany, 2022, pp. 127-131
 # 
 # English Translation of the above paper: https://github.com/GfSE/fas4sysmlv2/blob/main/doc/tech-docs/fas/FAS-as-a-formula-2022.odt	
+#
+
 
 
 from fas_frontend import *
@@ -31,6 +35,7 @@ from sympy import *
 import sys
 import os
 import platform
+import hashlib
     
 def SymbolicUpdateMatrixWithFlow(clDomainObjects,clActivities,mMatrixO, sLineToParse):
      sSourceObject,sFlow,sTargetObject = parseFlowLine(sLineToParse)
@@ -205,13 +210,18 @@ cFileName = sys.argv[1]
 cWorkingFolder = sys.argv[2]
 cWorkingFolder = cWorkingFolder.replace('"','').strip()
 
+if len(sys.argv)>3:
+     cExpectedHash = sys.argv[3].strip()
+else:
+     cExpectedHash = ''
+     
 clActivitiesAndObjectFlows, clFunctionalGroups, cSysMLString = fas_frontend(cFileName,'')
 
 #Clear screen
-if  platform.system()!='Windows':
-	print('\033[2J\033[H\033[3J')
+if platform.system()!='Windows':
+     print('\033[2J\033[H\033[3J')
 else:
-	os.system('cls')
+     os.system('cls')
 
 print ('Computing ...')
 print('')
@@ -220,7 +230,15 @@ cSysMLString = 'package FunctionalModel{' + '\r\n' + cSysMLString
 cSysMLString = cSysMLString + RunFas(clActivitiesAndObjectFlows, clFunctionalGroups)
 cSysMLString = cSysMLString + '}' + '\r\n'
 cNotebookFile = DumpJupyterNotebook(cWorkingFolder + 'FunctionalModel.ipynb', cWorkingFolder + 'test_visuallly.ipynb',cSysMLString)
-print('Done.');
+print('   Done.');
+if cExpectedHash != '':
+     print('Verifying the result ... ')
+     cObtainedHash = hashlib.sha256(cSysMLString.encode('utf_8')).hexdigest()
+     if cObtainedHash == cExpectedHash:
+         print('   Passed.')
+     else:
+         print('   FAILED: Expected hash of SysMLv2 string: ' + cExpectedHash + ' - obtained hash: ' + cObtainedHash )
+
 print('Visualizing the result ...');
 cHtmlFile = cNotebookFile.replace('.ipynb','.html')
 if  platform.system()!='Windows':
@@ -234,7 +252,8 @@ else:
      cSilencer='>nul 2>&1';
      os.system('jupyter nbconvert --to html --execute ' + cNotebookFile + ' --output=' + cHtmlFile + ' ' + cSilencer)
      os.system(cHtmlFile)
- 
+
+print('   Done.');
 
 
   
