@@ -54,12 +54,12 @@ def main():
      cResultFile = cWorkingFolder + 'temp_result.ipynb'
      DumpJupyterNotebook(cOutputFile, cNotebookFile, cSysMLString)
 
-     if  platform.system()!='Windows':
-         cSilencer='>/dev/null 2>&1'
+     if platform.system()!='Windows':
+         cSilencer='2>/dev/null'
+         os.system('jupyter nbconvert --to notebook --execute ' + cOutputFile + ' --stdout >' + cResultFile + ' ' + cSilencer)
      else:
          cSilencer='>nul 2>&1';
-
-     os.system('jupyter nbconvert --to notebook --execute ' + cOutputFile + ' --output=' + cResultFile + ' ' + cSilencer)
+         os.system('jupyter nbconvert --to notebook --execute ' + cOutputFile + ' --output=' + cResultFile + ' ' + cSilencer)
 
      FID1=open(cResultFile ,'r');
      bStdout = False

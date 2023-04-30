@@ -204,6 +204,8 @@ def RunFas(clActivitiesAndObjectFlows, clFunctionalGroups):
      return cSysMLString    
 
 
+if sys.version_info[0] < 3 or sys.version_info[1]<9 and platform.system()!='Windows':
+     raise Exception("Python version is insufficient. Python 3.9 or higher is required.")
 
 init_printing(use_unicode=False)
 cFileName = sys.argv[1]
@@ -246,7 +248,9 @@ if  platform.system()!='Windows':
      os.system('jupyter nbconvert --to html --execute ' + cNotebookFile + ' --output=' + cHtmlFile + ' ' + cSilencer);
      status=os.waitstatus_to_exitcode(os.system('firefox ' + cHtmlFile + ' ' + cSilencer))
      if status > 0:
-         os.system('chrome ' + cHtmlFile + ' ' + cSilencer)
+         status=os.waitstatus_to_exitcode(os.system('opera ' + cHtmlFile + ' ' + cSilencer))
+         if status > 0:
+             os.system('chrome ' + cHtmlFile + ' ' + cSilencer)
    
 else:
      cSilencer='>nul 2>&1';
