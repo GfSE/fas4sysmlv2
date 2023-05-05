@@ -52,6 +52,7 @@ def main():
      cNotebookFile = cWorkingFolder + 'fas_input_writer.ipynb' 
      cOutputFile = cWorkingFolder + 'temp_output.ipynb'
      cResultFile = cWorkingFolder + 'temp_result.ipynb'
+     cProjectIdFile = cWorkingFolder + 'project_id.txt'
      DumpJupyterNotebook(cOutputFile, cNotebookFile, cSysMLString)
 
      if platform.system()!='Windows':
@@ -65,9 +66,11 @@ def main():
      bStdout = False
      bData = False
      bResultExpected = False
+     cStatus = ''
      for tline in FID1:
          if bResultExpected:
-             print('STATUS: ' + tline.replace('\\n','').replace('\\r','').strip())
+             cStatus = 'STATUS: ' + tline.replace('\\n','').replace('\\r','').strip()
+             print(cStatus)
              break
          if tline.find('"name": "stdout",')>-1:
              bStdout = True
@@ -77,6 +80,13 @@ def main():
              bResultExpected = True
      FID1.close()
      
+     posOpeningParenthesis = cStatus.find('(')
+     posClosingParenthesis = cStatus.find(')')
+     cProjectID = cStatus[(posOpeningParenthesis+1):posClosingParenthesis]
+
+     FID1=open(cProjectIdFile,'w');
+     FID1.write(cProjectID)
+     FID1.close()
 
 if __name__ == "__main__":
     main()
