@@ -15,7 +15,6 @@
 #
 # The code wraps around the core function to call it from the usecase-activity-editor
 #
-# Call: python test_fas_frontend.py <file name of input file from OpenOffice> <folder name of working folder> [<expected hash of SysMLv2 string to test against>]
 #
 # The input comes via a file written during the fas input generation to transport the project number
 #
@@ -26,27 +25,23 @@
 import sys
 import os
 import platform
-    
+cFolderName = sys.argv[1]
+sys.path.insert(1,cFolderName.strip().replace('io/usecase-activity-editor','core').replace('io\\usecase-activity-editor','core'))
+from fas4sysmlv2_main import *  
 
 
-def main(): 
-    cFolderName = sys.argv[1]
-    cProjectIdFile = cFolderName.strip() + 'project_id.txt'
-    FID1=open(cProjectIdFile ,'r');
-    cID = ''
-    for tline in FID1:
-        cID = tline
-    FID1.close()
+cProjectIdFile = cFolderName.strip() + 'project_id.txt'
+FID1=open(cProjectIdFile ,'r');
+cID = ''
+for tline in FID1:
+    cID = tline
+FID1.close()
 
-    if  platform.system()!='Windows':
-        os.system('python ' + cFolderName.strip() + '../../core/fas4sysmlv2_main.py ' +  cID );
-    else:
-        os.system('python ' + cFolderName.strip() + '..\\..\\core\\fas4sysmlv2_main.py ' +  cID );
+run_fas4sysml(cID)
 
      
 
-if __name__ == "__main__":
-    main()
+
 
 
   

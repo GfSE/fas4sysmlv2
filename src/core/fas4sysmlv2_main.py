@@ -14,6 +14,7 @@
 
 
 from tkinter import *
+from tkinter import messagebox
 from tkinter import ttk
 from functools import partial
 import sys
@@ -28,7 +29,7 @@ import requests
 def fas_transform(cProjectID,cServerName):
      print(cProjectID.get())
      print(cServerName.get())
-     print("fas_transform is not yet implemented")
+     messagebox.showwarning("FAS Plugin","fas_transform is not yet implemented")
 
 def processProjectSelection(listWindow,theCombo,cProjectID):
      selectedProject = theCombo.get()
@@ -62,7 +63,7 @@ def selectproject(cProjectID, cServerName):
 
          listWindow.mainloop()   
          
-def main():
+def run_fas4sysml(cProjectUUID):
      mainWindow = Tk()
      mainWindow.title("FAS Plugin")
      frm = ttk.Frame(mainWindow)
@@ -70,8 +71,7 @@ def main():
 
      ttk.Label(frm, text="FAS Plugin for SysML v2").grid(column=0, row=0)
      cProjectID = StringVar()
-     if len (sys.argv)>1:
-         cProjectID.set(sys.argv[1])
+     cProjectID.set(cProjectUUID)
      cServerName = StringVar()
      cServerName .set('http://localhost:9000')
      ttk.Label(frm, text="").grid(column=0, row=1)
@@ -85,6 +85,11 @@ def main():
      ttk.Button(frm, text="Quit", command=mainWindow.destroy).grid(column=2, row=5)
      mainWindow.mainloop()
 
+def main():
+     cProjectID = ''
+     if len (sys.argv)>1:
+         cProjectID=sys.argv[1]
+     run_fas4sysml(cProjectID)
 
 if __name__ == "__main__":
-    main()
+     main()
