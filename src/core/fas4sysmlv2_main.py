@@ -19,10 +19,7 @@ from tkinter import ttk
 from functools import partial
 import sys
 
-import sysml_v2_api_client
-from sysml_v2_api_client.rest import ApiException
 
-import pandas as pd
 import requests 
 
 
