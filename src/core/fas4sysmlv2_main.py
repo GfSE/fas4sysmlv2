@@ -25,9 +25,10 @@
 #   https://github.com/GfSE/fas4sysmlv2/blob/main/doc/tech-docs/fas/FAS-as-a-formula-2022.odt	
 #
 
-
+import tkinter as tk
 from tkinter import *
 from tkinter import messagebox
+from tkinter import scrolledtext
 from tkinter import ttk
 from functools import partial
 import sys
@@ -249,9 +250,10 @@ def RenderFunctionalArchitecture(F,clFunctionalBlockNames):
 
 
 
-def RunFas(clActivitiesAndObjectFlows, clFunctionalGroups):
+def run_fas(clActivitiesAndObjectFlows, clFunctionalGroups):
 
      cSysMLString=''
+     cFormulaOutput = ''
     
      ### Process Activities and Object Flows
      clLinesToParse =  clActivitiesAndObjectFlows
@@ -264,10 +266,10 @@ def RunFas(clActivitiesAndObjectFlows, clFunctionalGroups):
          clDomainObjects,clActivities,mSymbolicMatrixO = SymbolicUpdateMatrixWithFlow(clDomainObjects,clActivities,mSymbolicMatrixO, sLineToParse)
      
      
-     print('O = (symbolic ' + str(mSymbolicMatrixO.shape[0]) + 'x' + str(mSymbolicMatrixO.shape[1]) + ' matrix)')
-     print('')
-     pprint(mSymbolicMatrixO)
-     print('')
+     cFormulaOutput = cFormulaOutput  + 'O = (symbolic ' + str(mSymbolicMatrixO.shape[0]) + 'x' + str(mSymbolicMatrixO.shape[1]) + ' matrix)'
+     cFormulaOutput = cFormulaOutput  + '\r\n' 
+     cFormulaOutput = cFormulaOutput  + '\r\n' +pretty(mSymbolicMatrixO)
+     cFormulaOutput = cFormulaOutput  + '\r\n' 
      
      M=mSymbolicMatrixO.shape[0]
 
@@ -289,31 +291,31 @@ def RunFas(clActivitiesAndObjectFlows, clFunctionalGroups):
                  mSymbolicMatrixG = mSymbolicMatrixG + Matrix(mTemp)
           
    
-     print('G = (symbolic ' + str(mSymbolicMatrixG.shape[0]) + 'x' + str(mSymbolicMatrixG.shape[1]) + ' matrix)')
-     print('')
-     pprint(mSymbolicMatrixG)
-     print('')    
+     cFormulaOutput = cFormulaOutput  + '\r\n' + 'G = (symbolic ' + str(mSymbolicMatrixG.shape[0]) + 'x' + str(mSymbolicMatrixG.shape[1]) + ' matrix)'
+     cFormulaOutput = cFormulaOutput  + '\r\n' 
+     cFormulaOutput = cFormulaOutput  + '\r\n' +pretty(mSymbolicMatrixG)
+     cFormulaOutput = cFormulaOutput  + '\r\n'     
     
      
      ### Compute the functional architecture via FAS-as-a-formula
      ### F = G*O*G.T;
      mSymbolicMatrixF=mSymbolicMatrixG*mSymbolicMatrixO*mSymbolicMatrixG.T;
      
-     print('---------------------------------')
-     print('Applying FAS-as-a-formula:')
-     print('')
+     cFormulaOutput = cFormulaOutput  + '\r\n' + '---------------------------------'
+     cFormulaOutput = cFormulaOutput  + '\r\n' 'Applying FAS-as-a-formula:'
+     cFormulaOutput = cFormulaOutput  + '\r\n' ''
      # Explanation of "FAS-as-a-formula": https://github.com/GfSE/fas4sysmlv2/blob/main/doc/tech-docs/fas/FAS-as-a-formula-2022.odt"
      GOG,T,F = symbols('GOG, T, F')
      #This is a work-around to print the formula F=G*O*G**T in nice formatting:
-     pprint(Eq(F, GOG**T))
-     print('')
-     print('---------------------------------')
-     print('')  
+     cFormulaOutput = cFormulaOutput  + '\r\n' + pretty(Eq(F, GOG**T))
+     cFormulaOutput = cFormulaOutput  + '\r\n' 
+     cFormulaOutput = cFormulaOutput  + '\r\n'  + '---------------------------------'
+     cFormulaOutput = cFormulaOutput  + '\r\n' 
      
-     print('F = (symbolic ' + str(mSymbolicMatrixF.shape[0]) + 'x' + str(mSymbolicMatrixF.shape[1]) + ' matrix)')
-     print('')
-     pprint(mSymbolicMatrixF)
-     print('')    
+     cFormulaOutput = cFormulaOutput  + '\r\n' + 'F = (symbolic ' + str(mSymbolicMatrixF.shape[0]) + 'x' + str(mSymbolicMatrixF.shape[1]) + ' matrix)'
+     cFormulaOutput = cFormulaOutput  + '\r\n' 
+     cFormulaOutput = cFormulaOutput  + '\r\n' +pretty(mSymbolicMatrixF)
+     cFormulaOutput = cFormulaOutput  + '\r\n'     
      
      ### FAS method says that names of functional blocks are equal to names of functional groups
      clFunctionalBlockNames = clGroupName
@@ -321,7 +323,7 @@ def RunFas(clActivitiesAndObjectFlows, clFunctionalGroups):
      ### Print the functional architecture
      cSysMLString = RenderFunctionalArchitecture(mSymbolicMatrixF,clFunctionalBlockNames)
     
-     return cSysMLString    
+     return cSysMLString, cFormulaOutput    
   
   
 def read_activities_and_functional_groups(cProjectID,cServerName):
@@ -345,10 +347,21 @@ def write_functional_architecture(cProjectID,cServerName,cSysMLString):
      cErrorMsg = "write_functional_architecture is not implemented"
      return bSuccess, cErrorMsg
 
+def render_transform_formula(cFormulaOutput):
+     renderingWindow= Tk()
+     #renderingWindow.state('zoomed')
+     ttk.Label(renderingWindow, text="FAS-as-a-formula").grid(column=0, row=0)
+     scr = scrolledtext.ScrolledText(renderingWindow, width = 200, height = 40, font = ("Courier", 9))
+     scr.grid(column = 0, pady = 10, padx = 10)
+     scr.focus()
+     scr.insert(tk.INSERT,cFormulaOutput)
+     scr.configure(state ='disabled')
+     renderingWindow.mainloop()
 
 def fas_transform(cProjectID,cServerName):
      clActivitiesAndObjectFlows, clFunctionalGroups = read_activities_and_functional_groups(cProjectID,cServerName)
-     cSysMLString = RunFas(clActivitiesAndObjectFlows, clFunctionalGroups)
+     cSysMLString, cFormulaOutput = run_fas(clActivitiesAndObjectFlows, clFunctionalGroups)
+     render_transform_formula(cFormulaOutput)
      bSuccess, cErrorMsg = write_functional_architecture(cProjectID,cServerName,cSysMLString)
      if bSuccess == False:
          messagebox.showerror("FAS Plugin","Writing to the repository failed with the following error message: " + cErrorMsg)
