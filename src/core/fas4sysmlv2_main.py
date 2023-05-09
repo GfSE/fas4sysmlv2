@@ -11,6 +11,19 @@
 #
 #   This is the main py file of the FAS plugin for SysML v2
 #   When calling as a script, pass the project ID as an optional first parameter
+#
+#   This script requires the tkinter for GUI and sympy for symbolic computation
+# 
+#   Based on the following paper in german language : Lamm, J.G.: "Eine schlanke 
+#   Formel fuer den Kern der FAS-Methode, zur einfachen Werkzeug-Umsetzung 
+#   der Methode", in Koch, W.; Wilke, D.; Dreiseitel, S.; Kaffenberger, R. (Eds.): 
+#   Tag des Systems Engineering - Paderborn 16.-18. November 2022, 
+#   Gesellschaft fuer Systems Engineering e.V. (GfSE Verlag), Bremen, Germany, 
+#   2022, pp. 127-131
+#
+#   English Translation of the above paper: 
+#   https://github.com/GfSE/fas4sysmlv2/blob/main/doc/tech-docs/fas/FAS-as-a-formula-2022.odt	
+#
 
 
 from tkinter import *
@@ -19,14 +32,329 @@ from tkinter import ttk
 from functools import partial
 import sys
 
+from sympy import *
 
 import requests 
 
 
-def fas_transform(cProjectID,cServerName):
+#### BEGIN TEMP The following part needs to be solved more clever
+
+def strfind_zerobased(cStringtoSearch, cCharToFind):
+    return [nCounter for nCounter, currentChar in enumerate(cStringtoSearch) if currentChar == cCharToFind]
+
+def SubFlow(sFlowString,nPort):
+     sCurrentFlowName = sFlowString.strip()
+     POS = strfind_zerobased(sCurrentFlowName,'+')
+     if len(POS) > 0:      
+         if nPort == 0:
+             sTempStr = sCurrentFlowName[:POS[nPort]]
+             sCurrentFlowName = sTempStr.strip();
+         elif nPort >= len(POS):
+             sTempStr = sCurrentFlowName[(POS[nPort-1]+1):]
+             sCurrentFlowName = sTempStr.strip();
+         else:
+             sTempStr = sCurrentFlowName[(POS[nPort-1]+1):POS[nPort]]
+             sCurrentFlowName = sTempStr.strip();
+      
+     return sCurrentFlowName
+
+
+def parseGroupLine (sLine):
+      
+     iCount=0
+     clGroup = []
+     sGroupName = ''
+    
+     sComposedString = ''
+    
+     for nIndex in range(len(sLine)):
+         if sLine[nIndex]==':' or sLine[nIndex]==';':
+             iCount = iCount + 1;
+             if iCount == 1:
+                 sGroupName = sComposedString
+             else:
+                 clGroupNew = ['' for col in range(len(clGroup)+1)]
+                 for nFillIndex in range(len(clGroup)):
+                     clGroupNew[nFillIndex] = clGroup[nFillIndex][0] 
+                 clGroupNew[len(clGroupNew)-1] = sComposedString 
+                 clGroup = clGroupNew 
+             sComposedString = '';
+         else:
+            if sLine[nIndex] != ' ':
+                 sTempString = sComposedString + sLine[nIndex]
+                 sComposedString = sTempString.replace('.','_')
+    
+     if len(sComposedString)>0:
+         clGroupNew = ['' for col in range((len(clGroup)+1))]
+         for nFillIndex in range(len(clGroup)):
+             clGroupNew[nFillIndex] = clGroup[nFillIndex]
+       
+         #print('sComposedString: ' + sComposedString)
+         clGroupNew[len(clGroupNew)-1] = sComposedString 
+         clGroup = clGroupNew
+    
+     return sGroupName, clGroup
+
+
+def parseFlowLine (sLine):
+    
+     sSourceObject =''
+     sFlow = ''
+     sTargetObject = ''
+    
+     iCount=0
+    
+     sComposedString = ''
+    
+     for nIndex in range(len(sLine)):
+         if sLine[nIndex]==':' or sLine[nIndex]==';':
+             iCount = iCount + 1
+             if iCount == 1:
+                 sSourceObject = sComposedString
+             elif iCount == 2:
+                 sFlow = sComposedString;
+             else:
+                 sTargetObject = sComposedString;
+          
+          
+             sComposedString = '';
+         else:
+             if sLine[nIndex] != ' ':
+                 sTempString = sComposedString + sLine[nIndex]
+                 sComposedString = sTempString.replace('.','_')
+
+     if iCount == 2:
+         sTargetObject = sComposedString;
+    
+     return sSourceObject,sFlow,sTargetObject
+
+def GetIndexOfStringInCellArray(clIn,sContent):
+     # iIndex = -1 if not found        
+     iIndex = -1
+     for iCount in range (len(clIn)):
+         if clIn[iCount]==sContent:
+             iIndex = iCount
+             break
+     return iIndex  
+
+
+def UpdateUniqueContentCellArray (clIn, sContent):
+     iIndex = GetIndexOfStringInCellArray(clIn,sContent)
+ 
+     if iIndex == -1:
+         clOut = ['' for col in range((len(clIn)+1))]
+         for nFill in range(len(clIn)):
+             clOut[nFill]=clIn[nFill]
+         clOut[len(clOut)-1]=sContent
+     else:
+         clOut = clIn
+ 
+     return clOut
+
+#### END TEMP
+
+
+
+def SymbolicUpdateMatrixWithFlow(clDomainObjects,clActivities,mMatrixO, sLineToParse):
+     sSourceObject,sFlow,sTargetObject = parseFlowLine(sLineToParse)
+     clActivities = UpdateUniqueContentCellArray (clActivities, sSourceObject)
+     clActivities = UpdateUniqueContentCellArray (clActivities, sTargetObject)
+     clDomainObjects = UpdateUniqueContentCellArray (clDomainObjects, sFlow)
+     M = len(clActivities);
+     mNewMatrixO = Matrix([[0 for col in range(M)] for row in range(M)])
+     for nInitIndex1 in range(M):
+         for nInitIndex2  in range(M):
+             mShape=mMatrixO.shape
+             if nInitIndex1 < mShape[0] and nInitIndex2 < mShape[0]:
+                 mTemp = [[0 for col in range(M)] for row in range(M)]
+                 mTemp[nInitIndex1][nInitIndex2] = mMatrixO[nInitIndex1,nInitIndex2]
+                 mNewMatrixO = mNewMatrixO + Matrix(mTemp)
+             if GetIndexOfStringInCellArray(clActivities,sSourceObject) == nInitIndex1 and GetIndexOfStringInCellArray(clActivities,sTargetObject) == nInitIndex2 :
+                 mTemp = [[0 for col in range(M)] for row in range(M)]
+                 sFlowSymbolic = symbols(sFlow)
+                 mTemp[nInitIndex1][nInitIndex2] = sFlowSymbolic
+                 mNewMatrixO = mNewMatrixO + Matrix(mTemp)
+
+    
+     return clDomainObjects,clActivities,mNewMatrixO 
+ 
+ 
+def RenderFunctionalArchitecture(F,clFunctionalBlockNames):
+  
+     cSysMLstring = '   part FunctionalSystem{' + '\r\n'
+
+    
+     clSourcePortNames = [['' for col in range(F.shape[0])] for row in range(F.shape[0])]
+     clTargetPortNames = [['' for col in range(F.shape[0])] for row in range(F.shape[0])]
+     for nBlock in range(F.shape[0]):
+         cCurrentBlock = clFunctionalBlockNames[nBlock]
+         cSysMLstring = cSysMLstring + '      part ' + cCurrentBlock + '{' + '\r\n'
+         iPortNo = 0
+         for nPortOut in range(F.shape[0]):
+             if F[nBlock,nPortOut]!= 0: 
+                 if nPortOut != nBlock:
+                     sFlowName = str(F[nBlock,nPortOut])
+                     iNumPorts = max(1,sFlowName.strip().count('+')+1)
+                     clPortCell = ['' for col in range(iNumPorts)]
+                     for nPort in range(iNumPorts):
+                         iPortNo = iPortNo  + 1
+                         cPortName = 'p' + str(iPortNo)
+                         cSysMLstring = cSysMLstring + '         port ' + cPortName + ';' + '\r\n'
+                         clPortCell[nPort]=cPortName
+            
+                         clSourcePortNames[nBlock][nPortOut]=clPortCell
+                 
+         for nPortIn in range(F.shape[0]):
+             if F[nPortIn, nBlock]!= 0: 
+                 if nPortIn != nBlock:
+                     sFlowName = str(F[nPortIn,nBlock])
+                     iNumPorts = max(1,sFlowName.strip().count('+')+1)
+                     clPortCell = ['' for col in range(iNumPorts)]
+                     for nPort in range(iNumPorts):
+                         iPortNo = iPortNo + 1
+                         cPortName = 'p' + str(iPortNo)
+                         cSysMLstring = cSysMLstring + '         port ' + cPortName + ';' + '\r\n'
+                         clPortCell[nPort]=cPortName
+               
+                         clTargetPortNames[nPortIn][nBlock]=clPortCell
+         cSysMLstring = cSysMLstring + '      }' + '\r\n'
+   
+    
+    ## Connect the blocks with flows
+     cItemString = ''
+    
+     for nBlock1 in range(F.shape[0]):
+         for nBlock2 in range(F.shape[0]):
+             cFlow=F[nBlock1,nBlock2]
+             if nBlock1 != nBlock2 and cFlow != 0: 
+                 sFlowName = str(cFlow)
+                 clSourcePorts = clSourcePortNames[nBlock1][nBlock2]
+                 clTargetPorts = clTargetPortNames[nBlock1][nBlock2]
+                 for nPort in range(len(clSourcePorts)):
+                     sCurrentFlowName = SubFlow(sFlowName,nPort)
+                     cSysMLstring = cSysMLstring + '      flow of ' + sCurrentFlowName + ' from ' + clFunctionalBlockNames[nBlock1] + '.' + clSourcePorts[nPort] + ' to ' + clFunctionalBlockNames[nBlock2] + '.' + clTargetPorts[nPort] + ';' + '\r\n'
+                     cItemString = cItemString + '   item def ' + sCurrentFlowName + ';' + '\r\n'
+           
+    
+    ## Trace Functional Blocks to Functional Groups
+     if False: #This cannot be done in SysML notation; it needs to be done directly in the database, using the correct element IDs of elements to trace to
+         for nBlock in range(F.shape[0]):
+             sCurrentName = clFunctionalBlockNames[nBlock]
+             cItemString = cItemString + '   dependency from FunctionalSystem::' + sCurrentName + ' to UseCaseActivities::FunctionalGroups::' + sCurrentName + ';' + '\r\n'
+    
+      
+     cSysMLstring = cSysMLstring + '   }' + '\r\n' + cItemString 
+   
+     return  cSysMLstring
+
+
+
+def RunFas(clActivitiesAndObjectFlows, clFunctionalGroups):
+
+     cSysMLString=''
+    
+     ### Process Activities and Object Flows
+     clLinesToParse =  clActivitiesAndObjectFlows
+     clDomainObjects = []
+     clActivities = []
+     mSymbolicMatrixO = Matrix([])
+  
+     for nIndex in range(len(clLinesToParse)):
+         sLineToParse = clLinesToParse[nIndex]
+         clDomainObjects,clActivities,mSymbolicMatrixO = SymbolicUpdateMatrixWithFlow(clDomainObjects,clActivities,mSymbolicMatrixO, sLineToParse)
+     
+     
+     print('O = (symbolic ' + str(mSymbolicMatrixO.shape[0]) + 'x' + str(mSymbolicMatrixO.shape[1]) + ' matrix)')
+     print('')
+     pprint(mSymbolicMatrixO)
+     print('')
+     
+     M=mSymbolicMatrixO.shape[0]
+
+    
+     ### Process Functional Groupings
+     clLinesToParse =  clFunctionalGroups  
+     N = len(clLinesToParse)
+     mSymbolicMatrixG = Matrix([[0 for col in range(M)] for row in range(N)])
+
+     clGroupName = ['' for col in range(N)]
+     for n in range(N):
+         sLineToParse = clLinesToParse[n]
+         sGroupName, clGroup = parseGroupLine(sLineToParse)
+         clGroupName[n]=sGroupName
+         for m in range(M):
+             if GetIndexOfStringInCellArray(clGroup,clActivities[m]) > -1:
+                 mTemp = [[0 for col in range(M)] for row in range(N)]
+                 mTemp[n][m] = 1;
+                 mSymbolicMatrixG = mSymbolicMatrixG + Matrix(mTemp)
+          
+   
+     print('G = (symbolic ' + str(mSymbolicMatrixG.shape[0]) + 'x' + str(mSymbolicMatrixG.shape[1]) + ' matrix)')
+     print('')
+     pprint(mSymbolicMatrixG)
+     print('')    
+    
+     
+     ### Compute the functional architecture via FAS-as-a-formula
+     ### F = G*O*G.T;
+     mSymbolicMatrixF=mSymbolicMatrixG*mSymbolicMatrixO*mSymbolicMatrixG.T;
+     
+     print('---------------------------------')
+     print('Applying FAS-as-a-formula:')
+     print('')
+     # Explanation of "FAS-as-a-formula": https://github.com/GfSE/fas4sysmlv2/blob/main/doc/tech-docs/fas/FAS-as-a-formula-2022.odt"
+     GOG,T,F = symbols('GOG, T, F')
+     #This is a work-around to print the formula F=G*O*G**T in nice formatting:
+     pprint(Eq(F, GOG**T))
+     print('')
+     print('---------------------------------')
+     print('')  
+     
+     print('F = (symbolic ' + str(mSymbolicMatrixF.shape[0]) + 'x' + str(mSymbolicMatrixF.shape[1]) + ' matrix)')
+     print('')
+     pprint(mSymbolicMatrixF)
+     print('')    
+     
+     ### FAS method says that names of functional blocks are equal to names of functional groups
+     clFunctionalBlockNames = clGroupName
+     
+     ### Print the functional architecture
+     cSysMLString = RenderFunctionalArchitecture(mSymbolicMatrixF,clFunctionalBlockNames)
+    
+     return cSysMLString    
+  
+  
+def read_activities_and_functional_groups(cProjectID,cServerName):
      print(cProjectID.get())
      print(cServerName.get())
-     messagebox.showwarning("FAS Plugin","fas_transform is not yet implemented")
+     messagebox.showwarning("FAS Plugin","read_activities_and_functional_groups is not implemented. Using hard-coded data.")
+     ## BEGIN TEMP Hard-code some data until this function is implemented
+     ## When implementing the final version of the function, the data structure for the following two variables needs to be made more clean.
+     ## The structure is still based on the initial idea of reading input from hand-written cards via OCR
+     clActivitiesAndObjectFlows = ['GetMoney:money:MonitorPayment', 'MonitorPayment:clearance:ProvideMusicTrack', 'ProvideMusicTrack:music_track:PlayMusicTrack', 'PlayMusicTrack:audio_signal:ProduceSound']
+     clFunctionalGroups = ['MusicPlayer:PlayMusicTrack', 'Storage:ProvideMusicTrack', 'Accounting:MonitorPayment', 'IO_Customer:GetMoney:ProduceSound']
+     ## END TEMP Hard-code
+     return clActivitiesAndObjectFlows, clFunctionalGroups
+
+
+def write_functional_architecture(cProjectID,cServerName,cSysMLString):
+     bSuccess = False
+     print(cProjectID.get())
+     print(cServerName.get())
+     print(cSysMLString)
+     cErrorMsg = "write_functional_architecture is not implemented"
+     return bSuccess, cErrorMsg
+
+
+def fas_transform(cProjectID,cServerName):
+     clActivitiesAndObjectFlows, clFunctionalGroups = read_activities_and_functional_groups(cProjectID,cServerName)
+     cSysMLString = RunFas(clActivitiesAndObjectFlows, clFunctionalGroups)
+     bSuccess, cErrorMsg = write_functional_architecture(cProjectID,cServerName,cSysMLString)
+     if bSuccess == False:
+         messagebox.showerror("FAS Plugin","Writing to the repository failed with the following error message: " + cErrorMsg)
+     
+     messagebox.showwarning("FAS Plugin","fas_transform is missing functionality for tracing functional blocks to functional groups")
+
 
 def processProjectSelection(listWindow,theCombo,cProjectID):
      selectedProject = theCombo.get()
@@ -34,6 +362,7 @@ def processProjectSelection(listWindow,theCombo,cProjectID):
      posClosingParenthesis = selectedProject.find(')')
      cProjectID.set(selectedProject[(posOpeningParenthesis+1):posClosingParenthesis])
      listWindow.destroy()
+
     
 def selectproject(cProjectID, cServerName):
      tdata = []
@@ -59,6 +388,7 @@ def selectproject(cProjectID, cServerName):
          ttk.Button(frm, text="Cancel", command=listWindow.destroy).grid(column=2, row=2)
 
          listWindow.mainloop()   
+
          
 def run_fas4sysml(cProjectUUID):
      mainWindow = Tk()
@@ -82,11 +412,15 @@ def run_fas4sysml(cProjectUUID):
      ttk.Button(frm, text="Quit", command=mainWindow.destroy).grid(column=2, row=5)
      mainWindow.mainloop()
 
+
 def main():
+     init_printing(use_unicode=False)
+
      cProjectID = ''
      if len (sys.argv)>1:
          cProjectID=sys.argv[1]
      run_fas4sysml(cProjectID)
+
 
 if __name__ == "__main__":
      main()
