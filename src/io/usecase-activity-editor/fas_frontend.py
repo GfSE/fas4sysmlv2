@@ -30,7 +30,7 @@ def RenderFunctionalGroupsInSysML(clGroupName,clActivities, mMatrixG):
          cSysMLString= cSysMLString + '         package ' + clGroupName[n] + '{' + cLF
          for m in range (M):
              if mMatrixG[n][m] > 0:
-                 cSysMLString = cSysMLString + '            import ' + clActivities[m] + ';' + cLF
+                 cSysMLString = cSysMLString + '            import OverallUseCase::' + clActivities[m] + ';' + cLF
          
          cSysMLString= cSysMLString + '         }' + cLF
 
@@ -65,6 +65,7 @@ def Readname(FID,iLineIndex):
          sName = sLine.strip()
  
      return sName, iLineIndexNew        
+
 def  My_GrowCellArray(clOld, newEntry):
      clNew = ['' for col in range((len(clOld)+1))]
      for nCopy in range(len(clOld)):
@@ -241,7 +242,7 @@ def RenderActivityDefinitionsInSysML(O,clActivities):
                  iNumOccurences = sFlowString.count('+')
                  for nParam in range(iNumOccurences  +1):
                      sCurrentFlowName = SubFlow(sFlowString,nParam)
-                     sInput = sCurrentFlowName
+                     sInput = sCurrentFlowName.lower()
                      cSysMLString=cSysMLString + '         in ' + sInput + ';' + cLF
               
           
@@ -253,7 +254,7 @@ def RenderActivityDefinitionsInSysML(O,clActivities):
                  iNumOccurences = sFlowString.count('+')
                  for nParam in range(iNumOccurences + 1):
                      sCurrentFlowName = SubFlow(sFlowString,nParam)
-                     sOutput = sCurrentFlowName 
+                     sOutput = sCurrentFlowName.lower() 
                      cSysMLString = cSysMLString + '         out ' + sOutput + ';' + cLF
          cSysMLString = cSysMLString + '      }' + cLF
     
@@ -336,28 +337,37 @@ def UpdateMatrixWithFlow(clDomainObjects,clActivities,mMatrixO, sLineToParse):
      return clDomainObjects,clActivities,mMatrixO 
 
 
-def RenderFlowsInSysML(O,clActivities):
+def RenderFlowsAndItemDefsInSysML(O,clActivities):
      cSysMLString=''
+     cItemString='' 
      cLF = '\r\n'
+     clActionNames = ['' for col in range(len(clActivities))]
+
      
      cSysMLString = cSysMLString + '      action def OverallUseCase {' + cLF
     
      for nText in range(len(clActivities)):   
-         cSysMLString = cSysMLString + '         action a' + str(nText) + ':' + clActivities[nText] + ';' + cLF
+         #cActionName = 'a' + str(nText)
+         cActionName = clActivities[nText].lower()
+         clActionNames[nText]=cActionName
+         cSysMLString = cSysMLString + '         action ' + cActionName + ':' + clActivities[nText] + ';' + cLF
     
      for n1 in range(len(clActivities)): 
          for n2 in range(len(clActivities)):
              if O[n1][n2] != '':
                  sFlowString=(O[n1][n2]).strip()
                  for nParam in range(sFlowString.count('+')+1):
-                     sInput = SubFlow(sFlowString,nParam)
-                     sResult = sInput
-                     cSysMLString = cSysMLString + '         flow from a' + str(n1) + '.' + sResult + ' to a'  + str(n2) + '.' + sInput + ';' + cLF
-               
+                     sCurrentFlowName = SubFlow(sFlowString,nParam)
+                     sResult = sCurrentFlowName.lower() 
+                     sInput = sCurrentFlowName.lower() 
+
+                     cSysMLString = cSysMLString + '         flow of ' + sCurrentFlowName + ' from ' + clActionNames[n1] + '.' + sResult + ' to '  + clActionNames[n2] + '.' + sInput + ';' + cLF
+                     cItemString = cItemString + '   item def ' + sCurrentFlowName + ';' + '\r\n'
+              
 
      cSysMLString = cSysMLString + '      }' + cLF
     
-     return cSysMLString
+     return cSysMLString, cItemString, clActionNames
 
 
 def ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups): 
@@ -390,12 +400,12 @@ def ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups):
           
         
      
-      
-     cSysMLString=cSysMLString + '   package UseCaseActivities{' + cLF
+     sFlows, sItemDefs, clActionNames = RenderFlowsAndItemDefsInSysML(mMatrixO, clActivities)
+     cSysMLString=cSysMLString + sItemDefs + cLF  + '   package UseCaseActivities{' + cLF
      cSysMLString = cSysMLString + RenderActivityDefinitionsInSysML(mMatrixO, clActivities)
-     cSysMLString = cSysMLString + RenderFlowsInSysML(mMatrixO, clActivities)
+     cSysMLString = cSysMLString + sFlows
      cSysMLString = cSysMLString + '      package FunctionalGroups{' + cLF
-     cSysMLString = cSysMLString + RenderFunctionalGroupsInSysML(clGroupName ,clActivities, mMatrixG)
+     cSysMLString = cSysMLString + RenderFunctionalGroupsInSysML(clGroupName ,clActionNames, mMatrixG)
      cSysMLString=cSysMLString + '      }' + cLF
      cSysMLString=cSysMLString + '   }' + cLF
      return cSysMLString 

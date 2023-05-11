@@ -63,7 +63,7 @@ def SymbolicUpdateMatrixWithFlow(clDomainObjects,clActivities,mMatrixO, sLineToP
  
 def RenderFunctionalArchitecture(F,clFunctionalBlockNames):
   
-     cSysMLstring = '   part FunctionalSystem{' + '\r\n'
+     cSysMLstring = '   part functionalSystem{' + '\r\n'
 
     
      clSourcePortNames = [['' for col in range(F.shape[0])] for row in range(F.shape[0])]
@@ -115,13 +115,12 @@ def RenderFunctionalArchitecture(F,clFunctionalBlockNames):
                  for nPort in range(len(clSourcePorts)):
                      sCurrentFlowName = SubFlow(sFlowName,nPort)
                      cSysMLstring = cSysMLstring + '      flow of ' + sCurrentFlowName + ' from ' + clFunctionalBlockNames[nBlock1] + '.' + clSourcePorts[nPort] + ' to ' + clFunctionalBlockNames[nBlock2] + '.' + clTargetPorts[nPort] + ';' + '\r\n'
-                     cItemString = cItemString + '   item def ' + sCurrentFlowName + ';' + '\r\n'
            
     
     ## Trace Functional Blocks to Functional Groups
      for nBlock in range(F.shape[0]):
          sCurrentName = clFunctionalBlockNames[nBlock]
-         cItemString = cItemString + '   dependency from FunctionalSystem::' + sCurrentName + ' to UseCaseActivities::FunctionalGroups::' + sCurrentName + ';' + '\r\n'
+         cItemString = cItemString + '   dependency from functionalSystem::' + sCurrentName + ' to UseCaseActivities::FunctionalGroups::' + sCurrentName + ';' + '\r\n'
     
       
      cSysMLstring = cSysMLstring + '   }' + '\r\n' + cItemString 
