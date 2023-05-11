@@ -22,7 +22,7 @@
 #   2022, pp. 127-131
 #
 #   English Translation of the above paper: 
-#   https://github.com/GfSE/fas4sysmlv2/blob/main/doc/tech-docs/fas/FAS-as-a-formula-2022.odt	
+#   https://github.com/GfSE/fas4sysmlv2/blob/main/doc/tech-docs/fas/FAS-as-a-formula-2022.odt             
 #
 
 import tkinter as tk
@@ -141,7 +141,7 @@ def GetIndexOfStringInCellArray(clIn,sContent):
 
 def UpdateUniqueContentCellArray (clIn, sContent):
      iIndex = GetIndexOfStringInCellArray(clIn,sContent)
- 
+
      if iIndex == -1:
          clOut = ['' for col in range((len(clIn)+1))]
          for nFill in range(len(clIn)):
@@ -149,7 +149,7 @@ def UpdateUniqueContentCellArray (clIn, sContent):
          clOut[len(clOut)-1]=sContent
      else:
          clOut = clIn
- 
+
      return clOut
 
 #### END TEMP
@@ -325,18 +325,133 @@ def run_fas(clActivitiesAndObjectFlows, clFunctionalGroups):
     
      return cSysMLString, cFormulaOutput    
   
+
+def format_servername(cName):
+     if len(cName)>0:
+         if cName[len(cName)-1] == '/':
+            cName = cName[0:(len(cName)-1)]
+         
+         if cName.find('http') == -1:
+            cName = 'http://' + cName
+     
+     return cName
   
-def read_activities_and_functional_groups(cProjectID,cServerName):
-     print(cProjectID.get())
-     print(cServerName.get())
-     messagebox.showwarning("FAS Plugin","read_activities_and_functional_groups is not implemented. Using hard-coded data.")
+def read_activities_and_functional_groups(strProjectID,strServerName):
+     bSuccess = True
+     cErrorMessage = ''
+     cProjectID=strProjectID.get()
+     cServerName=format_servername(strServerName.get())
+     print(cProjectID)
+     print(cServerName)
+    
+     try:
+         response = requests.get(cServerName + "/projects/" + cProjectID)
+     except  requests.exceptions.ConnectionError:
+         bSuccess = false
+         cErrorMessage = 'Error: Could not connect to server'
+         print(cErrorMessage)
+
+         
+     if bSuccess and str(response)!='<Response [200]>':
+         bSuccess = false
+         cErrorMessage = 'Error: Could not find project on stated host'
+         print('Error: Could not find project on stated host')
+
+     
+     if bSuccess:
+         data = response.json()
+         oDefaultBranch = data.get('defaultBranch')
+         sDefaultBranchId=oDefaultBranch.get('@id')
+     
+         if str(type(oDefaultBranch)) == "<class 'NoneType'>":
+             bSuccess = False
+             cErrorMessage = 'Error: No default branch.'
+             print (cErrorMessage)
+     
+     if bSuccess:
+         response = requests.get(cServerName + "/projects/" + cProjectID + "/branches/" + sDefaultBranchId)
+         data = response.json()
+         oHeadCommit = data.get('head')
+         if str(type(oHeadCommit)) == "<class 'NoneType'>":
+             bSuccess = False
+             cErrorMessage = 'Error: No commit found.'
+             print (cErrorMessage)
+         else:
+             sHeadCommit = oHeadCommit.get('@id')
+
+     clActions=[]
+     clActionIds=[]
+     clFlowIds=[]
+     clFlowTargets=[]
+     clFlowItems=[]
+     clItemFeatureIds=[]
+     clItemFeatureTypes=[]
+     clItemDefs=[]
+     clItemDefIds=[]
+     if bSuccess:
+         response = requests.get(cServerName + "/projects/" + cProjectID + "/commits/"+sHeadCommit+"/elements")
+         data = response.json()
+     
+         for response in data:
+             #if response.get("@type") == "ItemFlowEnd" or response.get("@type") == "ItemDefinition" or response.get("@type") == "FeatureMembership" or response.get("@type") == "ActionUsage" or response.get("@type") == "FlowConnectionUsage":
+             #if response.get('@id')=='234bc46f-9cd3-4409-8c62-e33e5e96217b':
+             #    print(response.get('name'))
+             #    print(response)
+             if response.get("@type") == "ActionUsage":
+                 clActions.append(response.get("name"))
+                 clActionIds.append(response.get("elementId"))
+             if response.get("@type") == "ItemDefinition":
+                 #print('ItemDefinition')
+                 #print(response)                 
+                 clItemDefs.append(response.get("name"))
+                 clItemDefIds.append(response.get("elementId"))
+             if response.get("@type") == "FlowConnectionUsage":
+                 clFlowIds.append(response.get("elementId"))
+                 clFlowTargets.append(response.get("relatedElement"))
+                 clFlowItems.append(response.get("itemFeature"))
+             if response.get("@type") == "ItemFeature":
+                 #print('ItemFeature')
+                 #print(response)
+                 clItemFeatureIds.append(response.get("elementId"))
+                 clItemFeatureTypes.append(response.get("type"))
+         
+         #print(data)
+         
+         clActivitiesAndObjectFlows = []           
+         
+         
+         for iFlow in range(len(clFlowIds)):
+             vFlowTarget = clFlowTargets[iFlow]
+            
+             cFlowEnd1=vFlowTarget[0].get('@id')
+             cFlowEnd2=vFlowTarget[1].get('@id')
+             if clActionIds.count(cFlowEnd1) > 0:
+                 cFlowEndActionName=clActions[clActionIds.index(cFlowEnd1)]
+                 cFlowEndOtherId=vFlowTarget[1].get('@id')
+             else:
+                 cFlowEndActionName=clActions[clActionIds.index(cFlowEnd2)]
+                 cFlowEndOtherId=vFlowTarget[0].get('@id')
+                 
+             print(cFlowEndActionName + ' - ' + cFlowEndOtherId)
+             print(clFlowItems[iFlow])
+             print('ItemFeature: ' + clFlowItems[iFlow].get('@id'))
+             if clItemFeatureIds.count(clFlowItems[iFlow].get('@id'))>0:
+                 cItemFeatureTypeId=clItemFeatureTypes[clItemFeatureIds.index(clFlowItems[iFlow].get('@id'))]
+                 print (cItemFeatureTypeId)
+                 if clItemDefIds.count(cItemFeatureTypeId[0].get('@id'))>0:
+                     cItemDefinitionName = clItemDefs[clItemDefIds.index(cItemFeatureTypeId[0].get('@id'))]
+                 else:
+                     cItemDefinitionName = ''
+                 print('ItemDef name: ' + cItemDefinitionName)
+                 
+             print('-----------')
      ## BEGIN TEMP Hard-code some data until this function is implemented
      ## When implementing the final version of the function, the data structure for the following two variables needs to be made more clean.
      ## The structure is still based on the initial idea of reading input from hand-written cards via OCR
-     clActivitiesAndObjectFlows = ['GetMoney:money:MonitorPayment', 'MonitorPayment:clearance:ProvideMusicTrack', 'ProvideMusicTrack:music_track:PlayMusicTrack', 'PlayMusicTrack:audio_signal:ProduceSound']
+     #clActivitiesAndObjectFlows = ['GetMoney:money:MonitorPayment', 'MonitorPayment:clearance:ProvideMusicTrack', 'ProvideMusicTrack:music_track:PlayMusicTrack', 'PlayMusicTrack:audio_signal:ProduceSound']
      clFunctionalGroups = ['MusicPlayer:PlayMusicTrack', 'Storage:ProvideMusicTrack', 'Accounting:MonitorPayment', 'IO_Customer:GetMoney:ProduceSound']
      ## END TEMP Hard-code
-     return clActivitiesAndObjectFlows, clFunctionalGroups
+     return bSuccess, cErrorMessage, clActivitiesAndObjectFlows, clFunctionalGroups
 
 
 def write_functional_architecture(cProjectID,cServerName,cSysMLString):
@@ -349,6 +464,7 @@ def write_functional_architecture(cProjectID,cServerName,cSysMLString):
 
 def render_transform_formula(cFormulaOutput):
      renderingWindow= Tk()
+     renderingWindow.title("FAS Plugin")
      #renderingWindow.state('zoomed')
      ttk.Label(renderingWindow, text="FAS-as-a-formula").grid(column=0, row=0)
      scr = scrolledtext.ScrolledText(renderingWindow, width = 200, height = 40, font = ("Courier", 9))
@@ -359,12 +475,15 @@ def render_transform_formula(cFormulaOutput):
      renderingWindow.mainloop()
 
 def fas_transform(cProjectID,cServerName):
-     clActivitiesAndObjectFlows, clFunctionalGroups = read_activities_and_functional_groups(cProjectID,cServerName)
-     cSysMLString, cFormulaOutput = run_fas(clActivitiesAndObjectFlows, clFunctionalGroups)
-     render_transform_formula(cFormulaOutput)
-     bSuccess, cErrorMsg = write_functional_architecture(cProjectID,cServerName,cSysMLString)
+     bSuccess, cErrorMsg, clActivitiesAndObjectFlows, clFunctionalGroups = read_activities_and_functional_groups(cProjectID,cServerName)
      if bSuccess == False:
-         messagebox.showerror("FAS Plugin","Writing to the repository failed with the following error message: " + cErrorMsg)
+         messagebox.showerror("FAS Plugin","Reading from the repository failed with the following error message: " + cErrorMsg)
+     else:
+         cSysMLString, cFormulaOutput = run_fas(clActivitiesAndObjectFlows, clFunctionalGroups)
+         render_transform_formula(cFormulaOutput)
+         bSuccess, cErrorMsg = write_functional_architecture(cProjectID,cServerName,cSysMLString)
+         if bSuccess == False:
+             messagebox.showerror("FAS Plugin","Writing to the repository failed with the following error message: " + cErrorMsg)
      
      messagebox.showwarning("FAS Plugin","fas_transform is missing functionality for tracing functional blocks to functional groups")
 
@@ -382,7 +501,7 @@ def selectproject(cProjectID, cServerName):
      cProjectID.set("")
      cProjectID.set("")
      try:
-         response = requests.get(cServerName.get() + "/projects")
+         response = requests.get(format_servername(cServerName.get()) + "/projects")
          data = response.json()
          for response in data:
              tdata.append(response.get("name") + " (" + response.get("@id") + ")" )
