@@ -182,14 +182,14 @@ def SymbolicUpdateMatrixWithFlow(clDomainObjects,clActivities,mMatrixO, sLineToP
  
 def RenderFunctionalArchitecture(F,clFunctionalBlockNames):
   
-     cSysMLstring = '   part FunctionalSystem{' + '\r\n'
+     cSysMLstring = '   part FunctionalSystem{' + '\n'
 
     
      clSourcePortNames = [['' for col in range(F.shape[0])] for row in range(F.shape[0])]
      clTargetPortNames = [['' for col in range(F.shape[0])] for row in range(F.shape[0])]
      for nBlock in range(F.shape[0]):
          cCurrentBlock = clFunctionalBlockNames[nBlock]
-         cSysMLstring = cSysMLstring + '      part ' + cCurrentBlock + '{' + '\r\n'
+         cSysMLstring = cSysMLstring + '      part ' + cCurrentBlock + '{' + '\n'
          iPortNo = 0
          for nPortOut in range(F.shape[0]):
              if F[nBlock,nPortOut]!= 0: 
@@ -200,7 +200,7 @@ def RenderFunctionalArchitecture(F,clFunctionalBlockNames):
                      for nPort in range(iNumPorts):
                          iPortNo = iPortNo  + 1
                          cPortName = 'p' + str(iPortNo)
-                         cSysMLstring = cSysMLstring + '         port ' + cPortName + ';' + '\r\n'
+                         cSysMLstring = cSysMLstring + '         port ' + cPortName + ';' + '\n'
                          clPortCell[nPort]=cPortName
             
                          clSourcePortNames[nBlock][nPortOut]=clPortCell
@@ -214,11 +214,11 @@ def RenderFunctionalArchitecture(F,clFunctionalBlockNames):
                      for nPort in range(iNumPorts):
                          iPortNo = iPortNo + 1
                          cPortName = 'p' + str(iPortNo)
-                         cSysMLstring = cSysMLstring + '         port ' + cPortName + ';' + '\r\n'
+                         cSysMLstring = cSysMLstring + '         port ' + cPortName + ';' + '\n'
                          clPortCell[nPort]=cPortName
                
                          clTargetPortNames[nPortIn][nBlock]=clPortCell
-         cSysMLstring = cSysMLstring + '      }' + '\r\n'
+         cSysMLstring = cSysMLstring + '      }' + '\n'
    
     
     ## Connect the blocks with flows
@@ -233,18 +233,18 @@ def RenderFunctionalArchitecture(F,clFunctionalBlockNames):
                  clTargetPorts = clTargetPortNames[nBlock1][nBlock2]
                  for nPort in range(len(clSourcePorts)):
                      sCurrentFlowName = SubFlow(sFlowName,nPort)
-                     cSysMLstring = cSysMLstring + '      flow of ' + sCurrentFlowName + ' from ' + clFunctionalBlockNames[nBlock1] + '.' + clSourcePorts[nPort] + ' to ' + clFunctionalBlockNames[nBlock2] + '.' + clTargetPorts[nPort] + ';' + '\r\n'
-                     cItemString = cItemString + '   item def ' + sCurrentFlowName + ';' + '\r\n'
+                     cSysMLstring = cSysMLstring + '      flow of ' + sCurrentFlowName + ' from ' + clFunctionalBlockNames[nBlock1] + '.' + clSourcePorts[nPort] + ' to ' + clFunctionalBlockNames[nBlock2] + '.' + clTargetPorts[nPort] + ';' + '\n'
+                     cItemString = cItemString + '   item def ' + sCurrentFlowName + ';' + '\n'
            
     
     ## Trace Functional Blocks to Functional Groups
      if False: #This cannot be done in SysML notation; it needs to be done directly in the database, using the correct element IDs of elements to trace to
          for nBlock in range(F.shape[0]):
              sCurrentName = clFunctionalBlockNames[nBlock]
-             cItemString = cItemString + '   dependency from FunctionalSystem::' + sCurrentName + ' to UseCaseActivities::FunctionalGroups::' + sCurrentName + ';' + '\r\n'
+             cItemString = cItemString + '   dependency from FunctionalSystem::' + sCurrentName + ' to UseCaseActivities::FunctionalGroups::' + sCurrentName + ';' + '\n'
     
       
-     cSysMLstring = cSysMLstring + '   }' + '\r\n' + cItemString 
+     cSysMLstring = cSysMLstring + '   }' + '\n' + cItemString 
    
      return  cSysMLstring
 
@@ -267,9 +267,9 @@ def run_fas(clActivitiesAndObjectFlows, clFunctionalGroups):
      
      
      cFormulaOutput = cFormulaOutput  + 'O = (symbolic ' + str(mSymbolicMatrixO.shape[0]) + 'x' + str(mSymbolicMatrixO.shape[1]) + ' matrix)'
-     cFormulaOutput = cFormulaOutput  + '\r\n' 
-     cFormulaOutput = cFormulaOutput  + '\r\n' +pretty(mSymbolicMatrixO)
-     cFormulaOutput = cFormulaOutput  + '\r\n' 
+     cFormulaOutput = cFormulaOutput  + '\n' 
+     cFormulaOutput = cFormulaOutput  + '\n' +pretty(mSymbolicMatrixO)
+     cFormulaOutput = cFormulaOutput  + '\n' 
      
      M=mSymbolicMatrixO.shape[0]
 
@@ -291,31 +291,31 @@ def run_fas(clActivitiesAndObjectFlows, clFunctionalGroups):
                  mSymbolicMatrixG = mSymbolicMatrixG + Matrix(mTemp)
           
    
-     cFormulaOutput = cFormulaOutput  + '\r\n' + 'G = (symbolic ' + str(mSymbolicMatrixG.shape[0]) + 'x' + str(mSymbolicMatrixG.shape[1]) + ' matrix)'
-     cFormulaOutput = cFormulaOutput  + '\r\n' 
-     cFormulaOutput = cFormulaOutput  + '\r\n' +pretty(mSymbolicMatrixG)
-     cFormulaOutput = cFormulaOutput  + '\r\n'     
+     cFormulaOutput = cFormulaOutput  + '\n' + 'G = (symbolic ' + str(mSymbolicMatrixG.shape[0]) + 'x' + str(mSymbolicMatrixG.shape[1]) + ' matrix)'
+     cFormulaOutput = cFormulaOutput  + '\n' 
+     cFormulaOutput = cFormulaOutput  + '\n' +pretty(mSymbolicMatrixG)
+     cFormulaOutput = cFormulaOutput  + '\n'     
     
      
      ### Compute the functional architecture via FAS-as-a-formula
      ### F = G*O*G.T;
      mSymbolicMatrixF=mSymbolicMatrixG*mSymbolicMatrixO*mSymbolicMatrixG.T;
      
-     cFormulaOutput = cFormulaOutput  + '\r\n' + '---------------------------------'
-     cFormulaOutput = cFormulaOutput  + '\r\n' 'Applying FAS-as-a-formula:'
-     cFormulaOutput = cFormulaOutput  + '\r\n' ''
+     cFormulaOutput = cFormulaOutput  + '\n' + '---------------------------------'
+     cFormulaOutput = cFormulaOutput  + '\n' 'Applying FAS-as-a-formula:'
+     cFormulaOutput = cFormulaOutput  + '\n' ''
      # Explanation of "FAS-as-a-formula": https://github.com/GfSE/fas4sysmlv2/blob/main/doc/tech-docs/fas/FAS-as-a-formula-2022.odt"
      GOG,T,F = symbols('GOG, T, F')
      #This is a work-around to print the formula F=G*O*G**T in nice formatting:
-     cFormulaOutput = cFormulaOutput  + '\r\n' + pretty(Eq(F, GOG**T))
-     cFormulaOutput = cFormulaOutput  + '\r\n' 
-     cFormulaOutput = cFormulaOutput  + '\r\n'  + '---------------------------------'
-     cFormulaOutput = cFormulaOutput  + '\r\n' 
+     cFormulaOutput = cFormulaOutput  + '\n' + pretty(Eq(F, GOG**T))
+     cFormulaOutput = cFormulaOutput  + '\n' 
+     cFormulaOutput = cFormulaOutput  + '\n'  + '---------------------------------'
+     cFormulaOutput = cFormulaOutput  + '\n' 
      
-     cFormulaOutput = cFormulaOutput  + '\r\n' + 'F = (symbolic ' + str(mSymbolicMatrixF.shape[0]) + 'x' + str(mSymbolicMatrixF.shape[1]) + ' matrix)'
-     cFormulaOutput = cFormulaOutput  + '\r\n' 
-     cFormulaOutput = cFormulaOutput  + '\r\n' +pretty(mSymbolicMatrixF)
-     cFormulaOutput = cFormulaOutput  + '\r\n'     
+     cFormulaOutput = cFormulaOutput  + '\n' + 'F = (symbolic ' + str(mSymbolicMatrixF.shape[0]) + 'x' + str(mSymbolicMatrixF.shape[1]) + ' matrix)'
+     cFormulaOutput = cFormulaOutput  + '\n' 
+     cFormulaOutput = cFormulaOutput  + '\n' +pretty(mSymbolicMatrixF)
+     cFormulaOutput = cFormulaOutput  + '\n'     
      
      ### FAS method says that names of functional blocks are equal to names of functional groups
      clFunctionalBlockNames = clGroupName
@@ -381,13 +381,22 @@ def read_activities_and_functional_groups(strProjectID,strServerName):
 
      clActions=[]
      clActionIds=[]
+     clEndFeatureMembershipIds=[]
+     clEndFeatureMembershipTargets=[]
+     clFeatureMembershipIds=[]
+     clFeatureMembershipTargets=[]
      clFlowIds=[]
      clFlowTargets=[]
      clFlowItems=[]
+     clFlowOwnedRelationships = []
+     clItemsFlowEndIds=[]
+     clItemFlowEndOwnedRelationships = []
      clItemFeatureIds=[]
      clItemFeatureTypes=[]
      clItemDefs=[]
      clItemDefIds=[]
+     clReferenceSubSettingIds=[]
+     clReferenceSubSettingReferencedFeatures=[]
      if bSuccess:
          response = requests.get(cServerName + "/projects/" + cProjectID + "/commits/"+sHeadCommit+"/elements")
          data = response.json()
@@ -397,6 +406,19 @@ def read_activities_and_functional_groups(strProjectID,strServerName):
              #if response.get('@id')=='234bc46f-9cd3-4409-8c62-e33e5e96217b':
              #    print(response.get('name'))
              #    print(response)
+             
+             if response.get("@type") == "ReferenceSubsetting": #As ownedRelationship of target of FeatureEndMembership
+                 clReferenceSubSettingReferencedFeatures.append(response.get("referencedFeature"))
+                 clReferenceSubSettingIds.append(response.get("elementId"))
+             if response.get("@type") == "EndFeatureMembership":
+                 clEndFeatureMembershipTargets.append(response.get("target"))
+                 clEndFeatureMembershipIds.append(response.get("elementId"))
+             if response.get("@type") == "FeatureMembership":
+                 clFeatureMembershipTargets.append(response.get("target"))
+                 clFeatureMembershipIds.append(response.get("elementId"))
+             if response.get("@type") == "ItemFlowEnd":  #As target of EndFeatureMembership
+                 clItemFlowEndOwnedRelationships.append(response.get("ownedRelationship"))
+                 clItemsFlowEndIds.append(response.get("elementId"))
              if response.get("@type") == "ActionUsage":
                  clActions.append(response.get("name"))
                  clActionIds.append(response.get("elementId"))
@@ -409,6 +431,9 @@ def read_activities_and_functional_groups(strProjectID,strServerName):
                  clFlowIds.append(response.get("elementId"))
                  clFlowTargets.append(response.get("relatedElement"))
                  clFlowItems.append(response.get("itemFeature"))
+                 clFlowOwnedRelationships.append(response.get("ownedRelationship"))
+                 #print('FlowConnectionUsage')
+                 #print(response)
              if response.get("@type") == "ItemFeature":
                  #print('ItemFeature')
                  #print(response)
@@ -421,35 +446,60 @@ def read_activities_and_functional_groups(strProjectID,strServerName):
          
          
          for iFlow in range(len(clFlowIds)):
-             vFlowTarget = clFlowTargets[iFlow]
+             vFlowOwnedRelatoinship = clFlowOwnedRelationships[iFlow]
             
-             cFlowEnd1=vFlowTarget[0].get('@id')
-             cFlowEnd2=vFlowTarget[1].get('@id')
-             if clActionIds.count(cFlowEnd1) > 0:
-                 cFlowEndActionName=clActions[clActionIds.index(cFlowEnd1)]
-                 cFlowEndOtherId=vFlowTarget[1].get('@id')
-             else:
-                 cFlowEndActionName=clActions[clActionIds.index(cFlowEnd2)]
-                 cFlowEndOtherId=vFlowTarget[0].get('@id')
+             cFlowOwnedRelationship1=vFlowOwnedRelatoinship[0].get('@id')
+             cFlowOwnedRelationship2=vFlowOwnedRelatoinship[1].get('@id')
+             cFlowOwnedRelationship3=vFlowOwnedRelatoinship[2].get('@id')
+             clTargetIds = []
+             cFeatureMembershipTarget='undefined'
+             if clEndFeatureMembershipIds.count(cFlowOwnedRelationship1) > 0: 
+                 clTargetIds.append(clEndFeatureMembershipTargets[clEndFeatureMembershipIds.index(cFlowOwnedRelationship1)][0].get('@id'))
+             if clEndFeatureMembershipIds.count(cFlowOwnedRelationship2) > 0:
+                 clTargetIds.append(clEndFeatureMembershipTargets[clEndFeatureMembershipIds.index(cFlowOwnedRelationship2)][0].get('@id'))
+             if clEndFeatureMembershipIds.count(cFlowOwnedRelationship3) > 0:
+                 clTargetIds.append(clEndFeatureMembershipTargets[clEndFeatureMembershipIds.index(cFlowOwnedRelationship3)][0].get('@id'))
                  
-             print(cFlowEndActionName + ' - ' + cFlowEndOtherId)
-             print(clFlowItems[iFlow])
-             print('ItemFeature: ' + clFlowItems[iFlow].get('@id'))
-             if clItemFeatureIds.count(clFlowItems[iFlow].get('@id'))>0:
-                 cItemFeatureTypeId=clItemFeatureTypes[clItemFeatureIds.index(clFlowItems[iFlow].get('@id'))]
-                 print (cItemFeatureTypeId)
+             if clFeatureMembershipIds.count(cFlowOwnedRelationship1) > 0: 
+                 cFeatureMembershipTarget=clFeatureMembershipTargets[clFeatureMembershipIds.index(cFlowOwnedRelationship1)][0].get('@id')
+             if clFeatureMembershipIds.count(cFlowOwnedRelationship2) > 0:
+                 cFeatureMembershipTarget=clFeatureMembershipTargets[clFeatureMembershipIds.index(cFlowOwnedRelationship2)][0].get('@id')
+             if clFeatureMembershipIds.count(cFlowOwnedRelationship3) > 0:
+                 cFeatureMembershipTarget=clFeatureMembershipTargets[clFeatureMembershipIds.index(cFlowOwnedRelationship3)][0].get('@id')
+             #print('Target: ' + cFeatureMembershipTarget)
+
+             #print(clTargetIds)
+             #print('   --')
+             
+             clActionPair=[]
+             for iFlowPartner in range (len(clTargetIds)):
+                 cTargetId = clTargetIds[iFlowPartner]
+                 if  clItemsFlowEndIds.count(cTargetId) > 0:
+                     cOwnedRelationship=clItemFlowEndOwnedRelationships[ clItemsFlowEndIds.index(cTargetId)][0].get('@id')
+                     if clReferenceSubSettingIds.count(cOwnedRelationship) > 0:
+                         cReferencedFeature = clReferenceSubSettingReferencedFeatures[clReferenceSubSettingIds.index(cOwnedRelationship)].get('@id')
+                         if clActionIds.count(cReferencedFeature) > 0:
+                             cAction = clActions[clActionIds.index(cReferencedFeature)]
+                             clActionPair.append(cAction)
+                             #print(cAction)
+                             
+             if clItemFeatureIds.count(cFeatureMembershipTarget)>0:
+                 cItemFeatureTypeId=clItemFeatureTypes[clItemFeatureIds.index(cFeatureMembershipTarget)]
+                 #print (cItemFeatureTypeId)
                  if clItemDefIds.count(cItemFeatureTypeId[0].get('@id'))>0:
                      cItemDefinitionName = clItemDefs[clItemDefIds.index(cItemFeatureTypeId[0].get('@id'))]
                  else:
                      cItemDefinitionName = ''
-                 print('ItemDef name: ' + cItemDefinitionName)
-                 
-             print('-----------')
+                 #print('ItemDef name: ' + cItemDefinitionName)
+             if len(clActionPair) == 2:
+                clActivitiesAndObjectFlows.append(clActionPair[0] + ':' + cItemDefinitionName + ':' + clActionPair[1])
+                print(clActivitiesAndObjectFlows)
+             
      ## BEGIN TEMP Hard-code some data until this function is implemented
      ## When implementing the final version of the function, the data structure for the following two variables needs to be made more clean.
      ## The structure is still based on the initial idea of reading input from hand-written cards via OCR
      #clActivitiesAndObjectFlows = ['GetMoney:money:MonitorPayment', 'MonitorPayment:clearance:ProvideMusicTrack', 'ProvideMusicTrack:music_track:PlayMusicTrack', 'PlayMusicTrack:audio_signal:ProduceSound']
-     clFunctionalGroups = ['MusicPlayer:PlayMusicTrack', 'Storage:ProvideMusicTrack', 'Accounting:MonitorPayment', 'IO_Customer:GetMoney:ProduceSound']
+     clFunctionalGroups = ['musicPlayer:playmusictrack', 'storage:providemusiczrack', 'accounting:monitorpayment', 'ioCustomer:getmoney:producesound']
      ## END TEMP Hard-code
      return bSuccess, cErrorMessage, clActivitiesAndObjectFlows, clFunctionalGroups
 
