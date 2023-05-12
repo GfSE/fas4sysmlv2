@@ -184,7 +184,7 @@ def SymbolicUpdateMatrixWithFlow(clDomainObjects,clActivities,mMatrixO, sLineToP
  
 def RenderFunctionalArchitecture(F,clFunctionalBlockNames):
   
-     cSysMLstring = '   part FunctionalSystem{' + '\n'
+     cSysMLstring = '   part functionalSystem{' + '\n'
 
     
      clSourcePortNames = [['' for col in range(F.shape[0])] for row in range(F.shape[0])]
