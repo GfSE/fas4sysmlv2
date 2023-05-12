@@ -337,12 +337,16 @@ def format_servername(cName):
      return cName
   
 def read_activities_and_functional_groups(strProjectID,strServerName):
+
+     clActivitiesAndObjectFlows = []           
+     clFunctionalGroups = []
+
      bSuccess = True
      cErrorMessage = ''
      cProjectID=strProjectID.get()
      cServerName=format_servername(strServerName.get())
-     print(cProjectID)
-     print(cServerName)
+     
+     print('Reading Use Case Activities and Functional Groups from project ' + cProjectID + ' on server ' + cServerName + ' ...')
     
      try:
          response = requests.get(cServerName + "/projects/" + cProjectID)
@@ -384,6 +388,7 @@ def read_activities_and_functional_groups(strProjectID,strServerName):
      clEndFeatureMembershipIds=[]
      clEndFeatureMembershipTargets=[]
      clFeatureMembershipIds=[]
+     clFeatureMembershipOwnedRelatedElements = []
      clFeatureMembershipTargets=[]
      clFlowIds=[]
      clFlowTargets=[]
@@ -395,6 +400,9 @@ def read_activities_and_functional_groups(strProjectID,strServerName):
      clItemFeatureTypes=[]
      clItemDefs=[]
      clItemDefIds=[]
+     clPackageIds=[]
+     clPackageNames=[]
+     clPackageImportedMemberships=[]
      clReferenceSubSettingIds=[]
      clReferenceSubSettingReferencedFeatures=[]
      if bSuccess:
@@ -402,10 +410,7 @@ def read_activities_and_functional_groups(strProjectID,strServerName):
          data = response.json()
      
          for response in data:
-             #if response.get("@type") == "ItemFlowEnd" or response.get("@type") == "ItemDefinition" or response.get("@type") == "FeatureMembership" or response.get("@type") == "ActionUsage" or response.get("@type") == "FlowConnectionUsage":
-             #if response.get('@id')=='234bc46f-9cd3-4409-8c62-e33e5e96217b':
-             #    print(response.get('name'))
-             #    print(response)
+
              
              if response.get("@type") == "ReferenceSubsetting": #As ownedRelationship of target of FeatureEndMembership
                  clReferenceSubSettingReferencedFeatures.append(response.get("referencedFeature"))
@@ -416,6 +421,7 @@ def read_activities_and_functional_groups(strProjectID,strServerName):
              if response.get("@type") == "FeatureMembership":
                  clFeatureMembershipTargets.append(response.get("target"))
                  clFeatureMembershipIds.append(response.get("elementId"))
+                 clFeatureMembershipOwnedRelatedElements.append(response.get("ownedRelatedElement"))
              if response.get("@type") == "ItemFlowEnd":  #As target of EndFeatureMembership
                  clItemFlowEndOwnedRelationships.append(response.get("ownedRelationship"))
                  clItemsFlowEndIds.append(response.get("elementId"))
@@ -423,8 +429,6 @@ def read_activities_and_functional_groups(strProjectID,strServerName):
                  clActions.append(response.get("name"))
                  clActionIds.append(response.get("elementId"))
              if response.get("@type") == "ItemDefinition":
-                 #print('ItemDefinition')
-                 #print(response)                 
                  clItemDefs.append(response.get("name"))
                  clItemDefIds.append(response.get("elementId"))
              if response.get("@type") == "FlowConnectionUsage":
@@ -432,25 +436,26 @@ def read_activities_and_functional_groups(strProjectID,strServerName):
                  clFlowTargets.append(response.get("relatedElement"))
                  clFlowItems.append(response.get("itemFeature"))
                  clFlowOwnedRelationships.append(response.get("ownedRelationship"))
-                 #print('FlowConnectionUsage')
-                 #print(response)
              if response.get("@type") == "ItemFeature":
-                 #print('ItemFeature')
-                 #print(response)
                  clItemFeatureIds.append(response.get("elementId"))
                  clItemFeatureTypes.append(response.get("type"))
+             if response.get("@type") == "Package":
+                 clPackageIds.append(response.get("elementId"))
+                 clPackageImportedMemberships.append(response.get("importedMembership"))
+                 clPackageNames.append(response.get("name"))
          
-         #print(data)
-         
-         clActivitiesAndObjectFlows = []           
+                 
+
+         #Process Use Case Activities and Object Flows         
          
          
          for iFlow in range(len(clFlowIds)):
-             vFlowOwnedRelatoinship = clFlowOwnedRelationships[iFlow]
+             
+             vFlowOwnedRelationship = clFlowOwnedRelationships[iFlow]
             
-             cFlowOwnedRelationship1=vFlowOwnedRelatoinship[0].get('@id')
-             cFlowOwnedRelationship2=vFlowOwnedRelatoinship[1].get('@id')
-             cFlowOwnedRelationship3=vFlowOwnedRelatoinship[2].get('@id')
+             cFlowOwnedRelationship1=vFlowOwnedRelationship[0].get('@id')
+             cFlowOwnedRelationship2=vFlowOwnedRelationship[1].get('@id')
+             cFlowOwnedRelationship3=vFlowOwnedRelationship[2].get('@id')
              clTargetIds = []
              cFeatureMembershipTarget='undefined'
              if clEndFeatureMembershipIds.count(cFlowOwnedRelationship1) > 0: 
@@ -481,7 +486,7 @@ def read_activities_and_functional_groups(strProjectID,strServerName):
                          if clActionIds.count(cReferencedFeature) > 0:
                              cAction = clActions[clActionIds.index(cReferencedFeature)]
                              clActionPair.append(cAction)
-                             #print(cAction)
+                             
                              
              if clItemFeatureIds.count(cFeatureMembershipTarget)>0:
                  cItemFeatureTypeId=clItemFeatureTypes[clItemFeatureIds.index(cFeatureMembershipTarget)]
@@ -490,26 +495,41 @@ def read_activities_and_functional_groups(strProjectID,strServerName):
                      cItemDefinitionName = clItemDefs[clItemDefIds.index(cItemFeatureTypeId[0].get('@id'))]
                  else:
                      cItemDefinitionName = ''
-                 #print('ItemDef name: ' + cItemDefinitionName)
+
              if len(clActionPair) == 2:
                 clActivitiesAndObjectFlows.append(clActionPair[0] + ':' + cItemDefinitionName + ':' + clActionPair[1])
-                print(clActivitiesAndObjectFlows)
+
+         
+         #Process  Functional Groups
+         for iPackage in range(len(clPackageIds)):
+             cPackageName = clPackageNames[iPackage]
+             cCurrentFunctionalGroup = cPackageName
+             vFeatureMemberships=clPackageImportedMemberships[iPackage]
+             for iUseCaseActivityInGroupCounter in range(len(vFeatureMemberships)):
+                cFeatureMembershipForUseCaseActivity = vFeatureMemberships[iUseCaseActivityInGroupCounter].get('@id')
+                if  clFeatureMembershipIds.count(cFeatureMembershipForUseCaseActivity) > 0:
+                    cFeatureMembershipOwnedRelatedElement = clFeatureMembershipOwnedRelatedElements[clFeatureMembershipIds.index(cFeatureMembershipForUseCaseActivity)][0].get('@id')
+                    if clActionIds.count(cFeatureMembershipOwnedRelatedElement) > 0:
+                         cAction = clActions[clActionIds.index(cFeatureMembershipOwnedRelatedElement)]
+                         cCurrentFunctionalGroup = cCurrentFunctionalGroup + ':' + cAction
              
-     ## BEGIN TEMP Hard-code some data until this function is implemented
-     ## When implementing the final version of the function, the data structure for the following two variables needs to be made more clean.
-     ## The structure is still based on the initial idea of reading input from hand-written cards via OCR
-     #clActivitiesAndObjectFlows = ['GetMoney:money:MonitorPayment', 'MonitorPayment:clearance:ProvideMusicTrack', 'ProvideMusicTrack:music_track:PlayMusicTrack', 'PlayMusicTrack:audio_signal:ProduceSound']
-     clFunctionalGroups = ['musicPlayer:playmusictrack', 'storage:providemusiczrack', 'accounting:monitorpayment', 'ioCustomer:getmoney:producesound']
-     ## END TEMP Hard-code
+             if cCurrentFunctionalGroup.count(':') > 0:
+                 clFunctionalGroups.append(cCurrentFunctionalGroup)       
+
+         
+         
      return bSuccess, cErrorMessage, clActivitiesAndObjectFlows, clFunctionalGroups
 
 
 def write_functional_architecture(cProjectID,cServerName,cSysMLString):
      bSuccess = False
-     print(cProjectID.get())
-     print(cServerName.get())
+     
+     print('')
+     print('Here is the generated functional architecture: ')
      print(cSysMLString)
+     print('Writing it to the server ... ')
      cErrorMsg = "write_functional_architecture is not implemented"
+     print(cErrorMsg)
      return bSuccess, cErrorMsg
 
 def render_transform_formula(cFormulaOutput):
@@ -529,11 +549,14 @@ def fas_transform(cProjectID,cServerName):
      if bSuccess == False:
          messagebox.showerror("FAS Plugin","Reading from the repository failed with the following error message: " + cErrorMsg)
      else:
+         print('Transforming to functional architecture via FAS-as-a-formula ...')
          cSysMLString, cFormulaOutput = run_fas(clActivitiesAndObjectFlows, clFunctionalGroups)
-         render_transform_formula(cFormulaOutput)
          bSuccess, cErrorMsg = write_functional_architecture(cProjectID,cServerName,cSysMLString)
+         render_transform_formula(cFormulaOutput)
          if bSuccess == False:
              messagebox.showerror("FAS Plugin","Writing to the repository failed with the following error message: " + cErrorMsg)
+         else:    
+             messagebox.showinfo("FAS Plugin","Writing to the repository succeeded.")
      
      messagebox.showwarning("FAS Plugin","fas_transform is missing functionality for tracing functional blocks to functional groups")
 
