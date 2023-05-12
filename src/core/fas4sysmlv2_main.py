@@ -9,8 +9,10 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 #
-#   This is the main py file of the FAS plugin for SysML v2
+#   This is the main py file of the FAS plugin for SysML v2.
+#
 #   When calling as a script, pass the project ID as an optional first parameter
+#   and the host url for connecting to the repository as an optional second one.
 #
 #   This script requires the tkinter for GUI and sympy for symbolic computation
 # 
@@ -532,15 +534,16 @@ def write_functional_architecture(cProjectID,cServerName,cSysMLString):
      print(cErrorMsg)
      return bSuccess, cErrorMsg
 
-def render_transform_formula(cFormulaOutput):
+def render_transform_result(cFormulaOutput, cSysMLString):
      renderingWindow= Tk()
      renderingWindow.title("FAS Plugin")
      #renderingWindow.state('zoomed')
-     ttk.Label(renderingWindow, text="FAS-as-a-formula").grid(column=0, row=0)
+     ttk.Label(renderingWindow, text="FAS-as-a-formula application and result").grid(column=0, row=0)
      scr = scrolledtext.ScrolledText(renderingWindow, width = 200, height = 40, font = ("Courier", 9))
      scr.grid(column = 0, pady = 10, padx = 10)
      scr.focus()
-     scr.insert(tk.INSERT,cFormulaOutput)
+     scr.insert(tk.INSERT, '================================================\nApplying FAS-as-a-formula to the model\n================================================\n\n' + cFormulaOutput + '\n\n\n================================================\nResulting functional architecture\n================================================\n\n' + cSysMLString)
+                           
      scr.configure(state ='disabled')
      renderingWindow.mainloop()
 
@@ -552,7 +555,7 @@ def fas_transform(cProjectID,cServerName):
          print('Transforming to functional architecture via FAS-as-a-formula ...')
          cSysMLString, cFormulaOutput = run_fas(clActivitiesAndObjectFlows, clFunctionalGroups)
          bSuccess, cErrorMsg = write_functional_architecture(cProjectID,cServerName,cSysMLString)
-         render_transform_formula(cFormulaOutput)
+         render_transform_result(cFormulaOutput, cSysMLString)
          if bSuccess == False:
              messagebox.showerror("FAS Plugin","Writing to the repository failed with the following error message: " + cErrorMsg)
          else:    
@@ -595,7 +598,7 @@ def selectproject(cProjectID, cServerName):
          listWindow.mainloop()   
 
          
-def run_fas4sysml(cProjectUUID):
+def run_fas4sysml(cProjectUUID, cHost):
      mainWindow = Tk()
      mainWindow.title("FAS Plugin")
      frm = ttk.Frame(mainWindow)
@@ -605,7 +608,7 @@ def run_fas4sysml(cProjectUUID):
      cProjectID = StringVar()
      cProjectID.set(cProjectUUID)
      cServerName = StringVar()
-     cServerName .set('http://localhost:9000')
+     cServerName.set(cHost)
      ttk.Label(frm, text="").grid(column=0, row=1)
      ttk.Label(frm, text="Server").grid(column=0, row=2)
      ttk.Entry(frm, textvariable = cServerName, width = 50).grid(column=1, row=2)
@@ -622,9 +625,12 @@ def main():
      init_printing(use_unicode=False)
 
      cProjectID = ''
+     cHost = 'http://localhost:9000'
      if len (sys.argv)>1:
          cProjectID=sys.argv[1]
-     run_fas4sysml(cProjectID)
+     if len (sys.argv)>2:
+         cHost=sys.argv[2]
+     run_fas4sysml(cProjectID,cHost)
 
 
 if __name__ == "__main__":

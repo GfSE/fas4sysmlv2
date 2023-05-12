@@ -66,6 +66,7 @@ def main():
      bStdout = False
      bData = False
      bResultExpected = False
+     cHost = ''
      cStatus = ''
      for tline in FID1:
          if bResultExpected:
@@ -78,6 +79,11 @@ def main():
              bData = True
          if tline.find('"text/plain": [')>-1 and bData:
              bResultExpected = True
+         iHostPos = tline.find('API base path:')
+         if iHostPos > -1:
+             cHost = tline[(iHostPos+15):].replace(',','').replace('"','').replace('\\r','').replace('\\n','').strip()
+             print(cHost)
+
      FID1.close()
      
      posOpeningParenthesis = cStatus.find('(')
@@ -85,7 +91,7 @@ def main():
      cProjectID = cStatus[(posOpeningParenthesis+1):posClosingParenthesis]
 
      FID1=open(cProjectIdFile,'w');
-     FID1.write(cProjectID)
+     FID1.write(cProjectID+'\r\n'+cHost)
      FID1.close()
 
 if __name__ == "__main__":

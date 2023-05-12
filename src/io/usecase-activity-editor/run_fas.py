@@ -33,11 +33,17 @@ from fas4sysmlv2_main import *
 cProjectIdFile = cFolderName.strip() + 'project_id.txt'
 FID1=open(cProjectIdFile ,'r');
 cID = ''
+cHost = ''
+iNum = 0
 for tline in FID1:
-    cID = tline
+    iNum = iNum+1
+    if iNum == 1:
+        cID = tline.strip()
+    else:
+        cHost = tline.strip()
 FID1.close()
 
-run_fas4sysml(cID)
+run_fas4sysml(cID, cHost)
 
      
 
