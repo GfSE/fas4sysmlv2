@@ -225,7 +225,8 @@ def RenderFunctionalArchitecture(F,clFunctionalBlockNames):
     
     ## Connect the blocks with flows
      cItemString = ''
-    
+     clBufferOfAllUsedItemDefs = [] #Remember what was already defined to avoid duplications
+
      for nBlock1 in range(F.shape[0]):
          for nBlock2 in range(F.shape[0]):
              cFlow=F[nBlock1,nBlock2]
@@ -236,7 +237,10 @@ def RenderFunctionalArchitecture(F,clFunctionalBlockNames):
                  for nPort in range(len(clSourcePorts)):
                      sCurrentFlowName = SubFlow(sFlowName,nPort)
                      cSysMLstring = cSysMLstring + '      flow of ' + sCurrentFlowName + ' from ' + clFunctionalBlockNames[nBlock1] + '.' + clSourcePorts[nPort] + ' to ' + clFunctionalBlockNames[nBlock2] + '.' + clTargetPorts[nPort] + ';' + '\n'
-                     cItemString = cItemString + '   item def ' + sCurrentFlowName + ';' + '\n'
+
+                     if clBufferOfAllUsedItemDefs.count(sCurrentFlowName) < 1:
+                         clBufferOfAllUsedItemDefs.append(sCurrentFlowName)
+                         cItemString = cItemString + '   item def ' + sCurrentFlowName + ';' + '\n'
            
     
     ## Trace Functional Blocks to Functional Groups
@@ -561,7 +565,7 @@ def fas_transform(cProjectID,cServerName):
          else:    
              messagebox.showinfo("FAS Plugin","Writing to the repository succeeded.")
      
-     messagebox.showwarning("FAS Plugin","fas_transform is missing functionality for tracing functional blocks to functional groups")
+     messagebox.showwarning("FAS Plugin","fas_transform is missing functionality for tracing functional blocks to functional groups and for re-using the original item defs in the database, instead of composing new ones")
 
 
 def processProjectSelection(listWindow,theCombo,cProjectID):
