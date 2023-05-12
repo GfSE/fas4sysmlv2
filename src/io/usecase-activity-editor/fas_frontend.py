@@ -233,7 +233,10 @@ def RenderActivityDefinitionsInSysML(O,clActivities):
      cSysMLString=''
      cLF = '\r\n'
 
+
      for nText in range(len(clActivities)):      
+         clBufferOfNamesForUniqueness = [] # Remember all parameter names to be able to ensure uniqueness
+
          cSysMLString = cSysMLString + '      action def ' + clActivities[nText] + ' {' + cLF
          for nIn in range(len(clActivities)):
              if O[nIn][nText] != '':
@@ -243,7 +246,13 @@ def RenderActivityDefinitionsInSysML(O,clActivities):
                  for nParam in range(iNumOccurences  +1):
                      sCurrentFlowName = SubFlow(sFlowString,nParam)
                      sInput = sCurrentFlowName.lower()
+                     iNumberForUniqueness=1
+                     while clBufferOfNamesForUniqueness.count(sInput)>0:
+                         if clBufferOfNamesForUniqueness.count(sInput + str(iNumberForUniqueness)) == 0:
+                             sInput = sInput  + str(iNumberForUniqueness)
+                         iNumberForUniqueness=iNumberForUniqueness+1
                      cSysMLString=cSysMLString + '         in ' + sInput + ';' + cLF
+                     clBufferOfNamesForUniqueness.append(sInput)
               
           
      
@@ -255,7 +264,14 @@ def RenderActivityDefinitionsInSysML(O,clActivities):
                  for nParam in range(iNumOccurences + 1):
                      sCurrentFlowName = SubFlow(sFlowString,nParam)
                      sOutput = sCurrentFlowName.lower() 
+                     iNumberForUniqueness=1
+                     while clBufferOfNamesForUniqueness.count(sOutput)>0:
+                         if clBufferOfNamesForUniqueness.count(sOutput + str(iNumberForUniqueness)) == 0:
+                             sOutput = sOutput  + str(iNumberForUniqueness)
+                         iNumberForUniqueness=iNumberForUniqueness+1
                      cSysMLString = cSysMLString + '         out ' + sOutput + ';' + cLF
+                     clBufferOfNamesForUniqueness.append(sOutput) 
+
          cSysMLString = cSysMLString + '      }' + cLF
     
      return cSysMLString
@@ -352,6 +368,7 @@ def RenderFlowsAndItemDefsInSysML(O,clActivities):
          clActionNames[nText]=cActionName
          cSysMLString = cSysMLString + '         action ' + cActionName + ':' + clActivities[nText] + ';' + cLF
     
+     clBufferOfAllUsedItemDefs = [] #Remember what was already defined to avoid duplications
      for n1 in range(len(clActivities)): 
          for n2 in range(len(clActivities)):
              if O[n1][n2] != '':
@@ -362,7 +379,10 @@ def RenderFlowsAndItemDefsInSysML(O,clActivities):
                      sInput = sCurrentFlowName.lower() 
 
                      cSysMLString = cSysMLString + '         flow of ' + sCurrentFlowName + ' from ' + clActionNames[n1] + '.' + sResult + ' to '  + clActionNames[n2] + '.' + sInput + ';' + cLF
-                     cItemString = cItemString + '   item def ' + sCurrentFlowName + ';' + '\r\n'
+
+                     if clBufferOfAllUsedItemDefs.count(sCurrentFlowName) < 1:
+                         clBufferOfAllUsedItemDefs.append(sCurrentFlowName)
+                         cItemString = cItemString + '   item def ' + sCurrentFlowName + ';' + '\r\n'
               
 
      cSysMLString = cSysMLString + '      }' + cLF
