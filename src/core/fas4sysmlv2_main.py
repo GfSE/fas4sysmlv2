@@ -34,6 +34,7 @@ from tkinter import scrolledtext
 from tkinter import ttk
 from functools import partial
 import sys
+import json
 
 from sympy import *
 
@@ -342,6 +343,34 @@ def format_servername(cName):
      
      return cName
   
+def run_query_for_elementtyp(cElementType, cServerName, cProjectID):
+    qresponse_json=json.dumps('')
+    qinput = {
+      '@type':'Query',
+      'select': ['name','@id','@type','owner'],
+      'where': {
+        '@type': 'CompositeConstraint',
+        'operator': 'and',
+        'constraint': [
+            {
+                '@type': 'PrimitiveConstraint',
+                'inverse': False,
+                'operator': '=',
+                'property': '@type',
+                'value': cElementType
+            }
+        ]
+      }
+    }
+
+    payload = json.dumps(qinput)
+    qurl = f"{cServerName}/projects/{cProjectID}/query-results" 
+    qresponse = requests.post(qurl, json=qinput)
+    if qresponse.status_code == 200:
+        qresponse_json = qresponse.json()
+
+    return qresponse_json
+  
 def read_activities_and_functional_groups(strProjectID,strServerName):
 
      clActivitiesAndObjectFlows = []           
@@ -362,7 +391,7 @@ def read_activities_and_functional_groups(strProjectID,strServerName):
          print(cErrorMessage)
 
          
-     if bSuccess and str(response)!='<Response [200]>':
+     if bSuccess and response.status_code!=200:
          bSuccess = false
          cErrorMessage = 'Error: Could not find project on stated host'
          print('Error: Could not find project on stated host')
@@ -411,44 +440,50 @@ def read_activities_and_functional_groups(strProjectID,strServerName):
      clPackageImportedMemberships=[]
      clReferenceSubSettingIds=[]
      clReferenceSubSettingReferencedFeatures=[]
-     if bSuccess:
-         response = requests.get(cServerName + "/projects/" + cProjectID + "/commits/"+sHeadCommit+"/elements")
-         data = response.json()
-     
-         for response in data:
 
-             
-             if response.get("@type") == "ReferenceSubsetting": #As ownedRelationship of target of FeatureEndMembership
-                 clReferenceSubSettingReferencedFeatures.append(response.get("referencedFeature"))
-                 clReferenceSubSettingIds.append(response.get("elementId"))
-             if response.get("@type") == "EndFeatureMembership":
-                 clEndFeatureMembershipTargets.append(response.get("target"))
-                 clEndFeatureMembershipIds.append(response.get("elementId"))
-             if response.get("@type") == "FeatureMembership":
-                 clFeatureMembershipTargets.append(response.get("target"))
-                 clFeatureMembershipIds.append(response.get("elementId"))
-                 clFeatureMembershipOwnedRelatedElements.append(response.get("ownedRelatedElement"))
-             if response.get("@type") == "ItemFlowEnd":  #As target of EndFeatureMembership
-                 clItemFlowEndOwnedRelationships.append(response.get("ownedRelationship"))
-                 clItemsFlowEndIds.append(response.get("elementId"))
-             if response.get("@type") == "ActionUsage":
-                 clActions.append(response.get("name"))
-                 clActionIds.append(response.get("elementId"))
-             if response.get("@type") == "ItemDefinition":
-                 clItemDefs.append(response.get("name"))
-                 clItemDefIds.append(response.get("elementId"))
-             if response.get("@type") == "FlowConnectionUsage":
-                 clFlowIds.append(response.get("elementId"))
-                 clFlowTargets.append(response.get("relatedElement"))
-                 clFlowItems.append(response.get("itemFeature"))
-                 clFlowOwnedRelationships.append(response.get("ownedRelationship"))
-             if response.get("@type") == "ItemFeature":
-                 clItemFeatureIds.append(response.get("elementId"))
-                 clItemFeatureTypes.append(response.get("type"))
-             if response.get("@type") == "Package":
-                 clPackageIds.append(response.get("elementId"))
-                 clPackageImportedMemberships.append(response.get("importedMembership"))
-                 clPackageNames.append(response.get("name"))
+     clElementTypes = ['ReferenceSubsetting','EndFeatureMembership','FeatureMembership','ItemFlowEnd','ActionUsage','ItemDefinition','FlowConnectionUsage','ItemFeature','Package']
+     
+     if bSuccess:
+     
+         for cElementType in clElementTypes:
+             data = run_query_for_elementtyp(cElementType, cServerName, cProjectID)
+             for currentRecord in data:
+                 sIdToGet=currentRecord.get('@id')
+                 qresult = requests.get(cServerName + "/projects/" + cProjectID + "/commits/"+sHeadCommit+"/elements/" + sIdToGet)
+                 response = qresult.json()
+
+
+                 if response.get("@type") == "ReferenceSubsetting": #As ownedRelationship of target of FeatureEndMembership
+                     clReferenceSubSettingReferencedFeatures.append(response.get("referencedFeature"))
+                     clReferenceSubSettingIds.append(response.get("elementId"))
+                 if response.get("@type") == "EndFeatureMembership":
+                     clEndFeatureMembershipTargets.append(response.get("target"))
+                     clEndFeatureMembershipIds.append(response.get("elementId"))
+                 if response.get("@type") == "FeatureMembership":
+                     clFeatureMembershipTargets.append(response.get("target"))
+                     clFeatureMembershipIds.append(response.get("elementId"))
+                     clFeatureMembershipOwnedRelatedElements.append(response.get("ownedRelatedElement"))
+                 if response.get("@type") == "ItemFlowEnd":  #As target of EndFeatureMembership
+                     clItemFlowEndOwnedRelationships.append(response.get("ownedRelationship"))
+                     clItemsFlowEndIds.append(response.get("elementId"))
+                 if response.get("@type") == "ActionUsage":
+                     clActions.append(response.get("name"))
+                     clActionIds.append(response.get("elementId"))
+                 if response.get("@type") == "ItemDefinition":
+                     clItemDefs.append(response.get("name"))
+                     clItemDefIds.append(response.get("elementId"))
+                 if response.get("@type") == "FlowConnectionUsage":
+                     clFlowIds.append(response.get("elementId"))
+                     clFlowTargets.append(response.get("relatedElement"))
+                     clFlowItems.append(response.get("itemFeature"))
+                     clFlowOwnedRelationships.append(response.get("ownedRelationship"))
+                 if response.get("@type") == "ItemFeature":
+                     clItemFeatureIds.append(response.get("elementId"))
+                     clItemFeatureTypes.append(response.get("type"))
+                 if response.get("@type") == "Package":
+                     clPackageIds.append(response.get("elementId"))
+                     clPackageImportedMemberships.append(response.get("importedMembership"))
+                     clPackageNames.append(response.get("name"))
          
                  
 
@@ -458,53 +493,52 @@ def read_activities_and_functional_groups(strProjectID,strServerName):
          for iFlow in range(len(clFlowIds)):
              
              vFlowOwnedRelationship = clFlowOwnedRelationships[iFlow]
-            
-             cFlowOwnedRelationship1=vFlowOwnedRelationship[0].get('@id')
-             cFlowOwnedRelationship2=vFlowOwnedRelationship[1].get('@id')
-             cFlowOwnedRelationship3=vFlowOwnedRelationship[2].get('@id')
-             clTargetIds = []
-             cFeatureMembershipTarget='undefined'
-             if clEndFeatureMembershipIds.count(cFlowOwnedRelationship1) > 0: 
-                 clTargetIds.append(clEndFeatureMembershipTargets[clEndFeatureMembershipIds.index(cFlowOwnedRelationship1)][0].get('@id'))
-             if clEndFeatureMembershipIds.count(cFlowOwnedRelationship2) > 0:
-                 clTargetIds.append(clEndFeatureMembershipTargets[clEndFeatureMembershipIds.index(cFlowOwnedRelationship2)][0].get('@id'))
-             if clEndFeatureMembershipIds.count(cFlowOwnedRelationship3) > 0:
-                 clTargetIds.append(clEndFeatureMembershipTargets[clEndFeatureMembershipIds.index(cFlowOwnedRelationship3)][0].get('@id'))
+             if len(vFlowOwnedRelationship)==3:
+                 cFlowOwnedRelationship1=vFlowOwnedRelationship[0].get('@id')
+                 cFlowOwnedRelationship2=vFlowOwnedRelationship[1].get('@id')
+                 cFlowOwnedRelationship3=vFlowOwnedRelationship[2].get('@id')
+                 clTargetIds = []
+                 cFeatureMembershipTarget='undefined'
+                 if clEndFeatureMembershipIds.count(cFlowOwnedRelationship1) > 0: 
+                     clTargetIds.append(clEndFeatureMembershipTargets[clEndFeatureMembershipIds.index(cFlowOwnedRelationship1)][0].get('@id'))
+                 if clEndFeatureMembershipIds.count(cFlowOwnedRelationship2) > 0:
+                     clTargetIds.append(clEndFeatureMembershipTargets[clEndFeatureMembershipIds.index(cFlowOwnedRelationship2)][0].get('@id'))
+                 if clEndFeatureMembershipIds.count(cFlowOwnedRelationship3) > 0:
+                     clTargetIds.append(clEndFeatureMembershipTargets[clEndFeatureMembershipIds.index(cFlowOwnedRelationship3)][0].get('@id'))
+                     
+                 if clFeatureMembershipIds.count(cFlowOwnedRelationship1) > 0: 
+                     cFeatureMembershipTarget=clFeatureMembershipTargets[clFeatureMembershipIds.index(cFlowOwnedRelationship1)][0].get('@id')
+                 if clFeatureMembershipIds.count(cFlowOwnedRelationship2) > 0:
+                     cFeatureMembershipTarget=clFeatureMembershipTargets[clFeatureMembershipIds.index(cFlowOwnedRelationship2)][0].get('@id')
+                 if clFeatureMembershipIds.count(cFlowOwnedRelationship3) > 0:
+                     cFeatureMembershipTarget=clFeatureMembershipTargets[clFeatureMembershipIds.index(cFlowOwnedRelationship3)][0].get('@id')
+                 #print('Target: ' + cFeatureMembershipTarget)
+
+                 #print(clTargetIds)
+                 #print('   --')
                  
-             if clFeatureMembershipIds.count(cFlowOwnedRelationship1) > 0: 
-                 cFeatureMembershipTarget=clFeatureMembershipTargets[clFeatureMembershipIds.index(cFlowOwnedRelationship1)][0].get('@id')
-             if clFeatureMembershipIds.count(cFlowOwnedRelationship2) > 0:
-                 cFeatureMembershipTarget=clFeatureMembershipTargets[clFeatureMembershipIds.index(cFlowOwnedRelationship2)][0].get('@id')
-             if clFeatureMembershipIds.count(cFlowOwnedRelationship3) > 0:
-                 cFeatureMembershipTarget=clFeatureMembershipTargets[clFeatureMembershipIds.index(cFlowOwnedRelationship3)][0].get('@id')
-             #print('Target: ' + cFeatureMembershipTarget)
+                 clActionPair=[]
+                 for iFlowPartner in range (len(clTargetIds)):
+                     cTargetId = clTargetIds[iFlowPartner]
+                     if  clItemsFlowEndIds.count(cTargetId) > 0:
+                         cOwnedRelationship=clItemFlowEndOwnedRelationships[ clItemsFlowEndIds.index(cTargetId)][0].get('@id')
+                         if clReferenceSubSettingIds.count(cOwnedRelationship) > 0:
+                             cReferencedFeature = clReferenceSubSettingReferencedFeatures[clReferenceSubSettingIds.index(cOwnedRelationship)].get('@id')
+                             if clActionIds.count(cReferencedFeature) > 0:
+                                 cAction = clActions[clActionIds.index(cReferencedFeature)]
+                                 clActionPair.append(cAction)
+                                 
+                                 
+                 if clItemFeatureIds.count(cFeatureMembershipTarget)>0:
+                     cItemFeatureTypeId=clItemFeatureTypes[clItemFeatureIds.index(cFeatureMembershipTarget)]
+                     #print (cItemFeatureTypeId)
+                     if clItemDefIds.count(cItemFeatureTypeId[0].get('@id'))>0:
+                         cItemDefinitionName = clItemDefs[clItemDefIds.index(cItemFeatureTypeId[0].get('@id'))]
+                     else:
+                         cItemDefinitionName = ''
 
-             #print(clTargetIds)
-             #print('   --')
-             
-             clActionPair=[]
-             for iFlowPartner in range (len(clTargetIds)):
-                 cTargetId = clTargetIds[iFlowPartner]
-                 if  clItemsFlowEndIds.count(cTargetId) > 0:
-                     cOwnedRelationship=clItemFlowEndOwnedRelationships[ clItemsFlowEndIds.index(cTargetId)][0].get('@id')
-                     if clReferenceSubSettingIds.count(cOwnedRelationship) > 0:
-                         cReferencedFeature = clReferenceSubSettingReferencedFeatures[clReferenceSubSettingIds.index(cOwnedRelationship)].get('@id')
-                         if clActionIds.count(cReferencedFeature) > 0:
-                             cAction = clActions[clActionIds.index(cReferencedFeature)]
-                             clActionPair.append(cAction)
-                             
-                             
-             if clItemFeatureIds.count(cFeatureMembershipTarget)>0:
-                 cItemFeatureTypeId=clItemFeatureTypes[clItemFeatureIds.index(cFeatureMembershipTarget)]
-                 #print (cItemFeatureTypeId)
-                 if clItemDefIds.count(cItemFeatureTypeId[0].get('@id'))>0:
-                     cItemDefinitionName = clItemDefs[clItemDefIds.index(cItemFeatureTypeId[0].get('@id'))]
-                 else:
-                     cItemDefinitionName = ''
-
-             if len(clActionPair) == 2:
-                clActivitiesAndObjectFlows.append(clActionPair[0] + ':' + cItemDefinitionName + ':' + clActionPair[1])
-
+                 if len(clActionPair) == 2:
+                    clActivitiesAndObjectFlows.append(clActionPair[0] + ':' + cItemDefinitionName + ':' + clActionPair[1])
          
          #Process  Functional Groups
          for iPackage in range(len(clPackageIds)):
