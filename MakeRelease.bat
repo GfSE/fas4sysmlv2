@@ -20,5 +20,5 @@ ROBOCOPY /S src\io RELEASE\src\io
 ROBOCOPY /S src\core RELEASE\src\core
 COPY LICENSE RELEASE
 COPY doc\user-manuals\FAS4SysMLv2_InstallationAndUse.txt RELEASE
-ECHO FAS PLugin for SySML v2 version 0.9.0 > RELEASE\Version.txt
+ECHO FAS Plugin for SySML v2 version 0.x.x > RELEASE\Version.txt
 REM Version 1.x will be reserved for the time after release of a SysML v2 standard.
