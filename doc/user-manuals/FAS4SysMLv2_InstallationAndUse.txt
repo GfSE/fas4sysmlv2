@@ -1,0 +1,93 @@
+===========================
+| FAS Plugin for SysML v2 |
+===========================
+
+ Installation and Use
+
+ May 2023
+
+
+ Copyright 2022 Gesellschaft fuer Systems Engineering e.V. (GfSE)
+ Licensed under the Apache License, Version 2.0 (the "License");
+ you may not use this file except in compliance with the License.
+ You may obtain a copy of the License at
+ http://www.apache.org/licenses/LICENSE-2.0  
+ Unless required by applicable law or agreed to in writing, software
+ distributed under the License is distributed on an "AS IS" BASIS,
+ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ See the License for the specific language governing permissions and
+ limitations under the License.
+
+
+1 INTRODUCTION
+==============
+
+The FAS plugin for SysML v2 can create a functional architecture model from 
+a specification of use case activities, following the FAS method [1,2,3].
+
+The underlying version of the SysML v2 specification is a working copy that was 
+obtained from  https://github.com/Systems-Modeling/SysML-v2-Release/tree/master/doc
+by the time of writing this version of the FAS Plugin for SysML v2. It is
+thus a good prediction of a potential future SysML v2 standard, but not yet
+a standardized specification. 
+
+The FAS Plugin for SysML v2 will use the "FAS-as-a-formula" approach [4] to transform
+Use Case Activities into Functional Architecture.
+
+This document describes its installation and use.
+
+2 INSTALLATION
+==============
+
+The following procedure should work on Windows 10 and 11 as well as on some 
+Linux distributions (tested with the OpenSUSE Leap 15.4 distribution).
+
+ - Install the SysML 2 reference installation for jupyter, according to
+   https://github.com/Systems-Modeling/SysML-v2-Release/tree/master/install/jupyter
+   (Note that this will also ensure the installation of Miniconda3 incl. Python.
+   The minimum required Python version is Python 3.9)
+
+ - Extract the folder structure of the FAS plugin, from the distribution containing
+   the present document.
+
+ - Ensure that you have access to a pilot implementation of a SysML v2 repository.
+   The SysML v2 reference implementation for jupyter must be set up to use this repository.
+   The installation of your own SysML v2 repository pilot installation is described here:
+   https://github.com/GfSE/fas4sysmlv2/blob/main/doc/tech-docs/sysmlv2-pilot/installation_howto.odt
+   The above guide also specifies how to define the repository to be used by the SysML v2 
+   reference implementation.
+
+ - Ensure that OpenOffice or LibreOffice is installed
+
+
+3 USE
+=====
+
+ - In the extracted folder structure, open the folder containing the file "fas_frontend.odp"
+   and open that file in OpenOffice or LibreOffice.
+
+ - Follow the instructions that are provided on the "How to run" slide in that slide deck.
+
+4 REFERENCES 
+============
+
+[1] T. Weilkiens, J. G. Lamm, S. Roth, and M. Walker, Model-Based System Architecture, 
+    Second Edition (Wiley Series in Systems Engineering and Management), Wiley, 2022.
+
+[2] J. G. Lamm and T. Weilkiens, "Method for Deriving Functional Architectures from Use Cases", 
+    Systems Engineering, Volume 17, Issue 2, pp. 225-236, Summer 2014. 
+    http://dx.doi.org/10.1002/sys.21265
+
+[3] J. G. Lamm and T. Weilkiens, "Funktionale Architekturen in SysML", in M. Maurer 
+    and S.-O. Schulze (Eds.), Tag des Systems Engineering, Muenchen Freising, 
+    10.-12. November 2010, Carl Hanser Verlag, Muenchen, Germany, pp. 109-118.
+    (in German language)
+
+[4] Lamm, J.G.: "Eine schlanke Formel fuer den Kern der FAS-Methode, zur einfachen Werkzeug-
+    Umsetzung der Methode", in Koch, W.; Wilke, D.; Dreiseitel, S.; Kaffenberger, R. (Eds.): 
+    Tag des Systems Engineering - Paderborn 16.-18. November 2022, Gesellschaft fuer 
+    Systems Engineering e.V. (GfSE Verlag), Bremen, Germany, 2022, pp. 127-131.
+    (in German language; English summary available here: 
+    https://github.com/GfSE/fas4sysmlv2/blob/main/doc/tech-docs/fas/FAS-as-a-formula-2022.odt )	
+
+END OF DOCUMENT

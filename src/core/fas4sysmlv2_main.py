@@ -35,11 +35,14 @@ from tkinter import ttk
 from functools import partial
 import sys
 import json
+import tempfile
 
 from sympy import *
 
 import requests 
 
+import platform
+import os
 
 #### BEGIN TEMP The following part needs to be solved more clever
 
@@ -155,6 +158,175 @@ def UpdateUniqueContentCellArray (clIn, sContent):
 
      return clOut
 
+#### THE FOLLOWING IS ONLY NEEDED IF WE WANT TO CONTINUE WRITING A NEW MODEL INSTEAD OF INCREMENTS FOR THE EXISTING MODEL
+#### IF THIS STAYS NEEDED IN FUTURE, THEN A JOINT MODULE WITH fas_frontend SHOULD BE CREATED
+
+def UpdateMatrixWithFlow(clDomainObjects,clActivities,mMatrixO, sLineToParse):
+     sSourceObject,sFlow,sTargetObject = parseFlowLine(sLineToParse)
+     clActivities = UpdateUniqueContentCellArray (clActivities, sSourceObject)
+     clActivities = UpdateUniqueContentCellArray (clActivities, sTargetObject)
+     clDomainObjects = UpdateUniqueContentCellArray (clDomainObjects, sFlow)
+     M = len(clActivities);
+     mNewMatrixO = [['' for col in range(M)] for row in range(M)]
+     for nInitIndex1 in range(M):
+         for nInitIndex2  in range(M):
+             if nInitIndex1 < len(mMatrixO) and nInitIndex2 < len(mMatrixO):
+                 mNewMatrixO[nInitIndex1][nInitIndex2] = mMatrixO[nInitIndex1][nInitIndex2]
+             if GetIndexOfStringInCellArray(clActivities,sSourceObject) == nInitIndex1 and GetIndexOfStringInCellArray(clActivities,sTargetObject) == nInitIndex2 :
+                 if mNewMatrixO[nInitIndex1][nInitIndex2] == '':
+                     mNewMatrixO[nInitIndex1][nInitIndex2] =  sFlow
+                 else:
+                     mNewMatrixO[nInitIndex1][nInitIndex2] =  mNewMatrixO[nInitIndex1][nInitIndex2] + ' + ' + sFlow  
+    
+     mMatrixO = mNewMatrixO;
+     return clDomainObjects,clActivities,mMatrixO 
+     
+def RenderFunctionalGroupsInSysML(clGroupName,clActivities, mMatrixG):
+     cSysMLString=''
+     cLF = '\n'
+     N=len(mMatrixG)  
+     if N>0:
+         M=len(mMatrixG[0])
+     else:
+         M=0
+         
+     for n in range(N):
+         cSysMLString= cSysMLString + '         package ' + clGroupName[n] + '{' + cLF
+         for m in range (M):
+             if mMatrixG[n][m] > 0:
+                 cSysMLString = cSysMLString + '            import OverallUseCase::' + clActivities[m] + ';' + cLF
+         
+         cSysMLString= cSysMLString + '         }' + cLF
+
+     
+     return cSysMLString
+     
+def RenderActivityDefinitionsInSysML(O,clActivities):
+     cSysMLString=''
+     cLF = '\n'
+
+
+     for nText in range(len(clActivities)):      
+         clBufferOfNamesForUniqueness = [] # Remember all parameter names to be able to ensure uniqueness
+
+         cSysMLString = cSysMLString + '      action def ' + clActivities[nText] + ' {' + cLF
+         for nIn in range(len(clActivities)):
+             if O[nIn][nText] != '':
+                 sTemp = O[nIn][nText]
+                 sFlowString = sTemp.strip()
+                 iNumOccurences = sFlowString.count('+')
+                 for nParam in range(iNumOccurences  +1):
+                     sCurrentFlowName = SubFlow(sFlowString,nParam)
+                     sInput = sCurrentFlowName.lower()
+                     iNumberForUniqueness=1
+                     while clBufferOfNamesForUniqueness.count(sInput)>0:
+                         if clBufferOfNamesForUniqueness.count(sInput + str(iNumberForUniqueness)) == 0:
+                             sInput = sInput  + str(iNumberForUniqueness)
+                         iNumberForUniqueness=iNumberForUniqueness+1
+                     cSysMLString=cSysMLString + '         in ' + sInput + ';' + cLF
+                     clBufferOfNamesForUniqueness.append(sInput)
+              
+          
+     
+         for nOut in range(len(clActivities)):
+             if O[nText][nOut] != '':
+                 sTemp = O[nText][nOut]
+                 sFlowString = sTemp.strip()
+                 iNumOccurences = sFlowString.count('+')
+                 for nParam in range(iNumOccurences + 1):
+                     sCurrentFlowName = SubFlow(sFlowString,nParam)
+                     sOutput = sCurrentFlowName.lower() 
+                     iNumberForUniqueness=1
+                     while clBufferOfNamesForUniqueness.count(sOutput)>0:
+                         if clBufferOfNamesForUniqueness.count(sOutput + str(iNumberForUniqueness)) == 0:
+                             sOutput = sOutput  + str(iNumberForUniqueness)
+                         iNumberForUniqueness=iNumberForUniqueness+1
+                     cSysMLString = cSysMLString + '         out ' + sOutput + ';' + cLF
+                     clBufferOfNamesForUniqueness.append(sOutput) 
+
+         cSysMLString = cSysMLString + '      }' + cLF
+    
+     return cSysMLString
+
+def RenderFlowsAndItemDefsInSysML(O,clActivities):
+     cSysMLString=''
+     cItemString='' 
+     cLF = '\n'
+     clActionNames = ['' for col in range(len(clActivities))]
+
+     
+     cSysMLString = cSysMLString + '      action def OverallUseCase {' + cLF
+    
+     for nText in range(len(clActivities)):   
+         #cActionName = 'a' + str(nText)
+         cActionName = clActivities[nText].lower()
+         clActionNames[nText]=cActionName
+         cSysMLString = cSysMLString + '         action ' + cActionName + ':' + clActivities[nText] + ';' + cLF
+    
+     clBufferOfAllUsedItemDefs = [] #Remember what was already defined to avoid duplications
+     for n1 in range(len(clActivities)): 
+         for n2 in range(len(clActivities)):
+             if O[n1][n2] != '':
+                 sFlowString=(O[n1][n2]).strip()
+                 for nParam in range(sFlowString.count('+')+1):
+                     sCurrentFlowName = SubFlow(sFlowString,nParam)
+                     sResult = sCurrentFlowName.lower() 
+                     sInput = sCurrentFlowName.lower() 
+
+                     cSysMLString = cSysMLString + '         flow of ' + sCurrentFlowName + ' from ' + clActionNames[n1] + '.' + sResult + ' to '  + clActionNames[n2] + '.' + sInput + ';' + cLF
+
+                     if clBufferOfAllUsedItemDefs.count(sCurrentFlowName) < 1:
+                         clBufferOfAllUsedItemDefs.append(sCurrentFlowName)
+                         #cItemString = cItemString + '   item def ' + sCurrentFlowName + ';' + '\r\n'  
+                         # Item defs will now come via the functional architecture
+              
+
+     cSysMLString = cSysMLString + '      }' + cLF
+    
+     return cSysMLString, cItemString, clActionNames
+
+
+def ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups): 
+     ### Process Activities and Object Flows
+     cSysMLString=''
+     cLF = '\n'
+     clLinesToParse =  clActivitiesAndObjectFlows
+     clDomainObjects = []
+     clActivities = []
+     mMatrixO = []
+  
+     for nIndex in range(len(clLinesToParse)):
+        sLineToParse = clLinesToParse[nIndex]
+        clDomainObjects,clActivities,mMatrixO = UpdateMatrixWithFlow(clDomainObjects,clActivities,mMatrixO, sLineToParse)
+    
+     ### Process Functional Groupings
+     clLinesToParse =  clFunctionalGroups  
+     N=len(clLinesToParse)
+     M=len(mMatrixO)
+     mMatrixG = [[0 for col in range(M)] for row in range(N)]
+
+     clGroupName = ['' for col in range(N)]
+     for n in range (N):
+        sLineToParse = clLinesToParse[n];
+        sGroupName, clGroup = parseGroupLine(sLineToParse)
+        clGroupName[n]=sGroupName;
+        for m in range(M):
+          if GetIndexOfStringInCellArray(clGroup,clActivities[m]) > -1:
+             mMatrixG[n][m] = 1;
+          
+        
+     
+     sFlows, sItemDefs, clActionNames = RenderFlowsAndItemDefsInSysML(mMatrixO, clActivities)
+     cSysMLString=cSysMLString + sItemDefs + cLF  + '   package UseCaseActivities{' + cLF
+     cSysMLString = cSysMLString + RenderActivityDefinitionsInSysML(mMatrixO, clActivities)
+     cSysMLString = cSysMLString + sFlows
+     cSysMLString = cSysMLString + '      package FunctionalGroups{' + cLF
+     cSysMLString = cSysMLString + RenderFunctionalGroupsInSysML(clGroupName ,clActionNames, mMatrixG)
+     cSysMLString=cSysMLString + '      }' + cLF
+     cSysMLString=cSysMLString + '   }' + cLF
+     return cSysMLString 
+
+
 #### END TEMP
 
 
@@ -187,7 +359,7 @@ def RenderFunctionalArchitecture(F,clFunctionalBlockNames):
   
      cSysMLstring = '   part functionalSystem{' + '\n'
 
-    
+     cDependencySpecification = ''
      clSourcePortNames = [['' for col in range(F.shape[0])] for row in range(F.shape[0])]
      clTargetPortNames = [['' for col in range(F.shape[0])] for row in range(F.shape[0])]
      for nBlock in range(F.shape[0]):
@@ -221,6 +393,8 @@ def RenderFunctionalArchitecture(F,clFunctionalBlockNames):
                          clPortCell[nPort]=cPortName
                
                          clTargetPortNames[nPortIn][nBlock]=clPortCell
+                         
+                         
          cSysMLstring = cSysMLstring + '      }' + '\n'
    
     
@@ -245,15 +419,14 @@ def RenderFunctionalArchitecture(F,clFunctionalBlockNames):
            
     
     ## Trace Functional Blocks to Functional Groups
-     if False: #This cannot be done in SysML notation; it needs to be done directly in the database, using the correct element IDs of elements to trace to
-         for nBlock in range(F.shape[0]):
-             sCurrentName = clFunctionalBlockNames[nBlock]
-             cItemString = cItemString + '   dependency from FunctionalSystem::' + sCurrentName + ' to UseCaseActivities::FunctionalGroups::' + sCurrentName + ';' + '\n'
+     for nBlock in range(F.shape[0]):
+         sCurrentName = clFunctionalBlockNames[nBlock]
+         cDependencySpecification = cDependencySpecification + '   dependency from functionalSystem::' + sCurrentName + ' to UseCaseActivities::FunctionalGroups::' + sCurrentName + ';' + '\r\n'
     
       
      cSysMLstring = cSysMLstring + '   }' + '\n' + cItemString 
    
-     return  cSysMLstring
+     return  cSysMLstring, cDependencySpecification
 
 
 
@@ -328,9 +501,9 @@ def run_fas(clActivitiesAndObjectFlows, clFunctionalGroups):
      clFunctionalBlockNames = clGroupName
      
      ### Print the functional architecture
-     cSysMLString = RenderFunctionalArchitecture(mSymbolicMatrixF,clFunctionalBlockNames)
+     cSysMLString, cDependencySpecification = RenderFunctionalArchitecture(mSymbolicMatrixF,clFunctionalBlockNames)
     
-     return cSysMLString, cFormulaOutput    
+     return cSysMLString, cFormulaOutput, cDependencySpecification    
   
 
 def format_servername(cName):
@@ -512,10 +685,6 @@ def read_activities_and_functional_groups(strProjectID,strServerName):
                      cFeatureMembershipTarget=clFeatureMembershipTargets[clFeatureMembershipIds.index(cFlowOwnedRelationship2)][0].get('@id')
                  if clFeatureMembershipIds.count(cFlowOwnedRelationship3) > 0:
                      cFeatureMembershipTarget=clFeatureMembershipTargets[clFeatureMembershipIds.index(cFlowOwnedRelationship3)][0].get('@id')
-                 #print('Target: ' + cFeatureMembershipTarget)
-
-                 #print(clTargetIds)
-                 #print('   --')
                  
                  clActionPair=[]
                  for iFlowPartner in range (len(clTargetIds)):
@@ -561,18 +730,89 @@ def read_activities_and_functional_groups(strProjectID,strServerName):
      return bSuccess, cErrorMessage, clActivitiesAndObjectFlows, clFunctionalGroups
 
 
-def write_functional_architecture(cProjectID,cServerName,cSysMLString):
+def DumpJupyterNotebook(cWorkingFolderAndOutputFile, cWorkingFolderAndInputFile, cSysMLString):
+     cNotebookFile = cWorkingFolderAndOutputFile
+     FID1=open(cWorkingFolderAndInputFile,'r');
+     FID2=open(cNotebookFile,'w');
+     for tline in FID1:
+         num = tline.find('"<Paste SysMLv2 code here>"')
+         if num > -1:
+             cCommaBlankAndQuotationMark=',' + '\r\n' + '    "'
+             cCodedSysML='    "' + cSysMLString.replace('\n','\\n"' + cCommaBlankAndQuotationMark)    
+             #Remove final comma, blank and quotation mark 
+             cCodedSysML = cCodedSysML[:(len(cCodedSysML)-len(cCommaBlankAndQuotationMark))]
+             FID2.write(cCodedSysML )
+         else:
+             FID2.write(tline)
+     FID1.close()
+     FID2.close()
+     return cNotebookFile 
+
+
+def write_functional_architecture(cProjectID,cServerName,cSysMLString,cOptionalInputModel,cOptionalDependencySpecification):
+     targetProjectID = ''
+
      bSuccess = False
-     
+     cErrorMsg = ''
+     cSysMLString = 'package FunctionalModel {\n' + cOptionalInputModel + cSysMLString + cOptionalDependencySpecification + '}\n'
      print('')
      print('Here is the generated functional architecture: ')
      print(cSysMLString)
      print('Writing it to the server ... ')
-     cErrorMsg = "write_functional_architecture is not implemented"
-     print(cErrorMsg)
-     return bSuccess, cErrorMsg
 
-def render_transform_result(cFormulaOutput, cSysMLString):
+     bNewProject = true # if set to false then the commit will be made to the project from which the use case activities were read
+     if bNewProject:
+         cWorkingFolder=tempfile.gettempdir()
+         cNotebookFile = os.path.join(cWorkingFolder,'temp_fas_input_writer.ipynb')
+         FID =open(cNotebookFile ,'w');
+         FID.write('{\n "cells": [\n  {\n   "cell_type": "markdown",\n   "id": "237f75ac",\n   "metadata": {},\n   "source": [\n    "FAS for SysMLv2: FAS Input to Repository Writer\\n",\n    "=="\n   ]\n  },\n  {\n   "cell_type": "code",\n   "execution_count": null,\n   "id": "f4fe084d",\n   "metadata": {},\n   "outputs": [],\n   "source": [\n    "<Paste SysMLv2 code here>"\n   ]\n  },\n  {\n   "cell_type": "code",\n   "execution_count": null,\n   "id": "7e04e6fc",\n   "metadata": {},\n   "outputs": [],\n   "source": [\n    "%publish FunctionalModel"\n   ]\n  }\n ],\n "metadata": {\n  "kernelspec": {\n   "display_name": "SysML",\n   "language": "sysml",\n   "name": "sysml"\n  },\n  "language_info": {\n   "codemirror_mode": "sysml",\n   "file_extension": ".sysml",\n   "mimetype": "text/x-sysml",\n   "name": "SysML",\n   "pygments_lexer": "java",\n   "version": "1.0.0"\n  }\n },\n "nbformat": 4,\n "nbformat_minor": 5\n}\n')
+         FID.close()
+
+         cOutputFile = os.path.join(cWorkingFolder, 'temp_output.ipynb')
+         cResultFile = os.path.join(cWorkingFolder, 'temp_result.ipynb')
+
+         DumpJupyterNotebook(cOutputFile, cNotebookFile, cSysMLString)
+         if platform.system()!='Windows':
+             cSilencer='2>/dev/null'
+             os.system('jupyter nbconvert --to notebook --execute ' + cOutputFile + ' --stdout >' + cResultFile + ' ' + cSilencer)
+         else:
+             cSilencer='>nul 2>&1';
+             os.system('jupyter nbconvert --to notebook --execute ' + cOutputFile + ' --output=' + cResultFile + ' ' + cSilencer)
+
+         status = ''
+         FID1=open(cResultFile ,'r');
+         bStdout = False
+         bData = False
+         bResultExpected = False
+         for tline in FID1:
+             if bResultExpected:
+                 status = 'STATUS: ' + tline.replace('\\n','').replace('\\r','').strip()
+                 break
+             if tline.find('"name": "stdout",')>-1:
+                 bStdout = True
+             if tline.find('"data": {')>-1 and bStdout:
+                 bData = True
+             if tline.find('"text/plain": [')>-1 and bData:
+                 bResultExpected = True
+         FID1.close()
+  
+         if status.find('Saved to Project') < 0:
+                cErrorMsg =  'Error in commit to target project: ' + status
+                print(cErrorMsg)
+                bSuccess= false
+         else:
+                posOpeningParenthesis = status.find('(')
+                posClosingParenthesis = status.find(')')
+                targetProjectID = status[(posOpeningParenthesis+1):posClosingParenthesis]
+                bSuccess= True
+     else:
+         cErrorMsg = "write_functional_architecture: code is not yet implemented for writing to existing projects"
+         messagebox.showwarning("FAS Plugin","fas_transform is missing functionality for tracing functional blocks to functional groups and for re-using the original item defs in the database, instead of composing new ones")
+         print(cErrorMsg)
+     return bSuccess, cErrorMsg, targetProjectID
+
+
+def render_transform_result(cFormulaOutput, cSysMLString, bSuccess, cTargetProject):
      renderingWindow= Tk()
      renderingWindow.title("FAS Plugin")
      #renderingWindow.state('zoomed')
@@ -580,7 +820,13 @@ def render_transform_result(cFormulaOutput, cSysMLString):
      scr = scrolledtext.ScrolledText(renderingWindow, width = 200, height = 40, font = ("Courier", 9))
      scr.grid(column = 0, pady = 10, padx = 10)
      scr.focus()
-     scr.insert(tk.INSERT, '================================================\nApplying FAS-as-a-formula to the model\n================================================\n\n' + cFormulaOutput + '\n\n\n================================================\nResulting functional architecture\n================================================\n\n' + cSysMLString)
+     cStatusString = ''
+     if bSuccess:
+         cSuccessString = 'Wrote the model to project ID ' + cTargetProject
+         print(cSuccessString)
+         cStatusString = '\n================================================\nWriting the model to the repository\n================================================\n\n'
+         cStatusString = cStatusString + cSuccessString
+     scr.insert(tk.INSERT, '================================================\nApplying FAS-as-a-formula to the model\n================================================\n\n' + cFormulaOutput + '\n\n\n================================================\nResulting functional architecture\n================================================\n\n' + cSysMLString + cStatusString)
                            
      scr.configure(state ='disabled')
      renderingWindow.mainloop()
@@ -591,15 +837,15 @@ def fas_transform(cProjectID,cServerName):
          messagebox.showerror("FAS Plugin","Reading from the repository failed with the following error message: " + cErrorMsg)
      else:
          print('Transforming to functional architecture via FAS-as-a-formula ...')
-         cSysMLString, cFormulaOutput = run_fas(clActivitiesAndObjectFlows, clFunctionalGroups)
-         bSuccess, cErrorMsg = write_functional_architecture(cProjectID,cServerName,cSysMLString)
-         render_transform_result(cFormulaOutput, cSysMLString)
+         cSysMLString, cFormulaOutput,cOptionalDependencySpecification = run_fas(clActivitiesAndObjectFlows, clFunctionalGroups)
+         cOptionalInputModel=ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups)
+         bSuccess, cErrorMsg, cTargetProject = write_functional_architecture(cProjectID,cServerName,cSysMLString,cOptionalInputModel,cOptionalDependencySpecification)
+         render_transform_result(cFormulaOutput, cSysMLString, bSuccess, cTargetProject)
          if bSuccess == False:
              messagebox.showerror("FAS Plugin","Writing to the repository failed with the following error message: " + cErrorMsg)
          else:    
-             messagebox.showinfo("FAS Plugin","Writing to the repository succeeded.")
+             print("Writing to the repository succeeded.") ##In that case the GUI representation of the success message will be generated elsewhere
      
-     messagebox.showwarning("FAS Plugin","fas_transform is missing functionality for tracing functional blocks to functional groups and for re-using the original item defs in the database, instead of composing new ones")
 
 
 def processProjectSelection(listWindow,theCombo,cProjectID):
