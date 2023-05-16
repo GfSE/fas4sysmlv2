@@ -47,6 +47,9 @@ Linux distributions (tested with the OpenSUSE Leap 15.4 distribution).
    (Note that this will also ensure the installation of Miniconda3 incl. Python.
    The minimum required Python version is Python 3.9)
 
+ - Ensure that the "sympy" package for Python is installed
+   (it can be installed from a command prompt with the command "pip install sympy").
+
  - Extract the folder structure of the FAS plugin, from the distribution containing
    the present document.
 
