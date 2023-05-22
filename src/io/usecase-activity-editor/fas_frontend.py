@@ -237,7 +237,7 @@ def RenderActivityDefinitionsInSysML(O,clActivities):
      for nText in range(len(clActivities)):      
          clBufferOfNamesForUniqueness = [] # Remember all parameter names to be able to ensure uniqueness
 
-         cSysMLString = cSysMLString + '      action def ' + clActivities[nText] + ' {' + cLF
+         cSysMLString = cSysMLString + '         action ' + clActivities[nText] + ' {' + cLF
          for nIn in range(len(clActivities)):
              if O[nIn][nText] != '':
                  sTemp = O[nIn][nText]
@@ -251,7 +251,7 @@ def RenderActivityDefinitionsInSysML(O,clActivities):
                          if clBufferOfNamesForUniqueness.count(sInput + str(iNumberForUniqueness)) == 0:
                              sInput = sInput  + str(iNumberForUniqueness)
                          iNumberForUniqueness=iNumberForUniqueness+1
-                     cSysMLString=cSysMLString + '         in ' + sInput + ';' + cLF
+                     cSysMLString=cSysMLString + '            in ' + sInput + ';' + cLF
                      clBufferOfNamesForUniqueness.append(sInput)
               
           
@@ -269,10 +269,10 @@ def RenderActivityDefinitionsInSysML(O,clActivities):
                          if clBufferOfNamesForUniqueness.count(sOutput + str(iNumberForUniqueness)) == 0:
                              sOutput = sOutput  + str(iNumberForUniqueness)
                          iNumberForUniqueness=iNumberForUniqueness+1
-                     cSysMLString = cSysMLString + '         out ' + sOutput + ';' + cLF
+                     cSysMLString = cSysMLString + '            out ' + sOutput + ';' + cLF
                      clBufferOfNamesForUniqueness.append(sOutput) 
 
-         cSysMLString = cSysMLString + '      }' + cLF
+         cSysMLString = cSysMLString + '         }' + cLF
     
      return cSysMLString
      
@@ -357,16 +357,12 @@ def RenderFlowsAndItemDefsInSysML(O,clActivities):
      cSysMLString=''
      cItemString='' 
      cLF = '\r\n'
-     clActionNames = ['' for col in range(len(clActivities))]
+     clActionNames = clActivities
 
      
      cSysMLString = cSysMLString + '      action def OverallUseCase {' + cLF
     
-     for nText in range(len(clActivities)):   
-         #cActionName = 'a' + str(nText)
-         cActionName = clActivities[nText].lower()
-         clActionNames[nText]=cActionName
-         cSysMLString = cSysMLString + '         action ' + cActionName + ':' + clActivities[nText] + ';' + cLF
+     cSysMLString = cSysMLString + RenderActivityDefinitionsInSysML(O,clActivities)
     
      clBufferOfAllUsedItemDefs = [] #Remember what was already defined to avoid duplications
      for n1 in range(len(clActivities)): 
@@ -422,7 +418,6 @@ def ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups):
      
      sFlows, sItemDefs, clActionNames = RenderFlowsAndItemDefsInSysML(mMatrixO, clActivities)
      cSysMLString=cSysMLString + sItemDefs + cLF  + '   package UseCaseActivities{' + cLF
-     cSysMLString = cSysMLString + RenderActivityDefinitionsInSysML(mMatrixO, clActivities)
      cSysMLString = cSysMLString + sFlows
      cSysMLString = cSysMLString + '      package FunctionalGroups{' + cLF
      cSysMLString = cSysMLString + RenderFunctionalGroupsInSysML(clGroupName ,clActionNames, mMatrixG)

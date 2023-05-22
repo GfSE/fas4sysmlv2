@@ -161,18 +161,10 @@ def UpdateUniqueContentCellArray (clIn, sContent):
 #### THE FOLLOWING IS ONLY NEEDED IF WE WANT TO CONTINUE WRITING A NEW MODEL INSTEAD OF INCREMENTS FOR THE EXISTING MODEL
 #### IF THIS STAYS NEEDED IN FUTURE, THEN A JOINT MODULE WITH fas_frontend SHOULD BE CREATED
 
-def UpdateMatrixWithFlow(clDomainObjects,clActivities,mMatrixO, sLineToParse,clActionDefs):
+def UpdateMatrixWithFlow(clDomainObjects,clActivities,mMatrixO, sLineToParse):
      sSourceObject,sFlow,sTargetObject = parseFlowLine(sLineToParse)
      clActivities = UpdateUniqueContentCellArray (clActivities, sSourceObject)
      clActivities = UpdateUniqueContentCellArray (clActivities, sTargetObject)
-     clActionDefs = []
-     for nActivity in range(len(clActivities)):
-         cActName = clActivities[nActivity]
-         clActionDefs.append(cActName)
-         if len(cActName) > 0:
-             cActName = cActName[0].upper() + cActName[1:len(cActName)]#Quick work-around for the first release. The clean solution would be to look for the precise spelling of the Activity name from the database
-             clActionDefs[nActivity] = cActName
-             
      clDomainObjects = UpdateUniqueContentCellArray (clDomainObjects, sFlow)
      M = len(clActivities);
      mNewMatrixO = [['' for col in range(M)] for row in range(M)]
@@ -187,7 +179,7 @@ def UpdateMatrixWithFlow(clDomainObjects,clActivities,mMatrixO, sLineToParse,clA
                      mNewMatrixO[nInitIndex1][nInitIndex2] =  mNewMatrixO[nInitIndex1][nInitIndex2] + ' + ' + sFlow  
     
      mMatrixO = mNewMatrixO;
-     return clDomainObjects,clActivities,mMatrixO,clActionDefs
+     return clDomainObjects,clActivities,mMatrixO 
      
 def RenderFunctionalGroupsInSysML(clGroupName,clActivities, mMatrixG):
      cSysMLString=''
@@ -209,7 +201,7 @@ def RenderFunctionalGroupsInSysML(clGroupName,clActivities, mMatrixG):
      
      return cSysMLString
      
-def RenderActivityDefinitionsInSysML(O,clActivities,clActionDefs):
+def RenderActivityDefinitionsInSysML(O,clActivities):
      cSysMLString=''
      cLF = '\n'
 
@@ -217,7 +209,7 @@ def RenderActivityDefinitionsInSysML(O,clActivities,clActionDefs):
      for nText in range(len(clActivities)):      
          clBufferOfNamesForUniqueness = [] # Remember all parameter names to be able to ensure uniqueness
 
-         cSysMLString = cSysMLString + '      action def ' + clActionDefs[nText] + ' {' + cLF
+         cSysMLString = cSysMLString + '         action ' + clActivities[nText] + ' {' + cLF
          for nIn in range(len(clActivities)):
              if O[nIn][nText] != '':
                  sTemp = O[nIn][nText]
@@ -231,7 +223,7 @@ def RenderActivityDefinitionsInSysML(O,clActivities,clActionDefs):
                          if clBufferOfNamesForUniqueness.count(sInput + str(iNumberForUniqueness)) == 0:
                              sInput = sInput  + str(iNumberForUniqueness)
                          iNumberForUniqueness=iNumberForUniqueness+1
-                     cSysMLString=cSysMLString + '         in ' + sInput + ';' + cLF
+                     cSysMLString=cSysMLString + '            in ' + sInput + ';' + cLF
                      clBufferOfNamesForUniqueness.append(sInput)
               
           
@@ -249,27 +241,24 @@ def RenderActivityDefinitionsInSysML(O,clActivities,clActionDefs):
                          if clBufferOfNamesForUniqueness.count(sOutput + str(iNumberForUniqueness)) == 0:
                              sOutput = sOutput  + str(iNumberForUniqueness)
                          iNumberForUniqueness=iNumberForUniqueness+1
-                     cSysMLString = cSysMLString + '         out ' + sOutput + ';' + cLF
+                     cSysMLString = cSysMLString + '            out ' + sOutput + ';' + cLF
                      clBufferOfNamesForUniqueness.append(sOutput) 
 
-         cSysMLString = cSysMLString + '      }' + cLF
+         cSysMLString = cSysMLString + '         }' + cLF
     
      return cSysMLString
 
-def RenderFlowsAndItemDefsInSysML(O,clActivities,clActionDefs):
+
+def RenderFlowsAndItemDefsInSysML(O,clActivities):
      cSysMLString=''
      cItemString='' 
      cLF = '\n'
-     clActionNames = ['' for col in range(len(clActivities))]
+     clActionNames = clActivities
 
      
      cSysMLString = cSysMLString + '      action def OverallUseCase {' + cLF
     
-     for nText in range(len(clActivities)):   
-         #cActionName = 'a' + str(nText)
-         cActionName = clActivities[nText].lower()
-         clActionNames[nText]=cActionName
-         cSysMLString = cSysMLString + '         action ' + cActionName + ':' + clActionDefs[nText] + ';' + cLF
+     cSysMLString = cSysMLString + RenderActivityDefinitionsInSysML(O,clActivities)
     
      clBufferOfAllUsedItemDefs = [] #Remember what was already defined to avoid duplications
      for n1 in range(len(clActivities)): 
@@ -285,8 +274,7 @@ def RenderFlowsAndItemDefsInSysML(O,clActivities,clActionDefs):
 
                      if clBufferOfAllUsedItemDefs.count(sCurrentFlowName) < 1:
                          clBufferOfAllUsedItemDefs.append(sCurrentFlowName)
-                         cItemString = cItemString + '   item def ' + sCurrentFlowName + ';' + '\n'  
-
+                         cItemString = cItemString + '   item def ' + sCurrentFlowName + ';' + '\n'
               
 
      cSysMLString = cSysMLString + '      }' + cLF
@@ -301,14 +289,12 @@ def ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups):
      clLinesToParse =  clActivitiesAndObjectFlows
      clDomainObjects = []
      clActivities = []
-     clActionDefs = []
      mMatrixO = []
   
      for nIndex in range(len(clLinesToParse)):
         sLineToParse = clLinesToParse[nIndex]
-        clDomainObjects,clActivities,mMatrixO, clActionDefs = UpdateMatrixWithFlow(clDomainObjects,clActivities,mMatrixO, sLineToParse, clActionDefs)
-
-
+        clDomainObjects,clActivities,mMatrixO = UpdateMatrixWithFlow(clDomainObjects,clActivities,mMatrixO, sLineToParse)
+    
      ### Process Functional Groupings
      clLinesToParse =  clFunctionalGroups  
      N=len(clLinesToParse)
@@ -326,9 +312,8 @@ def ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups):
           
         
      
-     sFlows, sItemDefs, clActionNames = RenderFlowsAndItemDefsInSysML(mMatrixO, clActivities, clActionDefs)
+     sFlows, sItemDefs, clActionNames = RenderFlowsAndItemDefsInSysML(mMatrixO, clActivities)
      cSysMLString=cSysMLString + sItemDefs + cLF  + '   package UseCaseActivities{' + cLF
-     cSysMLString = cSysMLString + RenderActivityDefinitionsInSysML(mMatrixO, clActivities, clActionDefs)
      cSysMLString = cSysMLString + sFlows
      cSysMLString = cSysMLString + '      package FunctionalGroups{' + cLF
      cSysMLString = cSysMLString + RenderFunctionalGroupsInSysML(clGroupName ,clActionNames, mMatrixG)
