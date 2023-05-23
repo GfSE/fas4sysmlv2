@@ -443,7 +443,7 @@ def run_fas(clActivitiesAndObjectFlows, clFunctionalGroups):
      
      cFormulaOutput = cFormulaOutput  + 'O = (symbolic ' + str(mSymbolicMatrixO.shape[0]) + 'x' + str(mSymbolicMatrixO.shape[1]) + ' matrix)'
      cFormulaOutput = cFormulaOutput  + '\n' 
-     cFormulaOutput = cFormulaOutput  + '\n' +pretty(mSymbolicMatrixO)
+     cFormulaOutput = cFormulaOutput  + '\n' +pretty(mSymbolicMatrixO, num_columns=195)
      cFormulaOutput = cFormulaOutput  + '\n' 
      
      M=mSymbolicMatrixO.shape[0]
@@ -468,7 +468,7 @@ def run_fas(clActivitiesAndObjectFlows, clFunctionalGroups):
    
      cFormulaOutput = cFormulaOutput  + '\n' + 'G = (symbolic ' + str(mSymbolicMatrixG.shape[0]) + 'x' + str(mSymbolicMatrixG.shape[1]) + ' matrix)'
      cFormulaOutput = cFormulaOutput  + '\n' 
-     cFormulaOutput = cFormulaOutput  + '\n' +pretty(mSymbolicMatrixG)
+     cFormulaOutput = cFormulaOutput  + '\n' +pretty(mSymbolicMatrixG, num_columns=195)
      cFormulaOutput = cFormulaOutput  + '\n'     
     
      
@@ -489,7 +489,7 @@ def run_fas(clActivitiesAndObjectFlows, clFunctionalGroups):
      
      cFormulaOutput = cFormulaOutput  + '\n' + 'F = (symbolic ' + str(mSymbolicMatrixF.shape[0]) + 'x' + str(mSymbolicMatrixF.shape[1]) + ' matrix)'
      cFormulaOutput = cFormulaOutput  + '\n' 
-     cFormulaOutput = cFormulaOutput  + '\n' +pretty(mSymbolicMatrixF)
+     cFormulaOutput = cFormulaOutput  + '\n' +pretty(mSymbolicMatrixF, num_columns=195)
      cFormulaOutput = cFormulaOutput  + '\n'     
      
      ### FAS method says that names of functional blocks are equal to names of functional groups
