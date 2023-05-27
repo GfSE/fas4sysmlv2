@@ -40,8 +40,7 @@ This document describes its installation and use.
 ==============
 
 The following procedure should work on Windows 10 and 11 as well as on some 
-Linux distributions (client-side installation tested with the OpenSUSE Leap 15.4 distribution and 
-server-side installation tested with Ubuntu 18.04.6).
+Linux distributions (tested with Ubuntu 18.04.6).
 
  - Install the SysML 2 reference installation for jupyter, according to
    https://github.com/Systems-Modeling/SysML-v2-Release/tree/master/install/jupyter

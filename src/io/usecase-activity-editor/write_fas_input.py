@@ -57,7 +57,7 @@ def main():
 
      if platform.system()!='Windows':
          cSilencer='2>/dev/null'
-         os.system('jupyter nbconvert --to notebook --execute ' + cOutputFile + ' --stdout >' + cResultFile + ' ' + cSilencer)
+         os.system('exec /bin/bash -i -c "jupyter nbconvert --to notebook --execute ' + cOutputFile + ' --stdout >' + cResultFile + ' ' + cSilencer +'"')
      else:
          cSilencer='>nul 2>&1';
          os.system('jupyter nbconvert --to notebook --execute ' + cOutputFile + ' --output=' + cResultFile + ' ' + cSilencer)
