@@ -244,7 +244,7 @@ print('Visualizing the result ...');
 cHtmlFile = cNotebookFile.replace('.ipynb','.html')
 if  platform.system()!='Windows':
      cSilencer='>/dev/null 2>&1'
-     os.system('jupyter nbconvert --to html --execute ' + cNotebookFile + ' --output=' + cHtmlFile + ' ' + cSilencer);
+     os.system('/bin/bash -i -c "jupyter nbconvert --to html --execute ' + cNotebookFile + ' --output=' + cHtmlFile + ' ' + cSilencer+'"');
      status=os.waitstatus_to_exitcode(os.system('firefox ' + cHtmlFile + ' ' + cSilencer))
      if status > 0:
          status=os.waitstatus_to_exitcode(os.system('opera ' + cHtmlFile + ' ' + cSilencer))
