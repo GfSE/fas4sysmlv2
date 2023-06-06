@@ -40,7 +40,7 @@ This document describes its installation and use.
 ==============
 
 The following procedure should work on Windows 10 and 11 as well as on some 
-Linux distributions (tested with Ubuntu 18.04.6).
+Linux distributions (tested with Ubuntu 18.04.6 and 22.04.2).
 
  - Install the SysML 2 reference installation for jupyter, according to
    https://github.com/Systems-Modeling/SysML-v2-Release/tree/master/install/jupyter
@@ -57,8 +57,8 @@ Linux distributions (tested with Ubuntu 18.04.6).
    The SysML v2 reference implementation for jupyter must be set up to use this repository.
    The installation of your own SysML v2 repository pilot installation is described here:
    https://github.com/GfSE/fas4sysmlv2/blob/main/doc/tech-docs/sysmlv2-pilot/installation_howto.odt
-   The above guide also specifies how to define the repository to be used by the SysML v2 
-   reference implementation.
+   The above guide also directs you for specifications on how to define the repository to be used 
+   by the SysML v2 reference implementation.
 
  - Ensure that OpenOffice or LibreOffice is installed
 
