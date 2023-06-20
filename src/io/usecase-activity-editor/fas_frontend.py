@@ -67,19 +67,32 @@ def Readname(FID,iLineIndex):
      return sName, iLineIndexNew        
 
 def  My_GrowCellArray(clOld, newEntry):
-     clNew = ['' for col in range((len(clOld)+1))]
-     for nCopy in range(len(clOld)):
-         clNew[nCopy]=clOld[nCopy]
-     clNew[len(clNew)-1]=newEntry;
-     return clNew      
+# This function is there due to porting from another programming language without an "append()" function
+# It shall be fully replaced by "append()" during further code cleaning
+     clOld.append(newEntry)      
+     return clOld
 
+
+def ParseFullActivityName(sFullName):
+     #If the Full name start with a number in round brackets, then this number is cut away and returned separately
+     #If no number is available, then -1 will be returned as the Activity number
+     iActivityNumber = -1
+     sName = sFullName.strip()
+     if sName[0] == '(':
+         iClosingBracketPos = sName.find(')')
+         if (iClosingBracketPos > -1) and (len(sName) > (iClosingBracketPos + 1)):
+             if iClosingBracketPos > 1:
+                 iActivityNumber = int(sName [1:(iClosingBracketPos)])
+             sName = sName [(iClosingBracketPos+1):].strip()
+
+     return sName, iActivityNumber 
 
 def ParseopenOfficeExportFile(cFileName):
      FID1_ID = open(cFileName,'r')
      clGroupNames=[]
      clGroupPositionVectors=[]
-     clActivityNames=[]
-     clActivityPositionVectors=[]
+     clActivityDictionary=[]
+     bActivityNumbersAreExhaustive=True
      clConnectorNames=[]
      clConnectorPositionVectors=[]
      FID1 = FID1_ID.readlines()
@@ -94,10 +107,12 @@ def ParseopenOfficeExportFile(cFileName):
              clGroupNames =  My_GrowCellArray(clGroupNames, sName)
              clGroupPositionVectors =  My_GrowCellArray(clGroupPositionVectors, vPositionsXY)            
          elif sLine=='Element':
-             sName, iLineIndex = Readname(FID1,iLineIndex)
+             sFullName, iLineIndex = Readname(FID1,iLineIndex)
+             sName, iActivityNumber = ParseFullActivityName(sFullName)
+             if iActivityNumber == -1:
+                 bActivityNumbersAreExhaustive=False
              vPositionsXY, iLineIndex = ReadPositions(FID1,4,iLineIndex)
-             clActivityNames =  My_GrowCellArray(clActivityNames, sName)
-             clActivityPositionVectors =  My_GrowCellArray(clActivityPositionVectors, vPositionsXY)
+             clActivityDictionary.append({ 'name': sName, 'number' :  iActivityNumber, 'positions' : vPositionsXY })
          elif sLine=='Connector':
              vStartPositionXY, iLineIndex = ReadPositions(FID1,2,iLineIndex)
              vEndPositionXY, iLineIndex = ReadPositions(FID1,2, iLineIndex)
@@ -111,6 +126,14 @@ def ParseopenOfficeExportFile(cFileName):
          
       
      FID1_ID.close()
+
+     # If all Activities have been numbered by a preceding number in round brackets in the name, then sort activity names and positions by activity number
+     if bActivityNumbersAreExhaustive:
+         clActivityDictionary = sorted(clActivityDictionary, key=lambda act: act.get('number'))
+
+     clActivityNames=[cAct.get('name') for cAct in clActivityDictionary]
+     clActivityPositionVectors=[cAct.get('positions') for cAct in clActivityDictionary]
+
      return clGroupNames, clGroupPositionVectors, clActivityNames, clActivityPositionVectors,clConnectorNames,clConnectorPositionVectors
 
 
