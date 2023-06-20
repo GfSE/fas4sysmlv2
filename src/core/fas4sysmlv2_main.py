@@ -161,17 +161,16 @@ def UpdateUniqueContentCellArray (clIn, sContent):
 #### THE FOLLOWING IS ONLY NEEDED IF WE WANT TO CONTINUE WRITING A NEW MODEL INSTEAD OF INCREMENTS FOR THE EXISTING MODEL
 #### IF THIS STAYS NEEDED IN FUTURE, THEN A JOINT MODULE WITH fas_frontend SHOULD BE CREATED
 
-def UpdateMatrixWithFlow(clDomainObjects,clActivities,mMatrixO, sLineToParse):
+def UpdateMatrixWithFlow(clDomainObjects,clActivityNamesSorted,mMatrixO, sLineToParse):
      sSourceObject,sFlow,sTargetObject = parseFlowLine(sLineToParse)
-     clActivities = UpdateUniqueContentCellArray (clActivities, sSourceObject)
-     clActivities = UpdateUniqueContentCellArray (clActivities, sTargetObject)
+     clActivities = clActivityNamesSorted
      clDomainObjects = UpdateUniqueContentCellArray (clDomainObjects, sFlow)
      M = len(clActivities);
-     mNewMatrixO = [['' for col in range(M)] for row in range(M)]
+     mNewMatrixO = mMatrixO
+     if len(mNewMatrixO)==0:
+         mNewMatrixO = [['' for col in range(M)] for row in range(M)]
      for nInitIndex1 in range(M):
          for nInitIndex2  in range(M):
-             if nInitIndex1 < len(mMatrixO) and nInitIndex2 < len(mMatrixO):
-                 mNewMatrixO[nInitIndex1][nInitIndex2] = mMatrixO[nInitIndex1][nInitIndex2]
              if GetIndexOfStringInCellArray(clActivities,sSourceObject) == nInitIndex1 and GetIndexOfStringInCellArray(clActivities,sTargetObject) == nInitIndex2 :
                  if mNewMatrixO[nInitIndex1][nInitIndex2] == '':
                      mNewMatrixO[nInitIndex1][nInitIndex2] =  sFlow
@@ -179,7 +178,8 @@ def UpdateMatrixWithFlow(clDomainObjects,clActivities,mMatrixO, sLineToParse):
                      mNewMatrixO[nInitIndex1][nInitIndex2] =  mNewMatrixO[nInitIndex1][nInitIndex2] + ' + ' + sFlow  
     
      mMatrixO = mNewMatrixO;
-     return clDomainObjects,clActivities,mMatrixO 
+     return clDomainObjects,mMatrixO 
+
      
 def RenderFunctionalGroupsInSysML(clGroupName,clActivities, mMatrixG):
      cSysMLString=''
@@ -282,18 +282,18 @@ def RenderFlowsAndItemDefsInSysML(O,clActivities):
      return cSysMLString, cItemString, clActionNames
 
 
-def ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups): 
+def ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups, clActivityNamesSorted): 
      ### Process Activities and Object Flows
      cSysMLString=''
      cLF = '\n'
      clLinesToParse =  clActivitiesAndObjectFlows
      clDomainObjects = []
-     clActivities = []
+     clActivities = clActivityNamesSorted
      mMatrixO = []
   
      for nIndex in range(len(clLinesToParse)):
         sLineToParse = clLinesToParse[nIndex]
-        clDomainObjects,clActivities,mMatrixO = UpdateMatrixWithFlow(clDomainObjects,clActivities,mMatrixO, sLineToParse)
+        clDomainObjects,mMatrixO = UpdateMatrixWithFlow(clDomainObjects,clActivities,mMatrixO, sLineToParse)
     
      ### Process Functional Groupings
      clLinesToParse =  clFunctionalGroups  
@@ -328,18 +328,14 @@ def ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups):
 
 def SymbolicUpdateMatrixWithFlow(clDomainObjects,clActivities,mMatrixO, sLineToParse):
      sSourceObject,sFlow,sTargetObject = parseFlowLine(sLineToParse)
-     clActivities = UpdateUniqueContentCellArray (clActivities, sSourceObject)
-     clActivities = UpdateUniqueContentCellArray (clActivities, sTargetObject)
      clDomainObjects = UpdateUniqueContentCellArray (clDomainObjects, sFlow)
      M = len(clActivities);
-     mNewMatrixO = Matrix([[0 for col in range(M)] for row in range(M)])
+     mNewMatrixO = mMatrixO
+     
+     if mNewMatrixO.shape[0] == 0:
+         mNewMatrixO = Matrix([[0 for col in range(M)] for row in range(M)])
      for nInitIndex1 in range(M):
          for nInitIndex2  in range(M):
-             mShape=mMatrixO.shape
-             if nInitIndex1 < mShape[0] and nInitIndex2 < mShape[0]:
-                 mTemp = [[0 for col in range(M)] for row in range(M)]
-                 mTemp[nInitIndex1][nInitIndex2] = mMatrixO[nInitIndex1,nInitIndex2]
-                 mNewMatrixO = mNewMatrixO + Matrix(mTemp)
              if GetIndexOfStringInCellArray(clActivities,sSourceObject) == nInitIndex1 and GetIndexOfStringInCellArray(clActivities,sTargetObject) == nInitIndex2 :
                  mTemp = [[0 for col in range(M)] for row in range(M)]
                  sFlowSymbolic = symbols(sFlow)
@@ -425,7 +421,7 @@ def RenderFunctionalArchitecture(F,clFunctionalBlockNames):
 
 
 
-def run_fas(clActivitiesAndObjectFlows, clFunctionalGroups):
+def run_fas(clActivitiesAndObjectFlows, clFunctionalGroups, clActivityNamesSorted):
 
      cSysMLString=''
      cFormulaOutput = ''
@@ -433,7 +429,7 @@ def run_fas(clActivitiesAndObjectFlows, clFunctionalGroups):
      ### Process Activities and Object Flows
      clLinesToParse =  clActivitiesAndObjectFlows
      clDomainObjects = []
-     clActivities = []
+     clActivities = clActivityNamesSorted
      mSymbolicMatrixO = Matrix([])
   
      for nIndex in range(len(clLinesToParse)):
@@ -721,8 +717,8 @@ def read_activities_and_functional_groups(strProjectID,strServerName):
                  clFunctionalGroups.append(cCurrentFunctionalGroup)       
 
          
-         
-     return bSuccess, cErrorMessage, clActivitiesAndObjectFlows, clFunctionalGroups
+     clActivityNamesSorted = sorted(clActions)    
+     return bSuccess, cErrorMessage, clActivitiesAndObjectFlows, clFunctionalGroups, clActivityNamesSorted
 
 
 def DumpJupyterNotebook(cWorkingFolderAndOutputFile, cWorkingFolderAndInputFile, cSysMLString):
@@ -835,13 +831,13 @@ def render_transform_result(cFormulaOutput, cSysMLString, bSuccess, cTargetProje
      renderingWindow.mainloop()
 
 def fas_transform(cProjectID,cServerName):
-     bSuccess, cErrorMsg, clActivitiesAndObjectFlows, clFunctionalGroups = read_activities_and_functional_groups(cProjectID,cServerName)
+     bSuccess, cErrorMsg, clActivitiesAndObjectFlows, clFunctionalGroups, clActivityNamesSorted = read_activities_and_functional_groups(cProjectID,cServerName)
      if bSuccess == False:
          messagebox.showerror("FAS Plugin","Reading from the repository failed with the following error message: " + cErrorMsg)
      else:
          print('Transforming to functional architecture via FAS-as-a-formula ...')
-         cSysMLString, cFormulaOutput,cOptionalDependencySpecification, cItemDefString = run_fas(clActivitiesAndObjectFlows, clFunctionalGroups)
-         cOptionalInputModel=ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups)
+         cSysMLString, cFormulaOutput,cOptionalDependencySpecification, cItemDefString = run_fas(clActivitiesAndObjectFlows, clFunctionalGroups, clActivityNamesSorted)
+         cOptionalInputModel=ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups, clActivityNamesSorted )
          bSuccess, cErrorMsg, cTargetProject = write_functional_architecture(cProjectID,cServerName,cSysMLString,cOptionalInputModel,cOptionalDependencySpecification, cItemDefString)
          render_transform_result(cFormulaOutput, cSysMLString, bSuccess, cTargetProject, cItemDefString)
          if bSuccess == False:

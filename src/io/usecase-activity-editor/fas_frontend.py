@@ -127,9 +127,13 @@ def ParseopenOfficeExportFile(cFileName):
       
      FID1_ID.close()
 
-     # If all Activities have been numbered by a preceding number in round brackets in the name, then sort activity names and positions by activity number
+     # If all Activities have been numbered by a preceding number in round brackets in the name, then sort activity names and positions by activity number,
+     # otherwise sort alphabetically by activity name, in order to have reproducible matrix content with equivalent input, independent from order of elements 
+     # in the graphical representation of the input.
      if bActivityNumbersAreExhaustive:
          clActivityDictionary = sorted(clActivityDictionary, key=lambda act: act.get('number'))
+     else:
+         clActivityDictionary = sorted(clActivityDictionary, key=lambda act: act.get('name'))
 
      clActivityNames=[cAct.get('name') for cAct in clActivityDictionary]
      clActivityPositionVectors=[cAct.get('positions') for cAct in clActivityDictionary]
