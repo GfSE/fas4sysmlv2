@@ -192,7 +192,7 @@ def ParseActivityModel (cFileName):
      rTolerancePixels = 50
      clActivitiesAndObjectFlows = CreateActivitiesAndObjectFlows(clActivityNames, clActivityPositionVectors,clConnectorNames,clConnectorPositionVectors, rTolerancePixels)
      clFunctionalGroups = CreateFunctionalGroups(clActivityNames, clActivityPositionVectors, clGroupNames,  clGroupPositionVectors)
-     return clActivitiesAndObjectFlows, clFunctionalGroups
+     return clActivitiesAndObjectFlows, clFunctionalGroups, clActivityNames
 
 
 def parseGroupLine (sLine):
@@ -252,15 +252,21 @@ def SubFlow(sFlowString,nPort):
      return sCurrentFlowName
 
 
-def RenderActivityDefinitionsInSysML(O,clActivities):
-     cSysMLString=''
+def RenderActivityDefinitionsInSysML(O,clActivities, clActivityNamesSorted):
+     # The use case activities in clActivities are connected with each other via matrix O
+     # The exhaustive set of use case activities to render (including the ones without connections)
+     # is provided in clActivityNamesSorted. The sort order in clActivityNamesSorted will
+     # be the order in which the Actions will be declared in SysML v2.
+
+     clSysMLStringsToBeSorted = []
+     clActionDefs = clActivityNamesSorted
      cLF = '\r\n'
 
 
      for nText in range(len(clActivities)):      
          clBufferOfNamesForUniqueness = [] # Remember all parameter names to be able to ensure uniqueness
 
-         cSysMLString = cSysMLString + '         action ' + clActivities[nText] + ' {' + cLF
+         cSysMLString = '         action ' + clActivities[nText] + ' {' + cLF
          for nIn in range(len(clActivities)):
              if O[nIn][nText] != '':
                  sTemp = O[nIn][nText]
@@ -296,8 +302,28 @@ def RenderActivityDefinitionsInSysML(O,clActivities):
                      clBufferOfNamesForUniqueness.append(sOutput) 
 
          cSysMLString = cSysMLString + '         }' + cLF
-    
-     return cSysMLString
+
+         iSortNumber = -1
+         if clActivityNamesSorted.count(clActivities[nText]) > 0:
+             iSortNumber = clActivityNamesSorted.index(clActivities[nText]) 
+
+         clSysMLStringsToBeSorted.append({'name' : clActivities[nText], 'sysml' : cSysMLString, 'number' : iSortNumber })
+
+     #Process use case activities without object flows
+     for nFullListIndex in range(len(clActivityNamesSorted)):
+         if clActivities.count(clActivityNamesSorted[nFullListIndex]) < 1:
+             cSysMLStringTemp = '         action ' + clActivityNamesSorted[nFullListIndex] + ' {' + cLF + '         }' + cLF 
+             clSysMLStringsToBeSorted.append({'name' : clActivityNamesSorted[nFullListIndex], 'sysml' : cSysMLStringTemp, 'number' : nFullListIndex })
+
+     clSysMLStringsSorted = sorted(clSysMLStringsToBeSorted, key=lambda act: act.get('number'))
+
+     cSysMLStringFinal = '';
+
+     for nString in range(len(clSysMLStringsSorted )):
+         cSysMLStringFinal = cSysMLStringFinal + clSysMLStringsSorted[nString].get('sysml')
+
+
+     return clActionDefs, cSysMLStringFinal
      
 def parseFlowLine (sLine):
     
@@ -355,17 +381,16 @@ def UpdateUniqueContentCellArray (clIn, sContent):
      return clOut
 
 
-def UpdateMatrixWithFlow(clDomainObjects,clActivities,mMatrixO, sLineToParse):
+def UpdateMatrixWithFlow(clDomainObjects,clActivityNamesSorted,mMatrixO, sLineToParse):
      sSourceObject,sFlow,sTargetObject = parseFlowLine(sLineToParse)
-     clActivities = UpdateUniqueContentCellArray (clActivities, sSourceObject)
-     clActivities = UpdateUniqueContentCellArray (clActivities, sTargetObject)
+     clActivities = clActivityNamesSorted
      clDomainObjects = UpdateUniqueContentCellArray (clDomainObjects, sFlow)
      M = len(clActivities);
-     mNewMatrixO = [['' for col in range(M)] for row in range(M)]
+     mNewMatrixO = mMatrixO
+     if len(mNewMatrixO)==0:
+         mNewMatrixO = [['' for col in range(M)] for row in range(M)]
      for nInitIndex1 in range(M):
          for nInitIndex2  in range(M):
-             if nInitIndex1 < len(mMatrixO) and nInitIndex2 < len(mMatrixO):
-                 mNewMatrixO[nInitIndex1][nInitIndex2] = mMatrixO[nInitIndex1][nInitIndex2]
              if GetIndexOfStringInCellArray(clActivities,sSourceObject) == nInitIndex1 and GetIndexOfStringInCellArray(clActivities,sTargetObject) == nInitIndex2 :
                  if mNewMatrixO[nInitIndex1][nInitIndex2] == '':
                      mNewMatrixO[nInitIndex1][nInitIndex2] =  sFlow
@@ -373,19 +398,20 @@ def UpdateMatrixWithFlow(clDomainObjects,clActivities,mMatrixO, sLineToParse):
                      mNewMatrixO[nInitIndex1][nInitIndex2] =  mNewMatrixO[nInitIndex1][nInitIndex2] + ' + ' + sFlow  
     
      mMatrixO = mNewMatrixO;
-     return clDomainObjects,clActivities,mMatrixO 
+     return clDomainObjects,mMatrixO 
 
 
-def RenderFlowsAndItemDefsInSysML(O,clActivities):
+def RenderFlowsAndItemDefsInSysML(O,clActivities,clActivityNamesSorted):
      cSysMLString=''
      cItemString='' 
      cLF = '\r\n'
-     clActionNames = clActivities
 
      
      cSysMLString = cSysMLString + '      action def OverallUseCase {' + cLF
     
-     cSysMLString = cSysMLString + RenderActivityDefinitionsInSysML(O,clActivities)
+     clActionNames, cSysMLStringToAdd = RenderActivityDefinitionsInSysML(O,clActivities,clActivityNamesSorted)
+
+     cSysMLString = cSysMLString + cSysMLStringToAdd
     
      clBufferOfAllUsedItemDefs = [] #Remember what was already defined to avoid duplications
      for n1 in range(len(clActivities)): 
@@ -409,19 +435,18 @@ def RenderFlowsAndItemDefsInSysML(O,clActivities):
      return cSysMLString, cItemString, clActionNames
 
 
-def ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups): 
+def ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups, clActivityNamesSorted): 
      ### Process Activities and Object Flows
      cSysMLString=''
      cLF = '\r\n'
      clLinesToParse =  clActivitiesAndObjectFlows
      clDomainObjects = []
-     clActivities = []
+     clActivities = clActivityNamesSorted
      mMatrixO = []
   
      for nIndex in range(len(clLinesToParse)):
         sLineToParse = clLinesToParse[nIndex]
-        clDomainObjects,clActivities,mMatrixO = UpdateMatrixWithFlow(clDomainObjects,clActivities,mMatrixO, sLineToParse)
-    
+        clDomainObjects,mMatrixO = UpdateMatrixWithFlow(clDomainObjects,clActivities,mMatrixO, sLineToParse)
      ### Process Functional Groupings
      clLinesToParse =  clFunctionalGroups  
      N=len(clLinesToParse)
@@ -439,7 +464,7 @@ def ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups):
           
         
      
-     sFlows, sItemDefs, clActionNames = RenderFlowsAndItemDefsInSysML(mMatrixO, clActivities)
+     sFlows, sItemDefs, clActionNames = RenderFlowsAndItemDefsInSysML(mMatrixO, clActivities, clActivityNamesSorted)
      cSysMLString=cSysMLString + sItemDefs + cLF  + '   package UseCaseActivities{' + cLF
      cSysMLString = cSysMLString + sFlows
      cSysMLString = cSysMLString + '      package FunctionalGroups{' + cLF
@@ -452,12 +477,12 @@ def ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups):
 
 
 def  fas_frontend(cFileName,cPath):
-     clActivitiesAndObjectFlows, clFunctionalGroups = ParseActivityModel(cFileName)
-     cSysMLString = ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups) 
+     clActivitiesAndObjectFlows, clFunctionalGroups, clActivityNamesInSortOrder = ParseActivityModel(cFileName)
+     cSysMLString = ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups, clActivityNamesInSortOrder) 
      print(cSysMLString);
 
   
-     return clActivitiesAndObjectFlows, clFunctionalGroups, cSysMLString
+     return clActivitiesAndObjectFlows, clFunctionalGroups, cSysMLString, clActivityNamesInSortOrder 
         
 
 def main(): 
@@ -465,7 +490,7 @@ def main():
     ## Path is legacy
     cPath = ''
 
-    clActivitiesAndObjectFlows, clFunctionalGroups, cSysMLString = fas_frontend(cFileName,cPath)
+    clActivitiesAndObjectFlows, clFunctionalGroups, cSysMLString, clActivityNamesInSortOrder  = fas_frontend(cFileName,cPath)
 
 if __name__ == "__main__":
     main()
