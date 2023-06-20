@@ -718,7 +718,8 @@ def read_activities_and_functional_groups(strProjectID,strServerName):
 
          
      clActivityNamesSorted = sorted(clActions)    
-     return bSuccess, cErrorMessage, clActivitiesAndObjectFlows, clFunctionalGroups, clActivityNamesSorted
+     clFunctionalGroupsSorted = sorted(clFunctionalGroups)
+     return bSuccess, cErrorMessage, clActivitiesAndObjectFlows, clFunctionalGroupsSorted, clActivityNamesSorted
 
 
 def DumpJupyterNotebook(cWorkingFolderAndOutputFile, cWorkingFolderAndInputFile, cSysMLString):

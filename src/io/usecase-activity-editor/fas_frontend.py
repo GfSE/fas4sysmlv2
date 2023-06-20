@@ -154,7 +154,7 @@ def  CreateFunctionalGroups(clActivityNames, clActivityPositionVectors, clGroupN
          
          clFunctionalGroups = My_GrowCellArray(clFunctionalGroups, cGroupingString)
        
-     return clFunctionalGroups 
+     return sorted(clFunctionalGroups) 
  
 def isConnected (vConnectorXY, vActivityPositions, rTolerancePixels):
      bret = False;
