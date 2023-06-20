@@ -39,18 +39,14 @@ import hashlib
     
 def SymbolicUpdateMatrixWithFlow(clDomainObjects,clActivities,mMatrixO, sLineToParse):
      sSourceObject,sFlow,sTargetObject = parseFlowLine(sLineToParse)
-     clActivities = UpdateUniqueContentCellArray (clActivities, sSourceObject)
-     clActivities = UpdateUniqueContentCellArray (clActivities, sTargetObject)
      clDomainObjects = UpdateUniqueContentCellArray (clDomainObjects, sFlow)
      M = len(clActivities);
-     mNewMatrixO = Matrix([[0 for col in range(M)] for row in range(M)])
+     mNewMatrixO = mMatrixO
+     
+     if mNewMatrixO.shape[0] == 0:
+         mNewMatrixO = Matrix([[0 for col in range(M)] for row in range(M)])
      for nInitIndex1 in range(M):
          for nInitIndex2  in range(M):
-             mShape=mMatrixO.shape
-             if nInitIndex1 < mShape[0] and nInitIndex2 < mShape[0]:
-                 mTemp = [[0 for col in range(M)] for row in range(M)]
-                 mTemp[nInitIndex1][nInitIndex2] = mMatrixO[nInitIndex1,nInitIndex2]
-                 mNewMatrixO = mNewMatrixO + Matrix(mTemp)
              if GetIndexOfStringInCellArray(clActivities,sSourceObject) == nInitIndex1 and GetIndexOfStringInCellArray(clActivities,sTargetObject) == nInitIndex2 :
                  mTemp = [[0 for col in range(M)] for row in range(M)]
                  sFlowSymbolic = symbols(sFlow)
@@ -128,14 +124,14 @@ def RenderFunctionalArchitecture(F,clFunctionalBlockNames):
      return  cSysMLstring
  
  
-def RunFas(clActivitiesAndObjectFlows, clFunctionalGroups):
+def RunFas(clActivitiesAndObjectFlows, clFunctionalGroups, clActivityNamesInSortOrder ):
 
      cSysMLString=''
     
      ### Process Activities and Object Flows
      clLinesToParse =  clActivitiesAndObjectFlows
      clDomainObjects = []
-     clActivities = []
+     clActivities = clActivityNamesInSortOrder 
      mSymbolicMatrixO = Matrix([])
   
      for nIndex in range(len(clLinesToParse)):
@@ -216,7 +212,7 @@ if len(sys.argv)>3:
 else:
      cExpectedHash = ''
      
-clActivitiesAndObjectFlows, clFunctionalGroups, cSysMLString = fas_frontend(cFileName,'')
+clActivitiesAndObjectFlows, clFunctionalGroups, cSysMLString, clActivityNamesInSortOrder  = fas_frontend(cFileName,'')
 
 #Clear screen
 if platform.system()!='Windows':
@@ -228,7 +224,7 @@ print ('Computing ...')
 print('')
 cSysMLString = 'package FunctionalModel{' + '\r\n' + cSysMLString
 ## Use fas-as-a-formula to test the obtained data 
-cSysMLString = cSysMLString + RunFas(clActivitiesAndObjectFlows, clFunctionalGroups)
+cSysMLString = cSysMLString + RunFas(clActivitiesAndObjectFlows, clFunctionalGroups, clActivityNamesInSortOrder )
 cSysMLString = cSysMLString + '}' + '\r\n'
 cNotebookFile = DumpJupyterNotebook(cWorkingFolder + 'FunctionalModel.ipynb', cWorkingFolder + 'test_visuallly.ipynb',cSysMLString)
 print('   Done.');

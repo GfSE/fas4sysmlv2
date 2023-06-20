@@ -45,7 +45,7 @@ def main():
      cWorkingFolder = sys.argv[2]
      cWorkingFolder = cWorkingFolder.replace('"','').strip()
 
-     clActivitiesAndObjectFlows, clFunctionalGroups, cSysMLString = fas_frontend(cFileName,'')
+     clActivitiesAndObjectFlows, clFunctionalGroups, cSysMLString, clActivities = fas_frontend(cFileName,'')
 
      print('')
      print('Storing the result in the repository ...')
