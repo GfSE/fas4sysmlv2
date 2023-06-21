@@ -127,6 +127,7 @@ def RenderFunctionalArchitecture(F,clFunctionalBlockNames):
 def RunFas(clActivitiesAndObjectFlows, clFunctionalGroups, clActivityNamesInSortOrder ):
 
      cSysMLString=''
+     cLatexString = ''
     
      ### Process Activities and Object Flows
      clLinesToParse =  clActivitiesAndObjectFlows
@@ -142,6 +143,7 @@ def RunFas(clActivitiesAndObjectFlows, clFunctionalGroups, clActivityNamesInSort
      print('O = (symbolic ' + str(mSymbolicMatrixO.shape[0]) + 'x' + str(mSymbolicMatrixO.shape[1]) + ' matrix)')
      print('')
      pprint(mSymbolicMatrixO)
+     cLatexString = cLatexString + '\\[\n   ' + 'O=' + latex(mSymbolicMatrixO).replace('[','(').replace(']',')') + '\n\\]\n'
      print('')
      
      M=mSymbolicMatrixO.shape[0]
@@ -167,6 +169,7 @@ def RunFas(clActivitiesAndObjectFlows, clFunctionalGroups, clActivityNamesInSort
      print('G = (symbolic ' + str(mSymbolicMatrixG.shape[0]) + 'x' + str(mSymbolicMatrixG.shape[1]) + ' matrix)')
      print('')
      pprint(mSymbolicMatrixG)
+     cLatexString = cLatexString + '\\[\n   ' + 'G=' + latex(mSymbolicMatrixG).replace('[','(').replace(']',')') + '\n\\]\n'
      print('')    
     
      
@@ -181,6 +184,7 @@ def RunFas(clActivitiesAndObjectFlows, clFunctionalGroups, clActivityNamesInSort
      GOG,T,F = symbols('GOG, T, F')
      #This is a work-around to print the formula F=G*O*G**T in nice formatting:
      pprint(Eq(F, GOG**T))
+     cLatexString = cLatexString + '\\[\n   ' + latex(Eq(F, GOG**T)).replace('[','(').replace(']',')') + '\n\\]\n'
      print('')
      print('---------------------------------')
      print('')  
@@ -188,6 +192,7 @@ def RunFas(clActivitiesAndObjectFlows, clFunctionalGroups, clActivityNamesInSort
      print('F = (symbolic ' + str(mSymbolicMatrixF.shape[0]) + 'x' + str(mSymbolicMatrixF.shape[1]) + ' matrix)')
      print('')
      pprint(mSymbolicMatrixF)
+     cLatexString = cLatexString + '\\[\n   ' + 'F=' + latex(mSymbolicMatrixF).replace('[','(').replace(']',')') + '\n\\]\n'
      print('')    
      
      ### FAS method says that names of functional blocks are equal to names of functional groups
@@ -195,7 +200,14 @@ def RunFas(clActivitiesAndObjectFlows, clFunctionalGroups, clActivityNamesInSort
      
      ### Print the functional architecture
      cSysMLString = RenderFunctionalArchitecture(mSymbolicMatrixF,clFunctionalBlockNames)
-    
+
+     for cDom in clDomainObjects:
+         cLatexString = cLatexString.replace(cDom,'\\textrm{' + cDom + '}')
+     cLatexPreamble = '\\documentclass[english]{article}\\usepackage[T1]{fontenc}\\usepackage[latin9]{inputenc}\\usepackage{amsmath}\\usepackage{babel}\n\\begin{document}\n'
+     
+     # Uncomment the following line to get matrices printed as Latex code
+     # print(cLatexPreamble + cLatexString + '\\end{document}')
+
      return cSysMLString    
 
 
