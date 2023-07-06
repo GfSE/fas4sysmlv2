@@ -4,7 +4,7 @@
 
  Installation and Use
 
- May 2023
+ May to July 2023
 
 
  Copyright 2022 Gesellschaft fuer Systems Engineering e.V. (GfSE)
@@ -55,10 +55,11 @@ Linux distributions (tested with Ubuntu 18.04.6 and 22.04.2).
 
  - Ensure that you have access to a pilot implementation of a SysML v2 repository.
    The SysML v2 reference implementation for jupyter must be set up to use this repository.
-   The installation of your own SysML v2 repository pilot installation is described here:
+   The installation process for installing your own SysML v2 repository pilot installation 
+   is described via the links collection in the following document:
    https://github.com/GfSE/fas4sysmlv2/blob/main/doc/tech-docs/sysmlv2-pilot/installation_howto.odt
-   The above guide also directs you for specifications on how to define the repository to be used 
-   by the SysML v2 reference implementation.
+   The specifications you find via links in the above guide also describe how to define 
+   the repository to be used by the SysML v2 reference implementation.
 
  - Ensure that OpenOffice or LibreOffice is installed
 
