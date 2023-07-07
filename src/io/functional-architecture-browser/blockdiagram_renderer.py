@@ -25,6 +25,9 @@ from functools import partial
 import sys
 import json
 import tempfile
+import base64
+import webbrowser
+import zlib
 
 
 import requests 
@@ -285,26 +288,38 @@ def render_diagram(cProjectID,cServerName):
      if bSuccess == False:
          messagebox.showerror("Diagram Renderer","Reading from the repository failed with the following error message: " + cErrorMsg)
      else:
-         print('------------------------------------------')
-         print('')
-         print('blockdiag {')
+         cDiag = ''
+         cNewLine = '\n'
+         cDiag = cDiag + 'blockdiag {' + cNewLine
          cSpace = '  '
-         print(cSpace + 'default_fontsize = 5')
+         cDiag = cDiag + cSpace + 'default_fontsize = 5' + cNewLine
          for cLine in clFunctionalBlocksAndFlows: 
-             print(cSpace + cLine)
+             cDiag = cDiag + cSpace + cLine  + cNewLine
 
-         print('}')
+         cDiag = cDiag + '}'  + cNewLine
+
+         print('------------------------------------------')
+         print('')
+         print(cDiag)
          print('')
          print('------------------------------------------')
-     
+
+
+         encoded = base64.b64encode(zlib.compress(bytes(cDiag, "utf-8"))).decode("ascii")
+         cURL = 'http://interactive.blockdiag.com/image?compression=deflate&encoding=base64&src=' + encoded.replace('/','_').replace('+','-')
+
+         print('Opening ' + cURL)
          
+         webbrowser.open_new(cURL)
+
+
 def run_renderer(cProjectUUID, cHost):
      mainWindow = Tk()
      mainWindow.title("Block Diagram Renderer")
      frm = ttk.Frame(mainWindow)
      frm.grid(row=0, column=0, columnspan=3)
 
-     ttk.Label(frm, text="Block Diagram Renderer").grid(column=0, row=0)
+     ttk.Label(frm, text="WARNING: Before running, please check that http://blockdiag.com/ still exists").grid(column=0, row=0)
      cProjectID = StringVar()
      cProjectID.set(cProjectUUID)
      cServerName = StringVar()
