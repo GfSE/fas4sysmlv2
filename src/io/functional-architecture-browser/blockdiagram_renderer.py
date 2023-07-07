@@ -20,20 +20,20 @@
 import tkinter as tk
 from tkinter import *
 from tkinter import messagebox
-from tkinter import scrolledtext
 from tkinter import ttk
 from functools import partial
 import sys
 import json
 import tempfile
 
-from sympy import *
 
 import requests 
 
 import platform
 import os
 
+#TODO
+#The following functions need to be placed in a common module, if they keep being shared with fas4sysmlv2_main.py
   
 
 def format_servername(cName):
@@ -74,6 +74,43 @@ def run_query_for_elementtyp(cElementType, cServerName, cProjectID):
 
     return qresponse_json
   
+def processProjectSelection(listWindow,theCombo,cProjectID):
+     selectedProject = theCombo.get()
+     posOpeningParenthesis = selectedProject.find('(')
+     posClosingParenthesis = selectedProject.find(')')
+     cProjectID.set(selectedProject[(posOpeningParenthesis+1):posClosingParenthesis])
+     listWindow.destroy()
+
+    
+def selectproject(cProjectID, cServerName):
+     tdata = []
+     cProjectID.set("")
+     cProjectID.set("")
+     try:
+         response = requests.get(format_servername(cServerName.get()) + "/projects")
+         data = response.json()
+         for response in data:
+             tdata.append(response.get("name") + " (" + response.get("@id") + ")" )
+     except  requests.exceptions.ConnectionError:
+         cProjectID.set("Cannot connect to server.")
+     
+     if len(tdata)>0:
+         listWindow = Tk()
+         listWindow.title("Block Diagram Renderer - Project Selection")
+         frm = ttk.Frame(listWindow)
+         frm.grid(row=0, column=0, columnspan=4)
+         ttk.Label(frm, text="Select project").grid(column=0, row=0)
+         theCombo=ttk.Combobox(frm, values=tdata, width = 100)
+         theCombo.grid(column=1, row=1)
+         ttk.Button(frm, text="OK", command=partial(processProjectSelection,listWindow,theCombo,cProjectID)).grid(column=3, row=2)
+         ttk.Button(frm, text="Cancel", command=listWindow.destroy).grid(column=2, row=2)
+
+         listWindow.mainloop()   
+
+### END TODO
+
+
+
 def read_functional_architecture(strProjectID,strServerName):
 
      clFunctionalBlocksAndFlows= []           
@@ -260,42 +297,6 @@ def render_diagram(cProjectID,cServerName):
          print('')
          print('------------------------------------------')
      
-#TODO
-#The following two functions need to be placed in a common module, if they keep being shared with fas4sysmlv2_main.py
-
-def processProjectSelection(listWindow,theCombo,cProjectID):
-     selectedProject = theCombo.get()
-     posOpeningParenthesis = selectedProject.find('(')
-     posClosingParenthesis = selectedProject.find(')')
-     cProjectID.set(selectedProject[(posOpeningParenthesis+1):posClosingParenthesis])
-     listWindow.destroy()
-
-    
-def selectproject(cProjectID, cServerName):
-     tdata = []
-     cProjectID.set("")
-     cProjectID.set("")
-     try:
-         response = requests.get(format_servername(cServerName.get()) + "/projects")
-         data = response.json()
-         for response in data:
-             tdata.append(response.get("name") + " (" + response.get("@id") + ")" )
-     except  requests.exceptions.ConnectionError:
-         cProjectID.set("Cannot connect to server.")
-     
-     if len(tdata)>0:
-         listWindow = Tk()
-         listWindow.title("Block Diagram Renderer - Project Selection")
-         frm = ttk.Frame(listWindow)
-         frm.grid(row=0, column=0, columnspan=4)
-         ttk.Label(frm, text="Select project").grid(column=0, row=0)
-         theCombo=ttk.Combobox(frm, values=tdata, width = 100)
-         theCombo.grid(column=1, row=1)
-         ttk.Button(frm, text="OK", command=partial(processProjectSelection,listWindow,theCombo,cProjectID)).grid(column=3, row=2)
-         ttk.Button(frm, text="Cancel", command=listWindow.destroy).grid(column=2, row=2)
-
-         listWindow.mainloop()   
-
          
 def run_renderer(cProjectUUID, cHost):
      mainWindow = Tk()
@@ -321,7 +322,6 @@ def run_renderer(cProjectUUID, cHost):
 
 
 def main():
-     init_printing(use_unicode=False)
 
      cProjectID = ''
      cHost = 'http://localhost:9000'
