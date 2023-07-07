@@ -831,7 +831,7 @@ def render_transform_result(cFormulaOutput, cSysMLString, bSuccess, cTargetProje
      scr.configure(state ='disabled')
      renderingWindow.mainloop()
 
-def fas_transform(cProjectID,cServerName):
+def fas_transform(cProjectID,cServerName,cNewProjectID):
      bSuccess, cErrorMsg, clActivitiesAndObjectFlows, clFunctionalGroups, clActivityNamesSorted = read_activities_and_functional_groups(cProjectID,cServerName)
      if bSuccess == False:
          messagebox.showerror("FAS Plugin","Reading from the repository failed with the following error message: " + cErrorMsg)
@@ -845,8 +845,7 @@ def fas_transform(cProjectID,cServerName):
              messagebox.showerror("FAS Plugin","Writing to the repository failed with the following error message: " + cErrorMsg)
          else:    
              print("Writing to the repository succeeded.") ##In that case the GUI representation of the success message will be generated elsewhere
-     
-
+         cNewProjectID.set(cTargetProject)
 
 def processProjectSelection(listWindow,theCombo,cProjectID):
      selectedProject = theCombo.get()
@@ -890,7 +889,9 @@ def run_fas4sysml(cProjectUUID, cHost):
 
      ttk.Label(frm, text="FAS Plugin for SysML v2").grid(column=0, row=0)
      cProjectID = StringVar()
+     cNewProjectID = StringVar()
      cProjectID.set(cProjectUUID)
+     cNewProjectID.set(cProjectUUID)
      cServerName = StringVar()
      cServerName.set(cHost)
      ttk.Label(frm, text="").grid(column=0, row=1)
@@ -900,9 +901,10 @@ def run_fas4sysml(cProjectUUID, cHost):
      ttk.Entry(frm, textvariable = cProjectID, width = 50).grid(column=1, row=3)
      ttk.Button(frm, text="Select", command=partial(selectproject,cProjectID,cServerName)).grid(column=2, row=3)
      ttk.Label(frm, text="").grid(column=0, row=4)
-     ttk.Button(frm, text="Run FAS transformation", command=partial(fas_transform,cProjectID,cServerName)).grid(column=1, row=5)
+     ttk.Button(frm, text="Run FAS transformation", command=partial(fas_transform,cProjectID,cServerName,cNewProjectID)).grid(column=1, row=5)
      ttk.Button(frm, text="Quit", command=mainWindow.destroy).grid(column=2, row=5)
      mainWindow.mainloop()
+     return cNewProjectID.get()
 
 
 def main():
@@ -914,7 +916,7 @@ def main():
          cProjectID=sys.argv[1]
      if len (sys.argv)>2:
          cHost=sys.argv[2]
-     run_fas4sysml(cProjectID,cHost)
+     cNewProjectID = run_fas4sysml(cProjectID,cHost)
 
 
 if __name__ == "__main__":

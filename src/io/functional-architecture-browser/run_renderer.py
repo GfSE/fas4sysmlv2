@@ -13,7 +13,7 @@
 
 
 #
-# The code wraps around the core function to call it from the usecase-activity-editor
+# The code wraps around the renderer function to call it from the usecase-activity-editor
 #
 #
 # The input comes via a file written during the fas input generation to transport the project number
@@ -26,11 +26,9 @@ import sys
 import os
 import platform
 cFolderName = sys.argv[1]
-sys.path.insert(1,cFolderName.strip().replace('io/usecase-activity-editor','core').replace('io\\usecase-activity-editor','core'))
-from fas4sysmlv2_main import *  
+from blockdiagram_renderer import *  
 
-
-cProjectIdFile = cFolderName.strip() + 'project_id.txt'
+cProjectIdFile = cFolderName.strip().replace('io/functional-architecture-browser','io/usecase-activity-editor').replace('io\\functional-architecture-browser','io\\usecase-activity-editor') + 'project_id.txt'
 FID1=open(cProjectIdFile ,'r');
 cID = ''
 cHost = ''
@@ -43,12 +41,7 @@ for tline in FID1:
         cHost = tline.strip()
 FID1.close()
 
-cNewProjectID = run_fas4sysml(cID, cHost)
-
-FID1=open(cProjectIdFile ,'w');
-FID1.write(cNewProjectID+'\r\n'+cHost)
-FID1.close()
-
+run_renderer(cID, cHost)
 
      
 
