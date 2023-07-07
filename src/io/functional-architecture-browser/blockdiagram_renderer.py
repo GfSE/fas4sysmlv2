@@ -36,8 +36,40 @@ import platform
 import os
 
 #TODO
-#The following functions need to be placed in a common module, if they keep being shared with fas4sysmlv2_main.py
-  
+#The following functions need to be placed in a common module, if they keep being shared with fas4sysmlv2_main.py or fas_frontend.py
+
+def parseFlowLine (sLine):
+    
+     sSourceObject =''
+     sFlow = ''
+     sTargetObject = ''
+    
+     iCount=0
+    
+     sComposedString = ''
+    
+     for nIndex in range(len(sLine)):
+         if sLine[nIndex]==':' or sLine[nIndex]==';':
+             iCount = iCount + 1
+             if iCount == 1:
+                 sSourceObject = sComposedString
+             elif iCount == 2:
+                 sFlow = sComposedString;
+             else:
+                 sTargetObject = sComposedString;
+          
+          
+             sComposedString = '';
+         else:
+             if sLine[nIndex] != ' ':
+                 sTempString = sComposedString + sLine[nIndex]
+                 sComposedString = sTempString.replace('.','_')
+
+     if iCount == 2:
+         sTargetObject = sComposedString;
+    
+     return sSourceObject,sFlow,sTargetObject
+
 
 def format_servername(cName):
      if len(cName)>0:
@@ -276,25 +308,83 @@ def read_functional_architecture(strProjectID,strServerName):
                          cItemDefinitionName = ''
 
                  if len(clPair) == 2:
-                    clFunctionalBlocksAndFlows.append(clPair[0] + ' -> ' +   clPair[1] + ' [label = ' + cItemDefinitionName + ' ]')
+                    clFunctionalBlocksAndFlows.append(clPair[0] + ':' + cItemDefinitionName + ':' +    clPair[1])
          
          return bSuccess, cErrorMessage, clFunctionalBlocksAndFlows
 
 
+	
+    
 
+
+def extend_flow_string (sFlow, sNew):
+     sFlow_extended = sFlow
+     if len(sFlow) > 0: 
+         sFlow_extended = sFlow_extended + ', '
+     sFlow_extended = sFlow_extended + sNew
+     return sFlow_extended
 
 def render_diagram(cProjectID,cServerName):
      bSuccess, cErrorMsg, clFunctionalBlocksAndFlows = read_functional_architecture(cProjectID,cServerName)
      if bSuccess == False:
          messagebox.showerror("Diagram Renderer","Reading from the repository failed with the following error message: " + cErrorMsg)
      else:
+         # blockdiag currently only supports one connection per pair of blocks
+         # connections will be unified by direction and sorted by connection partner
+         # Then multiple flows will be visualized by concatenating a corresponding string to label the connection
+
+
+
+         clNormalizedBlocksAndFlows =[]
+
+         for cLineToInsert in clFunctionalBlocksAndFlows:
+             cNewSource, cNewFlow, cNewTarget  = parseFlowLine( cLineToInsert )
+             bUpdated = False
+             for iLineToProcess in range(len(clNormalizedBlocksAndFlows )):
+                 dictCurrent = clNormalizedBlocksAndFlows[iLineToProcess]
+                 cSource = dictCurrent.get('source')
+                 cTarget = dictCurrent.get('target')
+                 cFlowsS2T = dictCurrent.get('source_to_target_flows')
+                 cFlowsT2S = dictCurrent.get('target_to_source_flows')
+                 if cSource == cNewSource and cTarget == cNewTarget:
+                     cFlowsS2T = extend_flow_string(cFlowsS2T, cNewFlow)
+                     clNormalizedBlocksAndFlows[iLineToProcess] = { 'source': cSource, 'target' :  cTarget, 'source_to_target_flows' : cFlowsS2T, 'target_to_source_flows': cFlowsT2S }
+                     bUpdated = True
+                 elif cTarget == cNewSource and cSource == cNewTarget:
+                     cFlowsT2S = extend_flow_string(cFlowsT2S, cNewFlow)
+                     clNormalizedBlocksAndFlows[iLineToProcess] = { 'source': cSource, 'target' :  cTarget, 'source_to_target_flows' : cFlowsS2T, 'target_to_source_flows': cFlowsT2S }
+                     bUpdated = True
+
+             if bUpdated == False:
+                     clNormalizedBlocksAndFlows.append({ 'source': cNewSource, 'target' :  cNewTarget, 'source_to_target_flows' : cNewFlow, 'target_to_source_flows': '' })
+
+                      
+              
+             
+       
+
+
          cDiag = ''
          cNewLine = '\n'
          cDiag = cDiag + 'blockdiag {' + cNewLine
          cSpace = '  '
-         cDiag = cDiag + cSpace + 'default_fontsize = 5' + cNewLine
-         for cLine in clFunctionalBlocksAndFlows: 
-             cDiag = cDiag + cSpace + cLine  + cNewLine
+         if len(clNormalizedBlocksAndFlows) < len(clFunctionalBlocksAndFlows):
+             # Some flows are labled with multiple items. The font size needs to be reduced
+             cDiag = cDiag + cSpace + 'default_fontsize = 3' + cNewLine
+         else:
+             cDiag = cDiag + cSpace + 'default_fontsize = 5' + cNewLine
+         for cLine in clNormalizedBlocksAndFlows: 
+             cDiagLine = ''             
+             if len(cLine.get('target_to_source_flows'))>0:
+                 #Flows in both directions exist
+                 cItemDefinitionName = cLine.get('target_to_source_flows') + '   <-->   ' + cLine.get('source_to_target_flows')
+                 cDiagLine = cLine.get('source')  + ' <-> ' + cLine.get('target')   + ' [label = "' + cItemDefinitionName + '" ]'                
+             else:
+                 cItemDefinitionName = cLine.get('source_to_target_flows')                 
+                 cDiagLine = cLine.get('source') + ' -> '  + cLine.get('target')   + ' [label = "' + cItemDefinitionName + '" ]'                
+                
+
+             cDiag = cDiag + cSpace + cDiagLine  + cNewLine
 
          cDiag = cDiag + '}'  + cNewLine
 
