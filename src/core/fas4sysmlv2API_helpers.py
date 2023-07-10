@@ -97,4 +97,21 @@ def selectproject(cProjectID, cServerName):
          ttk.Button(frm, text="OK", command=partial(processProjectSelection,listWindow,theCombo,cProjectID)).grid(column=3, row=2)
          ttk.Button(frm, text="Cancel", command=listWindow.destroy).grid(column=2, row=2)
 
-         listWindow.mainloop()   
+         listWindow.mainloop() 
+
+def dictionary_payload_partusage(element_id, name, quali_name):
+    dictionary_payload_partusage = {
+        "payload": {
+            '@type': 'PartUsage',
+            '@id': element_id,
+            'elementId': element_id,
+            'name': name,
+            'owner': None,
+            'owningMembership': None,
+            'owningNamespace': None,
+            'owningRelationship': None,
+            'qualifiedName': quali_name
+        },
+        "identity": {"@id": element_id}
+    }
+    return dictionary_payload_partusage  
