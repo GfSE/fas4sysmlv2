@@ -35,114 +35,8 @@ import requests
 import platform
 import os
 
-#TODO
-#The following functions need to be placed in a common module, if they keep being shared with fas4sysmlv2_main.py or fas_frontend.py
+from fas4sysmlv2API_helpers import * 
 
-def parseFlowLine (sLine):
-    
-     sSourceObject =''
-     sFlow = ''
-     sTargetObject = ''
-    
-     iCount=0
-    
-     sComposedString = ''
-    
-     for nIndex in range(len(sLine)):
-         if sLine[nIndex]==':' or sLine[nIndex]==';':
-             iCount = iCount + 1
-             if iCount == 1:
-                 sSourceObject = sComposedString
-             elif iCount == 2:
-                 sFlow = sComposedString;
-             else:
-                 sTargetObject = sComposedString;
-          
-          
-             sComposedString = '';
-         else:
-             if sLine[nIndex] != ' ':
-                 sTempString = sComposedString + sLine[nIndex]
-                 sComposedString = sTempString.replace('.','_')
-
-     if iCount == 2:
-         sTargetObject = sComposedString;
-    
-     return sSourceObject,sFlow,sTargetObject
-
-
-def format_servername(cName):
-     if len(cName)>0:
-         if cName[len(cName)-1] == '/':
-            cName = cName[0:(len(cName)-1)]
-         
-         if cName.find('http') == -1:
-            cName = 'http://' + cName
-     
-     return cName
-  
-def run_query_for_elementtyp(cElementType, cServerName, cProjectID):
-    qresponse_json=json.dumps('')
-    qinput = {
-      '@type':'Query',
-      'select': ['name','@id','@type','owner'],
-      'where': {
-        '@type': 'CompositeConstraint',
-        'operator': 'and',
-        'constraint': [
-            {
-                '@type': 'PrimitiveConstraint',
-                'inverse': False,
-                'operator': '=',
-                'property': '@type',
-                'value': cElementType
-            }
-        ]
-      }
-    }
-
-    payload = json.dumps(qinput)
-    qurl = f"{cServerName}/projects/{cProjectID}/query-results" 
-    qresponse = requests.post(qurl, json=qinput)
-    if qresponse.status_code == 200:
-        qresponse_json = qresponse.json()
-
-    return qresponse_json
-  
-def processProjectSelection(listWindow,theCombo,cProjectID):
-     selectedProject = theCombo.get()
-     posOpeningParenthesis = selectedProject.find('(')
-     posClosingParenthesis = selectedProject.find(')')
-     cProjectID.set(selectedProject[(posOpeningParenthesis+1):posClosingParenthesis])
-     listWindow.destroy()
-
-    
-def selectproject(cProjectID, cServerName):
-     tdata = []
-     cProjectID.set("")
-     cProjectID.set("")
-     try:
-         response = requests.get(format_servername(cServerName.get()) + "/projects")
-         data = response.json()
-         for response in data:
-             tdata.append(response.get("name") + " (" + response.get("@id") + ")" )
-     except  requests.exceptions.ConnectionError:
-         cProjectID.set("Cannot connect to server.")
-     
-     if len(tdata)>0:
-         listWindow = Tk()
-         listWindow.title("Block Diagram Renderer - Project Selection")
-         frm = ttk.Frame(listWindow)
-         frm.grid(row=0, column=0, columnspan=4)
-         ttk.Label(frm, text="Select project").grid(column=0, row=0)
-         theCombo=ttk.Combobox(frm, values=tdata, width = 100)
-         theCombo.grid(column=1, row=1)
-         ttk.Button(frm, text="OK", command=partial(processProjectSelection,listWindow,theCombo,cProjectID)).grid(column=3, row=2)
-         ttk.Button(frm, text="Cancel", command=listWindow.destroy).grid(column=2, row=2)
-
-         listWindow.mainloop()   
-
-### END TODO
 
 
 
@@ -160,13 +54,13 @@ def read_functional_architecture(strProjectID,strServerName):
      try:
          response = requests.get(cServerName + "/projects/" + cProjectID)
      except  requests.exceptions.ConnectionError:
-         bSuccess = false
+         bSuccess = False
          cErrorMessage = 'Error: Could not connect to server'
          print(cErrorMessage)
 
          
      if bSuccess and response.status_code!=200:
-         bSuccess = false
+         bSuccess = False
          cErrorMessage = 'Error: Could not find project on stated host'
          print('Error: Could not find project on stated host')
 
@@ -308,7 +202,7 @@ def read_functional_architecture(strProjectID,strServerName):
                          cItemDefinitionName = ''
 
                  if len(clPair) == 2:
-                    clFunctionalBlocksAndFlows.append(clPair[0] + ':' + cItemDefinitionName + ':' +    clPair[1])
+                    clFunctionalBlocksAndFlows.append({"source": clPair[0], "flow": cItemDefinitionName, "target":   clPair[1]})
          
          return bSuccess, cErrorMessage, clFunctionalBlocksAndFlows
 
@@ -324,6 +218,11 @@ def extend_flow_string (sFlow, sNew):
      sFlow_extended = sFlow_extended + sNew
      return sFlow_extended
 
+
+def evaluateFlow(sLine):   
+     return sLine.get('source'),sLine.get('flow'),sLine.get('target')
+
+
 def render_diagram(cProjectID,cServerName):
      bSuccess, cErrorMsg, clFunctionalBlocksAndFlows = read_functional_architecture(cProjectID,cServerName)
      if bSuccess == False:
@@ -338,7 +237,7 @@ def render_diagram(cProjectID,cServerName):
          clNormalizedBlocksAndFlows =[]
 
          for cLineToInsert in clFunctionalBlocksAndFlows:
-             cNewSource, cNewFlow, cNewTarget  = parseFlowLine( cLineToInsert )
+             cNewSource, cNewFlow, cNewTarget  = evaluateFlow( cLineToInsert )
              bUpdated = False
              for iLineToProcess in range(len(clNormalizedBlocksAndFlows )):
                  dictCurrent = clNormalizedBlocksAndFlows[iLineToProcess]

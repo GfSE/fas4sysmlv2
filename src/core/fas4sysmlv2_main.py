@@ -36,6 +36,7 @@ from functools import partial
 import sys
 import json
 import tempfile
+from fas4sysmlv2API_helpers import *
 
 from sympy import *
 
@@ -497,43 +498,6 @@ def run_fas(clActivitiesAndObjectFlows, clFunctionalGroups, clActivityNamesSorte
      return cSysMLString, cFormulaOutput, cDependencySpecification, cItemDefString    
   
 
-def format_servername(cName):
-     if len(cName)>0:
-         if cName[len(cName)-1] == '/':
-            cName = cName[0:(len(cName)-1)]
-         
-         if cName.find('http') == -1:
-            cName = 'http://' + cName
-     
-     return cName
-  
-def run_query_for_elementtyp(cElementType, cServerName, cProjectID):
-    qresponse_json=json.dumps('')
-    qinput = {
-      '@type':'Query',
-      'select': ['name','@id','@type','owner'],
-      'where': {
-        '@type': 'CompositeConstraint',
-        'operator': 'and',
-        'constraint': [
-            {
-                '@type': 'PrimitiveConstraint',
-                'inverse': False,
-                'operator': '=',
-                'property': '@type',
-                'value': cElementType
-            }
-        ]
-      }
-    }
-
-    payload = json.dumps(qinput)
-    qurl = f"{cServerName}/projects/{cProjectID}/query-results" 
-    qresponse = requests.post(qurl, json=qinput)
-    if qresponse.status_code == 200:
-        qresponse_json = qresponse.json()
-
-    return qresponse_json
   
 def read_activities_and_functional_groups(strProjectID,strServerName):
 
@@ -550,13 +514,13 @@ def read_activities_and_functional_groups(strProjectID,strServerName):
      try:
          response = requests.get(cServerName + "/projects/" + cProjectID)
      except  requests.exceptions.ConnectionError:
-         bSuccess = false
+         bSuccess = False
          cErrorMessage = 'Error: Could not connect to server'
          print(cErrorMessage)
 
          
      if bSuccess and response.status_code!=200:
-         bSuccess = false
+         bSuccess = False
          cErrorMessage = 'Error: Could not find project on stated host'
          print('Error: Could not find project on stated host')
 
@@ -752,7 +716,7 @@ def write_functional_architecture(cProjectID,cServerName,cSysMLString,cOptionalI
      print(cSysMLString)
      print('Writing it to the server ... ')
 
-     bNewProject = true # if set to false then the commit will be made to the project from which the use case activities were read
+     bNewProject = True # if set to false then the commit will be made to the project from which the use case activities were read
      if bNewProject:
          cWorkingFolder=tempfile.mkdtemp()
          #print(cWorkingFolder)
@@ -797,7 +761,7 @@ def write_functional_architecture(cProjectID,cServerName,cSysMLString,cOptionalI
          if status.find('Saved to Project') < 0:
                 cErrorMsg =  'Error in commit to target project: ' + status
                 print(cErrorMsg)
-                bSuccess= false
+                bSuccess= False
          else:
                 posOpeningParenthesis = status.find('(')
                 posClosingParenthesis = status.find(')')
@@ -847,38 +811,6 @@ def fas_transform(cProjectID,cServerName,cNewProjectID):
              print("Writing to the repository succeeded.") ##In that case the GUI representation of the success message will be generated elsewhere
          cNewProjectID.set(cTargetProject)
 
-def processProjectSelection(listWindow,theCombo,cProjectID):
-     selectedProject = theCombo.get()
-     posOpeningParenthesis = selectedProject.find('(')
-     posClosingParenthesis = selectedProject.find(')')
-     cProjectID.set(selectedProject[(posOpeningParenthesis+1):posClosingParenthesis])
-     listWindow.destroy()
-
-    
-def selectproject(cProjectID, cServerName):
-     tdata = []
-     cProjectID.set("")
-     cProjectID.set("")
-     try:
-         response = requests.get(format_servername(cServerName.get()) + "/projects")
-         data = response.json()
-         for response in data:
-             tdata.append(response.get("name") + " (" + response.get("@id") + ")" )
-     except  requests.exceptions.ConnectionError:
-         cProjectID.set("Cannot connect to server.")
-     
-     if len(tdata)>0:
-         listWindow = Tk()
-         listWindow.title("FAS Plugin - Project Selection")
-         frm = ttk.Frame(listWindow)
-         frm.grid(row=0, column=0, columnspan=4)
-         ttk.Label(frm, text="Select project").grid(column=0, row=0)
-         theCombo=ttk.Combobox(frm, values=tdata, width = 100)
-         theCombo.grid(column=1, row=1)
-         ttk.Button(frm, text="OK", command=partial(processProjectSelection,listWindow,theCombo,cProjectID)).grid(column=3, row=2)
-         ttk.Button(frm, text="Cancel", command=listWindow.destroy).grid(column=2, row=2)
-
-         listWindow.mainloop()   
 
          
 def run_fas4sysml(cProjectUUID, cHost):

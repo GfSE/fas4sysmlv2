@@ -26,7 +26,10 @@ import sys
 import os
 import platform
 cFolderName = sys.argv[1]
+sys.path.insert(1,cFolderName.strip().replace('io/functional-architecture-browser','core').replace('io\\functional-architecture-browser','core'))
+from fas4sysmlv2API_helpers import *  
 from blockdiagram_renderer import *  
+
 
 cProjectIdFile = cFolderName.strip().replace('io/functional-architecture-browser','io/usecase-activity-editor').replace('io\\functional-architecture-browser','io\\usecase-activity-editor') + 'project_id.txt'
 FID1=open(cProjectIdFile ,'r');
