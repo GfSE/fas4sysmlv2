@@ -31,6 +31,64 @@ def format_servername(cName):
      
      return cName
   
+
+def read_full_repository(cServerName, cProjectID):
+# This function has been created to demonstrate the handling
+# of multiple HTML response pages.
+#
+# Normally, this function should not be used, but queries 
+# for subsets of the repository should be used instead.
+     bSuccess = True
+     data = []
+     try:
+         response = requests.get(cServerName + "/projects/" + cProjectID)
+     except  requests.exceptions.ConnectionError:
+         bSuccess = false
+         cErrorMessage = 'Error: Could not connect to server'
+         print(cErrorMessage)
+
+         
+     if bSuccess and response.status_code!=200:
+         bSuccess = False
+         cErrorMessage = 'Error: Could not find project on stated host'
+         print('Error: Could not find project on stated host')
+
+     
+     if bSuccess:
+         data = response.json()
+         oDefaultBranch = data.get('defaultBranch')
+         sDefaultBranchId=oDefaultBranch.get('@id')
+     
+         if str(type(oDefaultBranch)) == "<class 'NoneType'>":
+             bSuccess = False
+             cErrorMessage = 'Error: No default branch.'
+             print (cErrorMessage)
+     
+     if bSuccess:
+         response = requests.get(cServerName + "/projects/" + cProjectID + "/branches/" + sDefaultBranchId)
+         data = response.json()
+         oHeadCommit = data.get('head')
+         if str(type(oHeadCommit)) == "<class 'NoneType'>":
+             bSuccess = False
+             cErrorMessage = 'Error: No commit found.'
+             print (cErrorMessage)
+         else:
+             sHeadCommit = oHeadCommit.get('@id')
+
+
+     if bSuccess:
+         response = requests.get(cServerName + "/projects/" + cProjectID + "/commits/"+sHeadCommit+"/elements")
+         data = response.json()
+
+         # Handle next pages of mutlti-page HTML responses (when the payload is very large)
+         while response.headers.get('Link','--NOTFOUND--').find('?page[after]')>-1:
+            cNextPageLink = response.headers.get('Link').replace('<','').replace('; rel="next"','').replace('; rel="prev"','').replace('page[size]=100>','page[size]=10000>').replace('>','')
+            response = requests.get(cNextPageLink)
+            if response.status_code == 200:
+                data = data + response.json()
+
+     return data
+
 def run_query_for_elementtyp(cElementType, cServerName, cProjectID):
     qresponse_json=json.dumps('')
     qinput = {
@@ -56,13 +114,6 @@ def run_query_for_elementtyp(cElementType, cServerName, cProjectID):
     qresponse = requests.post(qurl, json=qinput)
     if qresponse.status_code == 200:
         qresponse_json = qresponse.json()
-        # Handle next pages of mutlti-page HTML responses (when the payload is very large)
-        #while qresponse.headers.get('Link','--NOTFOUND--').find('?page[after]')>-1:
-        #    cNextPageLink = response.headers.get('Link').replace('<','').replace('; rel="next"','').replace('; rel="prev"','').replace('page[size]=100>','page[size]=10000>').replace('>','')
-        #    print(cNextPageLink)
-        #    nextresponse = requests.post(cNextPageLink)
-        #    if qresponse.status_code == 200:
-        #        qresponse_json = qresponse_json + nextresponse.json()
 
     return qresponse_json
   
