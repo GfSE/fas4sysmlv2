@@ -233,13 +233,43 @@ def render_images(cProjectID,cServerName,cFolder,mainWindow):
     project_id=cProjectID.get()                    
     data = read_full_repository(thehost , project_id)
     imagenum = 0
+    clReferenceUsages = []
+    clReferenceUsageOwners = []
+    clItemUsages = []
+    clItemUsageOwners = []
+    clActionUsages = []
+    clActionUsageNames = []
+    clActionUsageOwners = []
+    for myelement in data:
+        if myelement.get('@type')=='ActionUsage':
+             clActionUsages.append(myelement.get('@id'))
+             clActionUsageOwners.append(myelement.get('owner').get('@id'))
+             clActionUsageNames.append(myelement.get('name'))
+        if myelement.get('@type')=='ItemUsage':
+             clItemUsages.append(myelement.get('@id'))
+             clItemUsageOwners.append(myelement.get('owner').get('@id'))
+        if myelement.get('@type')=='ReferenceUsage':
+             clReferenceUsages.append(myelement.get('@id'))
+             clReferenceUsageOwners.append(myelement.get('owner').get('@id'))
+             
     for myelement in data:
         if myelement.get('@type')=='LiteralString' and myelement.get('value')!='base64' and myelement.get('value')!='image/jpeg':
+            currentOwnerId = myelement.get('owner').get('@id')
+            cAction = ''
+            if clReferenceUsages.count(currentOwnerId)>0:
+                cReferenceUsageOwnerId=clReferenceUsageOwners[clReferenceUsages.index(currentOwnerId)]
+                if clReferenceUsages.count(cReferenceUsageOwnerId)>0:                    
+                    cReferenceUsageOwnerId=clReferenceUsageOwners[clReferenceUsages.index(cReferenceUsageOwnerId)]
+                    if clItemUsages.count(cReferenceUsageOwnerId)>0:
+                        cItemUsageOwnerId=clItemUsageOwners[clItemUsages.index(cReferenceUsageOwnerId)]
+                        if clActionUsages.count(cItemUsageOwnerId)>0:
+                            cAction=clActionUsageNames[clActionUsages.index(cItemUsageOwnerId)]
+                
             imagenum = imagenum + 1
             imageString = myelement.get('value')
             cImageName = cFolder.get() + 'Image' + str(imagenum) +'.html'
             FID=open(cImageName,'w')
-            FID.write('<html><body><img src="data:image/jpg;base64, ' +imageString +'" alt="" /></body></html>')
+            FID.write('<html><body><p><font size="+2">'+cAction+'</font></p><img src="data:image/jpg;base64, ' +imageString +'" alt="" /></body></html>')
             FID.close()                 
             webbrowser.open_new(cImageName)
     mainWindow.config(cursor="")
