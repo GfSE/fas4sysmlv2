@@ -540,6 +540,7 @@ def GetSamsMethodImages(cPath,clActivityNamesInSortOrder):
 
 def  fas_frontend(cFileName,cPath):
      clActivitiesAndObjectFlows, clFunctionalGroups, clActivityNamesInSortOrder = ParseActivityModel(cFileName)
+     sImages = []
      if cPath.strip()!='':
          sImages=GetSamsMethodImages(cPath.strip(),clActivityNamesInSortOrder)
      cSysMLString = ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups, clActivityNamesInSortOrder,sImages) 
