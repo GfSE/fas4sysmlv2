@@ -30,7 +30,7 @@ def DumpJupyterNotebook(cWorkingFolderAndOutputFile, cWorkingFolderAndInputFile,
          num = tline.find('"<Paste SysMLv2 code here>"')
          if num > -1:
              cCommaBlankAndQuotationMark=',' + '\r\n' + '    "'
-             cCodedSysML='    "' + cSysMLString.replace('\r\n','\\n"' + cCommaBlankAndQuotationMark)   
+             cCodedSysML='    "' + cSysMLString.replace('"','\\"').replace('\r\n','\\n"' + cCommaBlankAndQuotationMark)   
              #Remove final comma, blank and quotation mark 
              cCodedSysML = cCodedSysML[:(len(cCodedSysML)-len(cCommaBlankAndQuotationMark))]
              FID2.write(cCodedSysML )
@@ -45,7 +45,7 @@ def main():
      cWorkingFolder = sys.argv[2]
      cWorkingFolder = cWorkingFolder.replace('"','').strip()
 
-     clActivitiesAndObjectFlows, clFunctionalGroups, cSysMLString, clActivities = fas_frontend(cFileName,'')
+     clActivitiesAndObjectFlows, clFunctionalGroups, cSysMLString, clActivities = fas_frontend(cFileName, cWorkingFolder)
 
      print('')
      print('Storing the result in the repository ...')

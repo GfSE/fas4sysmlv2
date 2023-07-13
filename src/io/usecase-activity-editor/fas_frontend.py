@@ -15,6 +15,9 @@
 
 
 import sys
+import os
+import json
+import base64
 
 
 def RenderFunctionalGroupsInSysML(clGroupName,clActivities, mMatrixG):
@@ -256,7 +259,7 @@ def SubFlow(sFlowString,nPort):
      return sCurrentFlowName
 
 
-def RenderActivityDefinitionsInSysML(O,clActivities, clActivityNamesSorted):
+def RenderActivityDefinitionsInSysML(O,clActivities, clActivityNamesSorted, sImages):
      # The use case activities in clActivities are connected with each other via matrix O
      # The exhaustive set of use case activities to render (including the ones without connections)
      # is provided in clActivityNamesSorted. The sort order in clActivityNamesSorted will
@@ -304,6 +307,12 @@ def RenderActivityDefinitionsInSysML(O,clActivities, clActivityNamesSorted):
                          iNumberForUniqueness=iNumberForUniqueness+1
                      cSysMLString = cSysMLString + '            out ' + sOutput + ';' + cLF
                      clBufferOfNamesForUniqueness.append(sOutput) 
+         
+         cImageSysMLString = ''
+         for currentImage in sImages:
+             if currentImage.get('activity') == clActivities[nText]:
+                 cImageSysMLString = currentImage.get('sysml')
+         cSysMLString = cSysMLString + cImageSysMLString
 
          cSysMLString = cSysMLString + '         }' + cLF
 
@@ -405,7 +414,7 @@ def UpdateMatrixWithFlow(clDomainObjects,clActivityNamesSorted,mMatrixO, sLineTo
      return clDomainObjects,mMatrixO 
 
 
-def RenderFlowsAndItemDefsInSysML(O,clActivities,clActivityNamesSorted):
+def RenderFlowsAndItemDefsInSysML(O,clActivities,clActivityNamesSorted, sImages):
      cSysMLString=''
      cItemString='' 
      cLF = '\r\n'
@@ -413,7 +422,7 @@ def RenderFlowsAndItemDefsInSysML(O,clActivities,clActivityNamesSorted):
      
      cSysMLString = cSysMLString + '      action def OverallUseCase {' + cLF
     
-     clActionNames, cSysMLStringToAdd = RenderActivityDefinitionsInSysML(O,clActivities,clActivityNamesSorted)
+     clActionNames, cSysMLStringToAdd = RenderActivityDefinitionsInSysML(O,clActivities,clActivityNamesSorted, sImages)
 
      cSysMLString = cSysMLString + cSysMLStringToAdd
     
@@ -439,7 +448,7 @@ def RenderFlowsAndItemDefsInSysML(O,clActivities,clActivityNamesSorted):
      return cSysMLString, cItemString, clActionNames
 
 
-def ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups, clActivityNamesSorted): 
+def ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups, clActivityNamesSorted, sImages): 
      ### Process Activities and Object Flows
      cSysMLString=''
      cLF = '\r\n'
@@ -468,7 +477,7 @@ def ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups, clActivityNa
           
         
      
-     sFlows, sItemDefs, clActionNames = RenderFlowsAndItemDefsInSysML(mMatrixO, clActivities, clActivityNamesSorted)
+     sFlows, sItemDefs, clActionNames = RenderFlowsAndItemDefsInSysML(mMatrixO, clActivities, clActivityNamesSorted, sImages)
      cSysMLString=cSysMLString + sItemDefs + cLF  + '   package UseCaseActivities{' + cLF
      cSysMLString = cSysMLString + sFlows
      cSysMLString = cSysMLString + '      package FunctionalGroups{' + cLF
@@ -478,11 +487,55 @@ def ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups, clActivityNa
      return cSysMLString 
 
 
+def GetSamsMethodImages(cPath,clActivityNamesInSortOrder):
+     sImages = [];
+     for cActivity in clActivityNamesInSortOrder:
+         if os.path.isdir(cPath+cActivity):
+              filename = cPath+cActivity+os.sep+'DataSerializer.json'
+              if os.path.exists(filename):
+                  FID = open(filename)
+                  data = json.load(FID)
+                  FID.close()
+                  theTree = data.get("tree")
+                  imagename = ''
+                  for imagenameKey in theTree.keys():
+                      imagename = str(imagenameKey)
+                      break
+                  newstruct = theTree.get(imagename)
+                  for coordinatesKey in newstruct.keys():
+                      coordinatesKeyString = str(coordinatesKey)
+                      break
 
+                  coordinatesStruct = newstruct.get(coordinatesKeyString)
+                  x1=coordinatesStruct.get('x1')
+                  x2=coordinatesStruct.get('x2')
+                  y1=coordinatesStruct.get('y1')
+                  y2=coordinatesStruct.get('y2')
+
+                  cSysMLstring = ''
+                  with open( cPath+cActivity+os.sep+imagename,'rb' ) as file:
+                      binContent = file.read()
+                      encodedContent = base64.b64encode(binContent).decode()
+                      cNewLine= '\r\n'
+                      cMimeType = '"image/jpeg"'
+                      if imagename.find('.png')>-1:
+                          cMimeType = '"image/png"'
+                      cSysMLstring = '            item image{'+cNewLine+'               import Metadata::*;'+cNewLine+'               Image{'+cNewLine+'                  content="'+encodedContent+'";'+cNewLine+'                  encoding="base64";'+cNewLine+'                  type='+cMimeType+';'+cNewLine+'               }'+cNewLine
+                  cSysMLstring = cSysMLstring + '               attribute x1 = ' + str(x1)+';'+cNewLine
+                  cSysMLstring = cSysMLstring + '               attribute x2 = ' + str(x2)+';'+cNewLine
+                  cSysMLstring = cSysMLstring + '               attribute y1 = ' + str(y1)+';'+cNewLine
+                  cSysMLstring = cSysMLstring + '               attribute y2 = ' + str(y2)+';'+cNewLine
+                  cSysMLstring = cSysMLstring + '            }'+cNewLine                            
+                  sImages.append({"activity": cActivity, "sysml": cSysMLstring})
+      
+     return sImages
+     
 
 def  fas_frontend(cFileName,cPath):
      clActivitiesAndObjectFlows, clFunctionalGroups, clActivityNamesInSortOrder = ParseActivityModel(cFileName)
-     cSysMLString = ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups, clActivityNamesInSortOrder) 
+     if cPath.strip()!='':
+         sImages=GetSamsMethodImages(cPath.strip(),clActivityNamesInSortOrder)
+     cSysMLString = ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups, clActivityNamesInSortOrder,sImages) 
      print(cSysMLString);
 
   
@@ -491,8 +544,7 @@ def  fas_frontend(cFileName,cPath):
 
 def main(): 
     cFileName = sys.argv[1]
-    ## Path is legacy
-    cPath = ''
+    cPath = sys.argv[2].strip()
 
     clActivitiesAndObjectFlows, clFunctionalGroups, cSysMLString, clActivityNamesInSortOrder  = fas_frontend(cFileName,cPath)
 
