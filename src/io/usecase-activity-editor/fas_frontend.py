@@ -505,7 +505,7 @@ def GetSamsMethodImages(cPath,clActivityNamesInSortOrder):
                   bFoundCoordinates = False;
                   for coordinatesKey in newstruct.keys():
                       coordinatesKeyString = str(coordinatesKey)
-                      bFoundCoordinates = Rrue
+                      bFoundCoordinates = True
                       break
                   if bFoundCoordinates:
                       coordinatesStruct = newstruct.get(coordinatesKeyString)
