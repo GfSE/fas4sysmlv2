@@ -502,15 +502,22 @@ def GetSamsMethodImages(cPath,clActivityNamesInSortOrder):
                       imagename = str(imagenameKey)
                       break
                   newstruct = theTree.get(imagename)
+                  bFoundCoordinates = False;
                   for coordinatesKey in newstruct.keys():
                       coordinatesKeyString = str(coordinatesKey)
+                      bFoundCoordinates = Rrue
                       break
-
-                  coordinatesStruct = newstruct.get(coordinatesKeyString)
-                  x1=coordinatesStruct.get('x1')
-                  x2=coordinatesStruct.get('x2')
-                  y1=coordinatesStruct.get('y1')
-                  y2=coordinatesStruct.get('y2')
+                  if bFoundCoordinates:
+                      coordinatesStruct = newstruct.get(coordinatesKeyString)
+                      x1=coordinatesStruct.get('x1')
+                      x2=coordinatesStruct.get('x2')
+                      y1=coordinatesStruct.get('y1')
+                      y2=coordinatesStruct.get('y2')
+                  else:
+                      x1 = 0
+                      x2 = 0
+                      y1 = 0
+                      y2 = 0
 
                   cSysMLstring = ''
                   with open( cPath+cActivity+os.sep+imagename,'rb' ) as file:
