@@ -44,7 +44,7 @@ for tline in FID1:
         cHost = tline.strip()
 FID1.close()
 
-run_renderer(cID, cHost)
+run_renderer(cID, cHost, cFolderName.strip())
 
      
 

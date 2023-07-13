@@ -30,6 +30,7 @@ import webbrowser
 import zlib
 
 
+
 import requests 
 
 import platform
@@ -222,6 +223,20 @@ def extend_flow_string (sFlow, sNew):
 def evaluateFlow(sLine):   
      return sLine.get('source'),sLine.get('flow'),sLine.get('target')
 
+def render_images(cProjectID,cServerName,cFolder):
+    thehost = cServerName.get()
+    project_id=cProjectID.get()                    
+    data = read_full_repository(thehost , project_id)
+    imagenum = 0
+    for myelement in data:
+        if myelement.get('@type')=='LiteralString' and myelement.get('value')!='base64' and myelement.get('value')!='image/jpeg':
+            imagenum = imagenum + 1
+            imageString = myelement.get('value')
+            cImageName = cFolder.get() + 'Image' + str(imagenum) +'.html'
+            FID=open(cImageName,'w')
+            FID.write('<html><body><img src="data:image/jpg;base64, ' +imageString +'" alt="" /></body></html>')
+            FID.close()                 
+            webbrowser.open_new(cImageName)
 
 def render_diagram(cProjectID,cServerName):
      bSuccess, cErrorMsg, clFunctionalBlocksAndFlows = read_functional_architecture(cProjectID,cServerName)
@@ -257,11 +272,7 @@ def render_diagram(cProjectID,cServerName):
              if bUpdated == False:
                      clNormalizedBlocksAndFlows.append({ 'source': cNewSource, 'target' :  cNewTarget, 'source_to_target_flows' : cNewFlow, 'target_to_source_flows': '' })
 
-                      
-              
-             
-       
-
+                     
 
          cDiag = ''
          cNewLine = '\n'
@@ -302,7 +313,7 @@ def render_diagram(cProjectID,cServerName):
          webbrowser.open_new(cURL)
 
 
-def run_renderer(cProjectUUID, cHost):
+def run_renderer(cProjectUUID, cHost, cFolder):
      mainWindow = Tk()
      mainWindow.title("Block Diagram Renderer")
      frm = ttk.Frame(mainWindow)
@@ -311,6 +322,8 @@ def run_renderer(cProjectUUID, cHost):
      ttk.Label(frm, text="WARNING: Before running, please check that http://blockdiag.com/ still exists").grid(column=0, row=0)
      cProjectID = StringVar()
      cProjectID.set(cProjectUUID)
+     strFolder= StringVar()
+     strFolder.set(cFolder)
      cServerName = StringVar()
      cServerName.set(cHost)
      ttk.Label(frm, text="").grid(column=0, row=1)
@@ -321,20 +334,18 @@ def run_renderer(cProjectUUID, cHost):
      ttk.Button(frm, text="Select", command=partial(selectproject,cProjectID,cServerName)).grid(column=2, row=3)
      ttk.Label(frm, text="").grid(column=0, row=4)
      ttk.Button(frm, text="Render block diagram", command=partial(render_diagram,cProjectID,cServerName)).grid(column=1, row=5)
-     ttk.Button(frm, text="Quit", command=mainWindow.destroy).grid(column=2, row=5)
+     ttk.Button(frm, text="Show images", command=partial(render_images,cProjectID,cServerName,strFolder)).grid(column=2, row=5)
+     ttk.Button(frm, text="Quit", command=mainWindow.destroy).grid(column=3, row=5)
      mainWindow.mainloop()
 
 
-def main():
+def main(): 
+    cProject= sys.argv[1].strip()
+    cHost = sys.argv[2].strip()
+    cFolder = sys.argv[3].strip()
 
-     cProjectID = ''
-     cHost = 'http://localhost:9000'
-     if len (sys.argv)>1:
-         cProjectID=sys.argv[1]
-     if len (sys.argv)>2:
-         cHost=sys.argv[2]
-     run_renderer(cProjectID,cHost)
 
+    run_renderer(cProject, cHost, cFolder)
 
 if __name__ == "__main__":
-     main()
+    main()
