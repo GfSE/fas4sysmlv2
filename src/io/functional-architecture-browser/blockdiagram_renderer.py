@@ -21,6 +21,7 @@ import tkinter as tk
 from tkinter import *
 from tkinter import messagebox
 from tkinter import ttk
+from time import sleep
 from functools import partial
 import sys
 import json
@@ -223,7 +224,11 @@ def extend_flow_string (sFlow, sNew):
 def evaluateFlow(sLine):   
      return sLine.get('source'),sLine.get('flow'),sLine.get('target')
 
-def render_images(cProjectID,cServerName,cFolder):
+def render_images(cProjectID,cServerName,cFolder,mainWindow):
+    mainWindow.config(cursor="wait")
+    sleep(0.1)
+    mainWindow.update()
+    sleep(0.1)
     thehost = cServerName.get()
     project_id=cProjectID.get()                    
     data = read_full_repository(thehost , project_id)
@@ -237,8 +242,13 @@ def render_images(cProjectID,cServerName,cFolder):
             FID.write('<html><body><img src="data:image/jpg;base64, ' +imageString +'" alt="" /></body></html>')
             FID.close()                 
             webbrowser.open_new(cImageName)
+    mainWindow.config(cursor="")
 
-def render_diagram(cProjectID,cServerName):
+def render_diagram(cProjectID,cServerName,mainWindow):
+     mainWindow.config(cursor="wait")
+     sleep(0.1)
+     mainWindow.update()
+     sleep(0.1)
      bSuccess, cErrorMsg, clFunctionalBlocksAndFlows = read_functional_architecture(cProjectID,cServerName)
      if bSuccess == False:
          messagebox.showerror("Diagram Renderer","Reading from the repository failed with the following error message: " + cErrorMsg)
@@ -309,6 +319,7 @@ def render_diagram(cProjectID,cServerName):
          cURL = 'http://interactive.blockdiag.com/image?compression=deflate&encoding=base64&src=' + encoded.replace('/','_').replace('+','-')
 
          print('Opening ' + cURL)
+         mainWindow.config(cursor="")
          
          webbrowser.open_new(cURL)
 
@@ -333,8 +344,34 @@ def run_renderer(cProjectUUID, cHost, cFolder):
      ttk.Entry(frm, textvariable = cProjectID, width = 50).grid(column=1, row=3)
      ttk.Button(frm, text="Select", command=partial(selectproject,cProjectID,cServerName)).grid(column=2, row=3)
      ttk.Label(frm, text="").grid(column=0, row=4)
-     ttk.Button(frm, text="Render block diagram", command=partial(render_diagram,cProjectID,cServerName)).grid(column=1, row=5)
-     ttk.Button(frm, text="Show images", command=partial(render_images,cProjectID,cServerName,strFolder)).grid(column=2, row=5)
+     bShowBlockdiag = True
+     bShowImage=True
+     bSuccess = True
+     if cProjectUUID!='':
+         try:
+             response = requests.get(cHost + "/projects/" + cProjectUUID)
+         except  requests.exceptions.ConnectionError:
+             bSuccess = False
+
+         
+         if bSuccess and response.status_code==200:
+             data = response.json()
+             cProjectName = data.get('name')
+             if cProjectName.find('UseCaseActivities')>-1:
+                 bShowBlockdiag = False
+                 bShowImage=True             
+             else:
+                 bShowBlockdiag = True
+                 bShowImage=False             
+
+     if bShowBlockdiag:
+         ttk.Button(frm, text="Render block diagram", command=partial(render_diagram,cProjectID,cServerName,mainWindow)).grid(column=1, row=5)
+     if bShowImage:
+         if bShowBlockdiag:
+            iColumn = 2
+         else:
+            iColumn = 1 
+         ttk.Button(frm, text="Show images", command=partial(render_images,cProjectID,cServerName,strFolder,mainWindow)).grid(column=iColumn, row=5)
      ttk.Button(frm, text="Quit", command=mainWindow.destroy).grid(column=3, row=5)
      mainWindow.mainloop()
 

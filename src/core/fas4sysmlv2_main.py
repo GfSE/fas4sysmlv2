@@ -32,6 +32,7 @@ from tkinter import *
 from tkinter import messagebox
 from tkinter import scrolledtext
 from tkinter import ttk
+from time import sleep
 from functools import partial
 import sys
 import json
@@ -795,22 +796,35 @@ def render_transform_result(cFormulaOutput, cSysMLString, bSuccess, cTargetProje
      scr.configure(state ='disabled')
      renderingWindow.mainloop()
 
-def fas_transform(cProjectID,cServerName,cNewProjectID):
+def fas_transform(cProjectID,cServerName,cNewProjectID,mainWindow):
+     mainWindow.config(cursor="wait")
+     sleep(0.1)
+     mainWindow.update()
+     sleep(0.1)
+
      bSuccess, cErrorMsg, clActivitiesAndObjectFlows, clFunctionalGroups, clActivityNamesSorted = read_activities_and_functional_groups(cProjectID,cServerName)
      if bSuccess == False:
          messagebox.showerror("FAS Plugin","Reading from the repository failed with the following error message: " + cErrorMsg)
+         sleep(0.1)
+         mainWindow.config(cursor="")
+         mainWindow.update()
+         sleep(0.1)
      else:
          print('Transforming to functional architecture via FAS-as-a-formula ...')
          cSysMLString, cFormulaOutput,cOptionalDependencySpecification, cItemDefString = run_fas(clActivitiesAndObjectFlows, clFunctionalGroups, clActivityNamesSorted)
          cOptionalInputModel=ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups, clActivityNamesSorted )
          bSuccess, cErrorMsg, cTargetProject = write_functional_architecture(cProjectID,cServerName,cSysMLString,cOptionalInputModel,cOptionalDependencySpecification, cItemDefString)
+
+         sleep(0.1)
+         mainWindow.config(cursor="")
+         mainWindow.update()
+         sleep(0.1)
          render_transform_result(cFormulaOutput, cSysMLString, bSuccess, cTargetProject, cItemDefString)
          if bSuccess == False:
              messagebox.showerror("FAS Plugin","Writing to the repository failed with the following error message: " + cErrorMsg)
          else:    
              print("Writing to the repository succeeded.") ##In that case the GUI representation of the success message will be generated elsewhere
          cNewProjectID.set(cTargetProject)
-
 
          
 def run_fas4sysml(cProjectUUID, cHost):
@@ -833,7 +847,7 @@ def run_fas4sysml(cProjectUUID, cHost):
      ttk.Entry(frm, textvariable = cProjectID, width = 50).grid(column=1, row=3)
      ttk.Button(frm, text="Select", command=partial(selectproject,cProjectID,cServerName)).grid(column=2, row=3)
      ttk.Label(frm, text="").grid(column=0, row=4)
-     ttk.Button(frm, text="Run FAS transformation", command=partial(fas_transform,cProjectID,cServerName,cNewProjectID)).grid(column=1, row=5)
+     ttk.Button(frm, text="Run FAS transformation", command=partial(fas_transform,cProjectID,cServerName,cNewProjectID,mainWindow)).grid(column=1, row=5)
      ttk.Button(frm, text="Quit", command=mainWindow.destroy).grid(column=2, row=5)
      mainWindow.mainloop()
      return cNewProjectID.get()
