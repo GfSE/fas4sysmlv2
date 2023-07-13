@@ -356,7 +356,7 @@ def render_diagram(cProjectID,cServerName,mainWindow):
 
 def run_renderer(cProjectUUID, cHost, cFolder):
      mainWindow = Tk()
-     mainWindow.title("Block Diagram Renderer")
+     mainWindow.title("Diagram Renderer")
      frm = ttk.Frame(mainWindow)
      frm.grid(row=0, column=0, columnspan=3)
 
