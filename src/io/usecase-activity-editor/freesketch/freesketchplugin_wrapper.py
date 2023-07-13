@@ -36,6 +36,6 @@ def run_freesketchplugin(cFreesketchFolderName, cModelElementName):
          if bSilenced:
              cCommand = cCommand + ' ' + cSilencer
          if platform.system()!='Windows':
-             os.system('exec /bin/bash -i -c "' + cCommand + '"')
+             os.system("exec /bin/bash -i -c '" + cCommand + "'")
          else:
              os.system(cCommand)
