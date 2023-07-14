@@ -294,11 +294,35 @@ def render_images(cProjectID,cServerName,cFolder,mainWindow):
             cImageName = cFolder.get() + 'Image' + str(imagenum) +'.html'
             FID=open(cImageName,'w')
             cCoordinates = ''
+            ix1 = 0
+            iy1 = 0
+            ix2 = 0
+            iy2 = 0
             for currentCoordinate in sCoordinates:
                 cCoordinates = cCoordinates + currentCoordinate.get('name') + ' = ' +  str(currentCoordinate.get('value')) +'; ' 
+                if currentCoordinate.get('name')=='x1':
+                    ix1=currentCoordinate.get('value')
+                if currentCoordinate.get('name')=='y1':
+                    iy1=currentCoordinate.get('value')
+                if currentCoordinate.get('name')=='x2':
+                    ix2=currentCoordinate.get('value')
+                if currentCoordinate.get('name')=='y2':
+                    iy2=currentCoordinate.get('value')
+            if ix1>ix2:
+                ixtemp=ix1
+                ix1=ix2
+                ix2=ixtemp
+            if iy1>iy2:
+                iytemp=iy1
+                iy1=iy2
+                iy2=iytemp
+                    
+                   
             if cCoordinates == '':
                 cCoordinates = 'none'
-            FID.write('<html><body><p><font size="+2">'+cAction+'</font></p><p>(Coordinates: '+cCoordinates+')</p><img src="data:image/jpg;base64, ' +imageString +'" alt="" /></body></html>')
+            FID.write('<html><body><img width=265px;style=\'text-align: left; max-width: 100%; max-height: 100%;\' src="data:image/jpg;base64, ' +imageString +'" alt="" /></div> <div style=\'display: table-cell; position:absolute; border: 2px solid red; left: ' +str(ix1/3.0+7.0)+ 'px; top: ' +str(iy1/3.0-21.0)+ 'px; width: '+str((ix2-ix1)/3.0-0.0)+'px; height: '+str((iy2-iy1)/3.0-0.0)+'px \'></div><p><font size="+2">'+cAction+'</font></p></body></html>')
+            # abandoned border: <div style=\'display: table-cell; position:absolute; border: 2px solid red; left: ' +str(0)+ 'px; top: ' +str(0)+ 'px; width: '+str(500)+'px; height: '+str(500)+'px \'>
+            # abandoned coordinate information: <p>(Coordinates: '+cCoordinates+')</p>
             FID.close()                 
             webbrowser.open_new(cImageName)
     mainWindow.config(cursor="")
