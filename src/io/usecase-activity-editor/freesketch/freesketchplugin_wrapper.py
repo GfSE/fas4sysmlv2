@@ -32,7 +32,7 @@ def run_freesketchplugin(cFreesketchFolderName, cModelElementName):
     cFreesketchFolderName=cFreesketchFolderName.replace('\\\\','{}').replace('\\','').replace('{}','\\')
     if platform.system()!='Windows':
         clCommands=['javac -cp "gson.jar:imageplugin.jar" ' + cSources ,
-                    'java -cp ' + cSourceFolders + ';.;"gson.jar";"imageplugin.jar"  MainClass "' + cFreesketchFolderName + '" "' + cModelElementName + '" "' + cPluginName+ '"']
+                    'java -cp ' + cSourceFolders + ':.:"gson.jar":"imageplugin.jar"  MainClass "' + cFreesketchFolderName + '" "' + cModelElementName + '" "' + cPluginName+ '"']
     else:
         clCommands=['javac -cp "gson.jar;imageplugin.jar" ' + cSources ,
                     'java -cp ' + cSourceFolders + ';.;"gson.jar";"imageplugin.jar"  MainClass "' + cFreesketchFolderName + '" "' + cModelElementName + '" "' + cPluginName+ '"']
