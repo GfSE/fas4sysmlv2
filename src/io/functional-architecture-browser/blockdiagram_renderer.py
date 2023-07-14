@@ -320,7 +320,7 @@ def render_images(cProjectID,cServerName,cFolder,mainWindow):
                    
             if cCoordinates == '':
                 cCoordinates = 'none'
-            FID.write('<html><body><img width=265px;style=\'text-align: left; max-width: 100%; max-height: 100%;\' src="data:image/jpg;base64, ' +imageString +'" alt="" /></div> <div style=\'display: table-cell; position:absolute; border: 2px solid red; left: ' +str(ix1/3.0+7.0)+ 'px; top: ' +str(iy1/3.0-21.0)+ 'px; width: '+str((ix2-ix1)/3.0-0.0)+'px; height: '+str((iy2-iy1)/3.0-0.0)+'px \'></div><p><font size="+2">'+cAction+'</font></p></body></html>')
+            FID.write('<html><body><img width="800" style=\'text-align: left; max-width: 100%; max-height: 100%;\' src="data:image/jpg;base64, ' +imageString +'" alt="" /></div> <div style=\'display: table-cell; position:absolute; border: 2px solid red; left: ' +str(ix1/0.965-5.0)+ 'px; top: ' +str(iy1/0.965+8.0)+ 'px; width: '+str((ix2-ix1)/0.965-0.0)+'px; height: '+str((iy2-iy1)/0.965-0.0)+'px \'></div><p><font size="+2">'+cAction+'</font></p></body></html>')
             # abandoned border: <div style=\'display: table-cell; position:absolute; border: 2px solid red; left: ' +str(0)+ 'px; top: ' +str(0)+ 'px; width: '+str(500)+'px; height: '+str(500)+'px \'>
             # abandoned coordinate information: <p>(Coordinates: '+cCoordinates+')</p>
             FID.close()                 
