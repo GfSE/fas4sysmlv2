@@ -241,6 +241,7 @@ def render_images(cProjectID,cServerName,cFolder,mainWindow):
     clActionUsageNames = []
     clActionUsageOwners = []
     for myelement in data:
+        #Collect some relationships in from the model
         if myelement.get('@type')=='ActionUsage':
              clActionUsages.append(myelement.get('@id'))
              clActionUsageOwners.append(myelement.get('owner').get('@id'))
@@ -254,8 +255,10 @@ def render_images(cProjectID,cServerName,cFolder,mainWindow):
              
     for myelement in data:
         if myelement.get('@type')=='LiteralString' and myelement.get('value')!='base64' and myelement.get('value')!='image/jpeg' and myelement.get('value')!='image/png':
+            #Find the ActionUsage that is the owner of the ItemUsage that owns the Image that owns the StringLiteral (by jumping via 2 reference usages and one direct ownership)
             currentOwnerId = myelement.get('owner').get('@id')
             cAction = ''
+            sCoordinates = []
             if clReferenceUsages.count(currentOwnerId)>0:
                 cReferenceUsageOwnerId=clReferenceUsageOwners[clReferenceUsages.index(currentOwnerId)]
                 if clReferenceUsages.count(cReferenceUsageOwnerId)>0:                    
@@ -264,12 +267,38 @@ def render_images(cProjectID,cServerName,cFolder,mainWindow):
                         cItemUsageOwnerId=clItemUsageOwners[clItemUsages.index(cReferenceUsageOwnerId)]
                         if clActionUsages.count(cItemUsageOwnerId)>0:
                             cAction=clActionUsageNames[clActionUsages.index(cItemUsageOwnerId)]
-                
+
+                            # Find the coordinates of the image snippet (they are attributes of the item usage) 
+                            for myelement2 in data:
+                                if myelement2.get('@id')==clItemUsages[clItemUsages.index(cReferenceUsageOwnerId)]:
+                                    vOwned2=myelement2.get('ownedElement')
+                                    for eOwned2 in vOwned2:
+                                        idOwned2 = eOwned2.get('@id')
+                                        for myelement3 in data:
+                                            if myelement3.get('@id')==idOwned2 and myelement3.get('@type')=='AttributeUsage':
+                                                cCoordinateName = myelement3.get('name')
+                                                vOwned3=myelement3.get('ownedElement')
+                                                for eOwned3 in vOwned3:
+                                                    idOwned3 = eOwned3.get('@id')
+                                                    cCoordinateValue = ''
+                                                    for myelement4 in data:
+                                                        if myelement4.get('@id')==idOwned3: #and myelement3.get('@type')=='Mutiplicity':
+                                                            if cCoordinateValue == '' and str(myelement4.get('value')).isdigit():
+                                                                 cCoordinateValue = int(str(myelement4.get('value')))
+                                                                 sCoordinates.append({"name": cCoordinateName, "value": cCoordinateValue})
+ 
+            sCoordinates = sorted(sCoordinates, key=lambda coord: coord.get('name'))
+
             imagenum = imagenum + 1
             imageString = myelement.get('value')
             cImageName = cFolder.get() + 'Image' + str(imagenum) +'.html'
             FID=open(cImageName,'w')
-            FID.write('<html><body><p><font size="+2">'+cAction+'</font></p><img src="data:image/jpg;base64, ' +imageString +'" alt="" /></body></html>')
+            cCoordinates = ''
+            for currentCoordinate in sCoordinates:
+                cCoordinates = cCoordinates + currentCoordinate.get('name') + ' = ' +  str(currentCoordinate.get('value')) +'; ' 
+            if cCoordinates == '':
+                cCoordinates = 'none'
+            FID.write('<html><body><p><font size="+2">'+cAction+'</font></p><p>(Coordinates: '+cCoordinates+')</p><img src="data:image/jpg;base64, ' +imageString +'" alt="" /></body></html>')
             FID.close()                 
             webbrowser.open_new(cImageName)
     mainWindow.config(cursor="")
