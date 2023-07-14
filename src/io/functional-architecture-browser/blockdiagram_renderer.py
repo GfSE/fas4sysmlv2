@@ -253,7 +253,7 @@ def render_images(cProjectID,cServerName,cFolder,mainWindow):
              clReferenceUsageOwners.append(myelement.get('owner').get('@id'))
              
     for myelement in data:
-        if myelement.get('@type')=='LiteralString' and myelement.get('value')!='base64' and myelement.get('value')!='image/jpeg':
+        if myelement.get('@type')=='LiteralString' and myelement.get('value')!='base64' and myelement.get('value')!='image/jpeg' and myelement.get('value')!='image/png':
             currentOwnerId = myelement.get('owner').get('@id')
             cAction = ''
             if clReferenceUsages.count(currentOwnerId)>0:
