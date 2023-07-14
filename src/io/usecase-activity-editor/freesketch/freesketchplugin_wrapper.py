@@ -25,12 +25,17 @@ def run_freesketchplugin(cFreesketchFolderName, cModelElementName):
     if platform.system()!='Windows':
          cSilencer='2>/dev/null'
          cSources = cSources.replace('\\','/')
-         cSourceFolders = cSourceFolders.replace('\\','/')
+         cSourceFolders = cSourceFolders.replace('\\','/').replace(';',':')
     else:
          cSilencer='>nul 2>&1'
+
     cFreesketchFolderName=cFreesketchFolderName.replace('\\\\','{}').replace('\\','').replace('{}','\\')
-    clCommands=['javac -cp "gson.jar;imageplugin.jar" ' + cSources ,
-                'java -cp ' + cSourceFolders + ';.;"gson.jar";"imageplugin.jar"  MainClass "' + cFreesketchFolderName + '" "' + cModelElementName + '" "' + cPluginName+ '"']
+    if platform.system()!='Windows':
+        clCommands=['javac -cp "gson.jar:imageplugin.jar" ' + cSources ,
+                    'java -cp ' + cSourceFolders + ';.;"gson.jar";"imageplugin.jar"  MainClass "' + cFreesketchFolderName + '" "' + cModelElementName + '" "' + cPluginName+ '"']
+    else:
+        clCommands=['javac -cp "gson.jar;imageplugin.jar" ' + cSources ,
+                    'java -cp ' + cSourceFolders + ';.;"gson.jar";"imageplugin.jar"  MainClass "' + cFreesketchFolderName + '" "' + cModelElementName + '" "' + cPluginName+ '"']
 
     for cCommand in clCommands:
          if bSilenced:
