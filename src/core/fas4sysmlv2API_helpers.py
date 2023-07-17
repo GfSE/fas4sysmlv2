@@ -150,19 +150,59 @@ def selectproject(cProjectID, cServerName):
 
          listWindow.mainloop() 
 
-def dictionary_payload_partusage(element_id, name, quali_name):
+def dictionary_payload_partusage(element_id, name = None, quali_name = None, owner = None, owning = None):
     dictionary_payload_partusage = {
         "payload": {
             '@type': 'PartUsage',
             '@id': element_id,
             'elementId': element_id,
             'name': name,
-            'owner': None,
-            'owningMembership': None,
-            'owningNamespace': None,
-            'owningRelationship': None,
+            'owner': owner,
+            'owningMembership': owning,
+            'owningNamespace': owner,
+            'owningRelationship': owning,
             'qualifiedName': quali_name
         },
         "identity": {"@id": element_id}
     }
-    return dictionary_payload_partusage  
+    return dictionary_payload_partusage
+
+def dictionary_payload_owningmembership(element_id, member_element, memberId, owned_member_element, owned_member_element_id, target, name, owner):
+    dictionary_payload_owningmembership = {
+        "payload": {'@type': 'OwningMembership',
+                    '@id': element_id,
+                    'elementId': element_id,
+                    'memberElement': member_element,
+                    'memberElementId': memberId,
+                    'memberName': name,
+                    'membershipOwningNamespace': owner,
+                    'ownedMemberElement': owned_member_element ,
+                    'ownedMemberElementId': owned_member_element_id,
+                    'ownedMemberName': name,
+                    'ownedRelatedElement': [owned_member_element],
+                    'owningRelatedElement': owner,
+                    'relatedElement': [owner, owned_member_element],
+                    'source': [owner],
+                    'target': [target]
+                   },
+        "identity": {"@id": element_id}
+    }
+    return dictionary_payload_owningmembership
+
+def dictionary_payload_package(element_id, name = None, quali_name = None, member = None, membership = None ):
+    dictionary_payload_package = {
+        "payload": {'@type': 'Package',
+                    '@id': element_id,
+                    'elementId': element_id,
+                    'member': member,
+                    'membership': membership,
+                    'name': name,
+                    'ownedElement': member,
+                    'ownedMember': member,
+                    'ownedMembership': membership,
+                    'ownedRelationship': membership,
+                    'qualifiedName': quali_name
+                   },
+        "identity": {"@id": element_id}
+    }
+    return dictionary_payload_package
