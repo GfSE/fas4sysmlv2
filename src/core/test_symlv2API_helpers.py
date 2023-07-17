@@ -132,9 +132,17 @@ for iNumParts in [2, 10, 1000, 5000]:
                 payloadArray = []
 
                 for iPartNo in range(iNumParts):
+                    cPackageName = 'MyPackage' + str(iPartNo+1)
                     cPartName = 'MyPart' + str(iPartNo+1)
-                    element_id = str(uuid.uuid4())
-                    payloadArray.append(dictionary_payload_partusage(element_id, cPartName , cPartName))
+                    part_element_id = str(uuid.uuid4())
+                    package_element_id = str(uuid.uuid4())
+                    owningmembership_element_id = str(uuid.uuid4())
+                    payloadArray.append(dictionary_payload_package(package_element_id, cPackageName , cPartName))
+                    payloadArray.append(dictionary_payload_partusage(part_element_id, cPartName, cPartName))
+                    payloadArray.append(dictionary_payload_owningmembership(owningmembership_element_id, {'@id': part_element_id}, part_element_id, {'@id': part_element_id}, part_element_id, {'@id': part_element_id}, '', {'@id': package_element_id}))
+                    #print('--------------')
+                    #print(payloadArray)
+                    #print('--------------')
                     if len(payloadArray) > 1999:
                         #Commit in chunks if payload gets too large
                         commit_body =  '{"change": ' + json.dumps(payloadArray) +'}'
@@ -189,16 +197,16 @@ for iNumParts in [2, 10, 1000, 5000]:
                      iCounterQuery = 0
                      iCounterFullRead = 0
 
-                     data = run_query_for_elementtyp('PartUsage', cServerName, cProjectID)
-                 
+                     data = run_query_for_elementtyp('OwningMembership', cServerName, cProjectID)
+                     #print(data)
                      for response in data:
-                         if response.get("@type") == 'PartUsage':
+                         if response.get("@type") == 'OwningMembership':
                              iCounterQuery = iCounterQuery + 1
                      
                      data = read_full_repository(cServerName, cProjectID)
                  
                      for response in data:
-                         if response.get("@type") == 'PartUsage':
+                         if response.get("@type") == 'OwningMembership':
                              iCounterFullRead = iCounterFullRead + 1
                      
                      
