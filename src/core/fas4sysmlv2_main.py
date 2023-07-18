@@ -576,11 +576,14 @@ def read_activities_and_functional_groups(strProjectID,strServerName):
      
          for cElementType in clElementTypes:
              data = run_query_for_elementtyp(cElementType, cServerName, cProjectID)
+             currentSet = []
              for currentRecord in data:
                  sIdToGet=currentRecord.get('@id')
                  qresult = requests.get(cServerName + "/projects/" + cProjectID + "/commits/"+sHeadCommit+"/elements/" + sIdToGet)
                  response = qresult.json()
+                 currentSet.append(response)
 
+             for response in currentSet:
 
                  if response.get("@type") == "ReferenceSubsetting": #As ownedRelationship of target of FeatureEndMembership
                      clReferenceSubSettingReferencedFeatures.append(response.get("referencedFeature"))
@@ -596,8 +599,14 @@ def read_activities_and_functional_groups(strProjectID,strServerName):
                      clItemFlowEndOwnedRelationships.append(response.get("ownedRelationship"))
                      clItemsFlowEndIds.append(response.get("elementId"))
                  if response.get("@type") == "ActionUsage":
-                     clActions.append(response.get("name"))
-                     clActionIds.append(response.get("elementId"))
+                     bIgnoreAction = False
+                     for cCurrentAction in currentSet: #We know that "data" is a list of ActionUsages, because lists are retrieved type-by-type
+                         cOwnerID = cCurrentAction.get('owner').get('@id')
+                         if response.get("@id") == cOwnerID:
+                             bIgnoreAction = True #If the action owns other actions it is not a leaf and must be ignored.
+                     if bIgnoreAction == False:
+                         clActions.append(response.get("name"))
+                         clActionIds.append(response.get("elementId"))
                  if response.get("@type") == "ItemDefinition":
                      clItemDefs.append(response.get("name"))
                      clItemDefIds.append(response.get("elementId"))
