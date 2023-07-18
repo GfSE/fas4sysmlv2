@@ -431,7 +431,7 @@ def render_diagram(cProjectID,cServerName,mainWindow,strBaseURLParam):
 
 
              encoded = base64.b64encode(zlib.compress(bytes(cDiag, "utf-8"))).decode("ascii")
-             cURL = strBaseURL + 'image?compression=deflate&encoding=base64&src=' + encoded.replace('/','_').replace('+','-')
+             cURL = strRenderingURL + 'image?compression=deflate&encoding=base64&src=' + encoded.replace('/','_').replace('+','-')
 
              print('Opening ' + cURL)
              mainWindow.config(cursor="")
