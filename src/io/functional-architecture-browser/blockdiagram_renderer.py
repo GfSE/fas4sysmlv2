@@ -327,84 +327,116 @@ def render_images(cProjectID,cServerName,cFolder,mainWindow):
             webbrowser.open_new(cImageName)
     mainWindow.config(cursor="")
 
-def render_diagram(cProjectID,cServerName,mainWindow):
+def ProcessUrlInput(subWindow,theText,cProjectID,cServerName,mainWindow,strBaseURLParam):
+    strBaseURLParam.set(theText.get())
+    print('URL for rendering: ' + strBaseURLParam.get())
+    subWindow.destroy()
+    print('Rendering ...')
+    render_diagram(cProjectID,cServerName,mainWindow,strBaseURLParam)
+    print('done')
+
+def askForBaseUrl(cProjectID,cServerName,mainWindow,strBaseURLParam):
+     subWindow = Tk()
+     subWindow.title("URL Input")
+     frm = ttk.Frame(subWindow)
+     strURL = StringVar()
+     strURL.set('')
+     frm.grid(row=0, column=0, columnspan=3)
+     ttk.Label(frm, text="Please specify an URL to use for block diagram rendering.").grid(column=0, row=0)
+     ttk.Label(frm, text="You can get rid of this dialog by hard-coding the URL in the variable strRenderingUrl").grid(column=1, row=1)
+     ttk.Label(frm, text="in the first line of render_diagram in blockdiagram_renderer.py").grid(column=1, row=2)
+     ttk.Label(frm, text="                                                                           URL: ").grid(column=0, row=3)
+     theText = ttk.Entry(frm, textvariable = strURL, width = 80)
+     theText.grid(column=1, row=3)
+     ttk.Label(frm, text="Any URL you enter or hard-code must be safe to open in a browser.").grid(column=1, row=4)
+     ttk.Label(frm, text="You can try http://interactive.blockdiag.com/ if you can be sure it is safe to open.").grid(column=1, row=5)
+     ttk.Button(frm, text="OK", command=partial(ProcessUrlInput,subWindow,theText,cProjectID,cServerName,mainWindow,strBaseURLParam)).grid(column=3, row=6)
+     subWindow.mainloop()
+
+ 
+
+
+def render_diagram(cProjectID,cServerName,mainWindow,strBaseURLParam):
+     strRenderingURL = '' # Could be http://interactive.blockdiag.com/, if that site exists and is safe to use by the time of running this code
      mainWindow.config(cursor="watch")
      sleep(0.1)
      mainWindow.update()
      sleep(0.1)
-     bSuccess, cErrorMsg, clFunctionalBlocksAndFlows = read_functional_architecture(cProjectID,cServerName)
-     if bSuccess == False:
-         messagebox.showerror("Diagram Renderer","Reading from the repository failed with the following error message: " + cErrorMsg)
+     if strBaseURLParam.get() != '':
+         strRenderingURL = strBaseURLParam.get()
+     if strRenderingURL == '':
+         askForBaseUrl(cProjectID,cServerName,mainWindow,strBaseURLParam)
      else:
-         # blockdiag currently only supports one connection per pair of blocks
-         # connections will be unified by direction and sorted by connection partner
-         # Then multiple flows will be visualized by concatenating a corresponding string to label the connection
-
-
-
-         clNormalizedBlocksAndFlows =[]
-
-         for cLineToInsert in clFunctionalBlocksAndFlows:
-             cNewSource, cNewFlow, cNewTarget  = evaluateFlow( cLineToInsert )
-             bUpdated = False
-             for iLineToProcess in range(len(clNormalizedBlocksAndFlows )):
-                 dictCurrent = clNormalizedBlocksAndFlows[iLineToProcess]
-                 cSource = dictCurrent.get('source')
-                 cTarget = dictCurrent.get('target')
-                 cFlowsS2T = dictCurrent.get('source_to_target_flows')
-                 cFlowsT2S = dictCurrent.get('target_to_source_flows')
-                 if cSource == cNewSource and cTarget == cNewTarget:
-                     cFlowsS2T = extend_flow_string(cFlowsS2T, cNewFlow)
-                     clNormalizedBlocksAndFlows[iLineToProcess] = { 'source': cSource, 'target' :  cTarget, 'source_to_target_flows' : cFlowsS2T, 'target_to_source_flows': cFlowsT2S }
-                     bUpdated = True
-                 elif cTarget == cNewSource and cSource == cNewTarget:
-                     cFlowsT2S = extend_flow_string(cFlowsT2S, cNewFlow)
-                     clNormalizedBlocksAndFlows[iLineToProcess] = { 'source': cSource, 'target' :  cTarget, 'source_to_target_flows' : cFlowsS2T, 'target_to_source_flows': cFlowsT2S }
-                     bUpdated = True
-
-             if bUpdated == False:
-                     clNormalizedBlocksAndFlows.append({ 'source': cNewSource, 'target' :  cNewTarget, 'source_to_target_flows' : cNewFlow, 'target_to_source_flows': '' })
-
-                     
-
-         cDiag = ''
-         cNewLine = '\n'
-         cDiag = cDiag + 'blockdiag {' + cNewLine
-         cSpace = '  '
-         if len(clNormalizedBlocksAndFlows) < len(clFunctionalBlocksAndFlows):
-             # Some flows are labled with multiple items. The font size needs to be reduced
-             cDiag = cDiag + cSpace + 'default_fontsize = 3' + cNewLine
+         bSuccess, cErrorMsg, clFunctionalBlocksAndFlows = read_functional_architecture(cProjectID,cServerName)
+         if bSuccess == False:
+             messagebox.showerror("Diagram Renderer","Reading from the repository failed with the following error message: " + cErrorMsg)
          else:
-             cDiag = cDiag + cSpace + 'default_fontsize = 5' + cNewLine
-         for cLine in clNormalizedBlocksAndFlows: 
-             cDiagLine = ''             
-             if len(cLine.get('target_to_source_flows'))>0:
-                 #Flows in both directions exist
-                 cItemDefinitionName = cLine.get('target_to_source_flows') + '   <-->   ' + cLine.get('source_to_target_flows')
-                 cDiagLine = cLine.get('source')  + ' <-> ' + cLine.get('target')   + ' [label = "' + cItemDefinitionName + '" ]'                
+
+
+             # blockdiag currently only supports one connection per pair of blocks
+             # connections will be unified by direction and sorted by connection partner
+             # Then multiple flows will be visualized by concatenating a corresponding string to label the connection
+
+
+
+             clNormalizedBlocksAndFlows =[]
+
+             for cLineToInsert in clFunctionalBlocksAndFlows:
+                 cNewSource, cNewFlow, cNewTarget  = evaluateFlow( cLineToInsert )
+                 bUpdated = False
+                 for iLineToProcess in range(len(clNormalizedBlocksAndFlows )):
+                     dictCurrent = clNormalizedBlocksAndFlows[iLineToProcess]
+                     cSource = dictCurrent.get('source')
+                     cTarget = dictCurrent.get('target')
+                     cFlowsS2T = dictCurrent.get('source_to_target_flows')
+                     cFlowsT2S = dictCurrent.get('target_to_source_flows')
+                     if cSource == cNewSource and cTarget == cNewTarget:
+                         cFlowsS2T = extend_flow_string(cFlowsS2T, cNewFlow)
+                         clNormalizedBlocksAndFlows[iLineToProcess] = { 'source': cSource, 'target' :  cTarget, 'source_to_target_flows' : cFlowsS2T, 'target_to_source_flows': cFlowsT2S }
+                         bUpdated = True
+                     elif cTarget == cNewSource and cSource == cNewTarget:
+                         cFlowsT2S = extend_flow_string(cFlowsT2S, cNewFlow)
+                         clNormalizedBlocksAndFlows[iLineToProcess] = { 'source': cSource, 'target' :  cTarget, 'source_to_target_flows' : cFlowsS2T, 'target_to_source_flows': cFlowsT2S }
+                         bUpdated = True
+
+                 if bUpdated == False:
+                         clNormalizedBlocksAndFlows.append({ 'source': cNewSource, 'target' :  cNewTarget, 'source_to_target_flows' : cNewFlow, 'target_to_source_flows': '' })
+
+                         
+
+             cDiag = ''
+             cNewLine = '\n'
+             cDiag = cDiag + 'blockdiag {' + cNewLine
+             cSpace = '  '
+             if len(clNormalizedBlocksAndFlows) < len(clFunctionalBlocksAndFlows):
+                 # Some flows are labled with multiple items. The font size needs to be reduced
+                 cDiag = cDiag + cSpace + 'default_fontsize = 3' + cNewLine
              else:
-                 cItemDefinitionName = cLine.get('source_to_target_flows')                 
-                 cDiagLine = cLine.get('source') + ' -> '  + cLine.get('target')   + ' [label = "' + cItemDefinitionName + '" ]'                
-                
+                 cDiag = cDiag + cSpace + 'default_fontsize = 5' + cNewLine
+             for cLine in clNormalizedBlocksAndFlows: 
+                 cDiagLine = ''             
+                 if len(cLine.get('target_to_source_flows'))>0:
+                     #Flows in both directions exist
+                     cItemDefinitionName = cLine.get('target_to_source_flows') + '   <-->   ' + cLine.get('source_to_target_flows')
+                     cDiagLine = cLine.get('source')  + ' <-> ' + cLine.get('target')   + ' [label = "' + cItemDefinitionName + '" ]'                
+                 else:
+                     cItemDefinitionName = cLine.get('source_to_target_flows')                 
+                     cDiagLine = cLine.get('source') + ' -> '  + cLine.get('target')   + ' [label = "' + cItemDefinitionName + '" ]'                
+                    
 
-             cDiag = cDiag + cSpace + cDiagLine  + cNewLine
+                 cDiag = cDiag + cSpace + cDiagLine  + cNewLine
 
-         cDiag = cDiag + '}'  + cNewLine
-
-         print('------------------------------------------')
-         print('')
-         print(cDiag)
-         print('')
-         print('------------------------------------------')
+             cDiag = cDiag + '}'  + cNewLine
 
 
-         encoded = base64.b64encode(zlib.compress(bytes(cDiag, "utf-8"))).decode("ascii")
-         cURL = 'http://interactive.blockdiag.com/image?compression=deflate&encoding=base64&src=' + encoded.replace('/','_').replace('+','-')
 
-         print('Opening ' + cURL)
-         mainWindow.config(cursor="")
-         
-         webbrowser.open_new(cURL)
+             encoded = base64.b64encode(zlib.compress(bytes(cDiag, "utf-8"))).decode("ascii")
+             cURL = strBaseURL + 'image?compression=deflate&encoding=base64&src=' + encoded.replace('/','_').replace('+','-')
+
+             print('Opening ' + cURL)
+             mainWindow.config(cursor="")
+             
+             webbrowser.open_new(cURL)
 
 
 def run_renderer(cProjectUUID, cHost, cFolder):
@@ -413,7 +445,7 @@ def run_renderer(cProjectUUID, cHost, cFolder):
      frm = ttk.Frame(mainWindow)
      frm.grid(row=0, column=0, columnspan=3)
 
-     ttk.Label(frm, text="WARNING: Before running, please check that http://blockdiag.com/ still exists").grid(column=0, row=0)
+     ttk.Label(frm, text="Model information will be read from the repository and displayed graphically.").grid(column=0, row=0)
      cProjectID = StringVar()
      cProjectID.set(cProjectUUID)
      strFolder= StringVar()
@@ -425,8 +457,6 @@ def run_renderer(cProjectUUID, cHost, cFolder):
      ttk.Entry(frm, textvariable = cServerName, width = 50).grid(column=1, row=2)
      ttk.Label(frm, text="Project UUID").grid(column=0, row=3)
      ttk.Entry(frm, textvariable = cProjectID, width = 50).grid(column=1, row=3)
-     ttk.Button(frm, text="Select", command=partial(selectproject,cProjectID,cServerName)).grid(column=2, row=3)
-     ttk.Label(frm, text="").grid(column=0, row=4)
      bShowBlockdiag = True
      bShowImage=True
      bSuccess = True
@@ -447,8 +477,13 @@ def run_renderer(cProjectUUID, cHost, cFolder):
                  bShowBlockdiag = True
                  bShowImage=False             
 
+     if bShowBlockdiag and bShowImage:
+         ttk.Button(frm, text="Select", command=partial(selectproject,cProjectID,cServerName)).grid(column=2, row=3)
+         ttk.Label(frm, text="").grid(column=0, row=4)
      if bShowBlockdiag:
-         ttk.Button(frm, text="Render block diagram", command=partial(render_diagram,cProjectID,cServerName,mainWindow)).grid(column=1, row=5)
+         strBaseURLParam = StringVar()
+         strBaseURLParam.set('')
+         ttk.Button(frm, text="Render block diagram", command=partial(render_diagram,cProjectID,cServerName,mainWindow,strBaseURLParam)).grid(column=1, row=5)
      if bShowImage:
          if bShowBlockdiag:
             iColumn = 2
