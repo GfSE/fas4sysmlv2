@@ -258,7 +258,7 @@ def RenderFlowsAndItemDefsInSysML(O,clActivities):
      clActionNames = clActivities
 
      
-     cSysMLString = cSysMLString + '      action def OverallUseCase {' + cLF
+     cSysMLString = cSysMLString + '      action OverallUseCase {' + cLF
     
      cSysMLString = cSysMLString + RenderActivityDefinitionsInSysML(O,clActivities)
     
