@@ -31,8 +31,8 @@ def run_freesketchplugin(cFreesketchFolderName, cModelElementName):
 
     cFreesketchFolderName=cFreesketchFolderName.replace('\\\\','{}').replace('\\','').replace('{}','\\')
     if platform.system()!='Windows':
-        clCommands=['javac -cp "gson.jar:imageplugin.jar" ' + cSources ,
-                    'java -cp ' + cSourceFolders + ':.:"gson.jar":"imageplugin.jar"  MainClass "' + cFreesketchFolderName + '" "' + cModelElementName + '" "' + cPluginName+ '"']
+        clCommands=['`update-alternatives --list javac|grep "/jdk"|head -n 1`' +' -cp "gson.jar:imageplugin.jar" ' + cSources , 
+                    '`update-alternatives --list java|grep "/jdk"|head -n 1`' + ' -cp ' + cSourceFolders + ':.:"gson.jar":"imageplugin.jar" MainClass "' + cFreesketchFolderName + '" "' + cModelElementName + '" "' + cPluginName+ '"']
     else:
         clCommands=['javac -cp "gson.jar;imageplugin.jar" ' + cSources ,
                     'java -cp ' + cSourceFolders + ';.;"gson.jar";"imageplugin.jar"  MainClass "' + cFreesketchFolderName + '" "' + cModelElementName + '" "' + cPluginName+ '"']
@@ -40,4 +40,7 @@ def run_freesketchplugin(cFreesketchFolderName, cModelElementName):
     for cCommand in clCommands:
          if bSilenced:
              cCommand = cCommand + ' ' + cSilencer
-         os.system(cCommand)
+         if platform.system()!='Windows':
+             os.system('/bin/bash -c "'+ cCommand +'"')
+         else:
+             os.system(cCommand)
