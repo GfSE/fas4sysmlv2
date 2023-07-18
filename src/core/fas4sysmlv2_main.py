@@ -797,7 +797,7 @@ def render_transform_result(cFormulaOutput, cSysMLString, bSuccess, cTargetProje
      renderingWindow.mainloop()
 
 def fas_transform(cProjectID,cServerName,cNewProjectID,mainWindow):
-     mainWindow.config(cursor="wait")
+     mainWindow.config(cursor="watch")
      sleep(0.1)
      mainWindow.update()
      sleep(0.1)

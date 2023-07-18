@@ -43,7 +43,7 @@ def read_full_repository(cServerName, cProjectID):
      try:
          response = requests.get(cServerName + "/projects/" + cProjectID)
      except  requests.exceptions.ConnectionError:
-         bSuccess = false
+         bSuccess = False
          cErrorMessage = 'Error: Could not connect to server'
          print(cErrorMessage)
 

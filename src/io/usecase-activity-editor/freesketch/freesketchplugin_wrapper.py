@@ -14,8 +14,6 @@ import os
 
 def run_freesketchplugin(cFreesketchFolderName, cModelElementName):
     cPluginName = "Free Sketch Plugin by IPEK - Institute of Product Engineering at Karlsruhe Institute of Technology (KIT)"
-    if platform.system()!='Windows':
-        cPluginName = "Free Sketch Plugin by IPEK - Institute of Product Engineering at Karlsruhe Institute of Technology \(KIT\)"
 
     cSources = '.\\MainClass.java .\\com\\nomagic\\actions\\ActionsCategory.java .\\com\\nomagic\\actions\\NMAction.java .\\com\\nomagic\\magicdraw\\actions\\ActionsConfiguratorsManager.java .\\com\\nomagic\\magicdraw\\core\\Application.java .\\com\\nomagic\\magicdraw\\core\\myInstance.java .\\com\\nomagic\\magicdraw\\core\\myProject.java .\\com\\nomagic\\magicdraw\\ui\\dialogs\\MDDialogParentProvider.java .\\de\\gfse\\RealMainClass.java .\\global\\DataSerializer.java .\\global\\DataSerializer4Trace.java .\\global\\DataTree.java .\\rectangledesign\\BottomPanel.java .\\rectangledesign\\CenterPanel.java .\\rectangledesign\\Controller.java .\\rectangledesign\\LeftPanel.java .\\rectangledesign\\Shapes.java .\\rectangledesign\\TopPanel.java'
 
@@ -32,7 +30,7 @@ def run_freesketchplugin(cFreesketchFolderName, cModelElementName):
     cFreesketchFolderName=cFreesketchFolderName.replace('\\\\','{}').replace('\\','').replace('{}','\\')
     if platform.system()!='Windows':
         clCommands=['`update-alternatives --list javac|grep "/jdk"|head -n 1`' +' -cp "gson.jar:imageplugin.jar" ' + cSources , 
-                    '`update-alternatives --list java|grep "/jdk"|head -n 1`' + ' -cp ' + cSourceFolders + ':.:"gson.jar":"imageplugin.jar" MainClass "' + cFreesketchFolderName + '" "' + cModelElementName + '" "' + cPluginName+ '"']
+                    '`update-alternatives --list java|grep "/jdk"|head -n 1`' + ' -cp ' + cSourceFolders + ':.:"gson.jar":"imageplugin.jar" MainClass "' + cFreesketchFolderName + '" "' + cModelElementName + '" \'' + cPluginName+ '\'']
     else:
         clCommands=['javac -cp "gson.jar;imageplugin.jar" ' + cSources ,
                     'java -cp ' + cSourceFolders + ';.;"gson.jar";"imageplugin.jar"  MainClass "' + cFreesketchFolderName + '" "' + cModelElementName + '" "' + cPluginName+ '"']

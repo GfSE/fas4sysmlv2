@@ -225,7 +225,7 @@ def evaluateFlow(sLine):
      return sLine.get('source'),sLine.get('flow'),sLine.get('target')
 
 def render_images(cProjectID,cServerName,cFolder,mainWindow):
-    mainWindow.config(cursor="wait")
+    mainWindow.config(cursor="watch")
     sleep(0.1)
     mainWindow.update()
     sleep(0.1)
@@ -328,7 +328,7 @@ def render_images(cProjectID,cServerName,cFolder,mainWindow):
     mainWindow.config(cursor="")
 
 def render_diagram(cProjectID,cServerName,mainWindow):
-     mainWindow.config(cursor="wait")
+     mainWindow.config(cursor="watch")
      sleep(0.1)
      mainWindow.update()
      sleep(0.1)
