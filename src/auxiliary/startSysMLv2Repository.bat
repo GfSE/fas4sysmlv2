@@ -14,8 +14,13 @@
 :: Replace with your own path:
 set SYSMLV2APIPATH=C:\temp\SysML-v2-API-Services-master
 
+echo Starting docker desktop...
+:: Adapt path if necessary ...
+start "x" "C:\Program Files\Docker\Docker\Docker Desktop.exe"
+timeout 15 > nul
+echo Done.
 
-echo Starting docker ...
+echo Starting docker container...
 docker start sysml2-postgres > nul
 echo Done.
 c:
