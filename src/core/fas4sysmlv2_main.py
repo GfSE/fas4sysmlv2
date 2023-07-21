@@ -196,7 +196,7 @@ def RenderFunctionalGroupsInSysML(clGroupName,clActivities, mMatrixG):
          cSysMLString= cSysMLString + '         package ' + clGroupName[n] + '{' + cLF
          for m in range (M):
              if mMatrixG[n][m] > 0:
-                 cSysMLString = cSysMLString + '            import OverallUseCase::' + clActivities[m] + ';' + cLF
+                 cSysMLString = cSysMLString + '            import overallUseCase::' + clActivities[m] + ';' + cLF
          
          cSysMLString= cSysMLString + '         }' + cLF
 
@@ -258,7 +258,7 @@ def RenderFlowsAndItemDefsInSysML(O,clActivities):
      clActionNames = clActivities
 
      
-     cSysMLString = cSysMLString + '      action OverallUseCase {' + cLF
+     cSysMLString = cSysMLString + '      action overallUseCase {' + cLF
     
      cSysMLString = cSysMLString + RenderActivityDefinitionsInSysML(O,clActivities)
     
