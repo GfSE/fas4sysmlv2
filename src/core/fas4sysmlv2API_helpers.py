@@ -206,3 +206,20 @@ def dictionary_payload_package(element_id, name = None, quali_name = None, membe
         "identity": {"@id": element_id}
     }
     return dictionary_payload_package
+
+def copy_elements(source_host, source_id, target_host, target_id):
+    
+    rep = read_full_repository(source_host, source_id)
+    
+    rep_t = []
+    for i in range(len(rep)):
+        rep_t.append({"payload": rep[i],
+                      "identity": {"@id": rep[i]['@id']}})
+        
+    commit_body1 = '{"change":' + json.dumps(rep_t) + '}'
+    response = requests.post(target_host + "/projects/" +project_id1+ "/commits", headers={"Content-Type": "application/json"}, data = commit_body1)
+    
+    if response.status_code != 200:
+        return False , response.json()
+    else:
+        return True , response.json()
