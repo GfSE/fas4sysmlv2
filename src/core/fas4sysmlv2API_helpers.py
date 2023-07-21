@@ -217,7 +217,7 @@ def copy_elements(source_host, source_id, target_host, target_id):
                       "identity": {"@id": rep[i]['@id']}})
         
     commit_body1 = '{"change":' + json.dumps(rep_t) + '}'
-    response = requests.post(target_host + "/projects/" +project_id1+ "/commits", headers={"Content-Type": "application/json"}, data = commit_body1)
+    response = requests.post(target_host + "/projects/" +target_id+ "/commits", headers={"Content-Type": "application/json"}, data = commit_body1)
     
     if response.status_code != 200:
         return False , response.json()
