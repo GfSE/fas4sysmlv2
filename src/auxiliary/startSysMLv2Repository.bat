@@ -1,4 +1,3 @@
-
 @echo off
 ::   Copyright 2022 Gesellschaft fuer Systems Engineering e.V. (GfSE)
 ::   Licensed under the Apache License, Version 2.0 (the "License");
@@ -17,12 +16,29 @@ set SYSMLV2APIPATH=C:\temp\SysML-v2-API-Services-master
 echo Starting docker desktop...
 :: Adapt path if necessary ...
 start "x" "C:\Program Files\Docker\Docker\Docker Desktop.exe"
-timeout 15 > nul
+timeout 30 > nul
 echo Done.
 
 echo Starting docker container...
 docker start sysml2-postgres > nul
+:: The container starts rather quickly, but the database server 
+:: inside the container needs time to start and load, in case 
+:: the database is persisted.
+goto begincontainer
+:begincontainermsg
+echo Waiting for CPU load in the docker container to come down ...
+:begincontainer
+timeout 10 > nul
+:: Wait for CPU load in the container to come down
+SET LOOPCOUNTER = 0
+SET /A LOOPCOUNTER +=1
+FOR /F "delims=" %%i IN ('docker stats --format="{{.CPUPerc}}" --no-stream sysml2-postgres') DO set cpupercentdockerraw=%%i
+for /f "tokens=1 delims=." %%a in ("%cpupercentdockerraw%") do (  set CPUDOCKER=%%a)
+if %LOOPCOUNTER% GTR 15 goto endcontainer
+if %cpudocker% GTR 5 goto begincontainermsg
+:endcontainer
 echo Done.
+
 c:
 echo Starting SysML v2 API services ...
 cd %SYSMLV2APIPATH%
