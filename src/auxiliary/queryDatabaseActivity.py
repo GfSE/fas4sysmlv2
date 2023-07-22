@@ -11,7 +11,8 @@ def update_entities_committed(iNum):
     if iNum == 1:
         cEntities = 'entity'
 
-    sys.stdout.write ('\b'*10000 + '  |' + '#'*iNumForScaling + ' (' +str(iNum) + ' ' + cEntities + ')' )
+    #sys.stdout.write ('\b'*10000 + '  |' + '#'*iNumForScaling + ' (' +str(iNum) + ' ' + cEntities + ')' )
+    sys.stdout.write ('\b'*10000 + '  |' + '#'*iNumForScaling  )
     sys.stdout.flush()
  
 def end_progress_indicator():
