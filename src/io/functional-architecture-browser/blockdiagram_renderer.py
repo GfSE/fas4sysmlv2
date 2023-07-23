@@ -460,22 +460,15 @@ def run_renderer(cProjectUUID, cHost, cFolder):
      bShowBlockdiag = True
      bShowImage=True
      bSuccess = True
-     if cProjectUUID!='':
-         try:
-             response = requests.get(cHost + "/projects/" + cProjectUUID)
-         except  requests.exceptions.ConnectionError:
-             bSuccess = False
-
-         
-         if bSuccess and response.status_code==200:
-             data = response.json()
-             cProjectName = data.get('name')
-             if cProjectName.find('UseCaseActivities')>-1:
-                 bShowBlockdiag = False
-                 bShowImage=True             
-             else:
-                 bShowBlockdiag = True
-                 bShowImage=False             
+     if cProjectUUID!='' and cHost!='':
+         bShowImage=False
+         bShowBlockdiag = False
+         vPartUsages=run_query_for_elementtyp('PartUsage', cHost, cProjectUUID)
+         if len(vPartUsages) > 0:
+             bShowBlockdiag = True
+         vLiterals=run_query_for_elementtyp('LiteralString', cHost, cProjectUUID)
+         if len(vLiterals) > 0:
+             bShowImage=True             
 
      if bShowBlockdiag and bShowImage:
          ttk.Button(frm, text="Select", command=partial(selectproject,cProjectID,cServerName)).grid(column=2, row=3)
