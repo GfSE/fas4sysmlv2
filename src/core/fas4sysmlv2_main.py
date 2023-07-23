@@ -46,6 +46,15 @@ import requests
 import platform
 import os
 
+def convert_notebook(cSourceNotebook, cTargetNotebook):
+     import nbformat
+     from nbclient import NotebookClient
+
+     nbSource = nbformat.read(cSourceNotebook,4)
+     client = NotebookClient(nbSource, kernel_name='SysML')  
+     nbTarget =client.execute()            
+     nbformat.write(nbTarget,cTargetNotebook)
+
 #### BEGIN TEMP The following part needs to be solved more clever
 
 def strfind_zerobased(cStringtoSearch, cCharToFind):
@@ -744,7 +753,8 @@ def write_functional_architecture(cProjectID,cServerName,cSysMLString,cOptionalI
              os.system('/bin/bash -i -c "jupyter nbconvert --to notebook --execute ' + cOutputFile + ' --stdout >' + cResultFile + ' ' + cSilencer+'"')
          else:
              cSilencer='>nul 2>&1';
-             os.system('jupyter nbconvert --to notebook --execute ' + cOutputFile + ' --output=' + cResultFile + ' ' + cSilencer)
+             #os.system('jupyter nbconvert --to notebook --execute ' + cOutputFile + ' --output=' + cResultFile + ' ' + cSilencer)
+             convert_notebook(cOutputFile, cResultFile) #under Windows, this saves some time, at the cost of messy stdout output
 
          status = ''
          FID1=open(cResultFile ,'r');
