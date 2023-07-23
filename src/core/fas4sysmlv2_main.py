@@ -46,6 +46,19 @@ import requests
 import platform
 import os
 
+def transfer_result_back_to_sourceproject(cHost, temporary_project_with_data,target_project_for_merge):
+    bSuccess = true
+    # Todo: instead of just copying: Merge ItemDefs and toplevel Packages and created dependencies between functional blocks and functional groups
+    bSuccess,sInfo = copy_elements(cHost, temporary_project_with_data, cHost, target_project_for_merge)
+    print('Merging from temporary project ' + temporary_project_with_data + ' to project ' + target_project_for_merge)
+    if bSuccess==True:
+        print('Done')
+    else:
+        print('Error copying data back:')
+        print(sInfo)
+    return bSuccess    
+
+
 def convert_notebook(cSourceNotebook, cTargetNotebook):
      import nbformat
      from nbclient import NotebookClient
@@ -729,7 +742,9 @@ def write_functional_architecture(cProjectID,cServerName,cSysMLString,cOptionalI
 
      bSuccess = False
      cErrorMsg = ''
-     cSysMLString = 'package FunctionalModel {\n' + cOptionalInputModel + cSysMLString + cOptionalDependencySpecification + '}\n'
+     if cOptionalInputModel == '':
+         cOptionalInputModel = cItemDefString
+     cSysMLString = 'package FunctionalModel2 {\n' + cOptionalInputModel + cSysMLString + cOptionalDependencySpecification + '}\n'
      print('')
      print('Here is the generated functional architecture: ')
      print(cSysMLString)
@@ -741,7 +756,7 @@ def write_functional_architecture(cProjectID,cServerName,cSysMLString,cOptionalI
          #print(cWorkingFolder)
          cNotebookFile = os.path.join(cWorkingFolder,'temp_fas_input_writer.ipynb')
          FID =open(cNotebookFile ,'w');
-         FID.write('{\n "cells": [\n  {\n   "cell_type": "markdown",\n   "id": "237f75ac",\n   "metadata": {},\n   "source": [\n    "FAS for SysMLv2: FAS Input to Repository Writer\\n",\n    "=="\n   ]\n  },\n  {\n   "cell_type": "code",\n   "execution_count": null,\n   "id": "f4fe084d",\n   "metadata": {},\n   "outputs": [],\n   "source": [\n    "<Paste SysMLv2 code here>"\n   ]\n  },\n  {\n   "cell_type": "code",\n   "execution_count": null,\n   "id": "7e04e6fc",\n   "metadata": {},\n   "outputs": [],\n   "source": [\n    "%publish FunctionalModel"\n   ]\n  }\n ],\n "metadata": {\n  "kernelspec": {\n   "display_name": "SysML",\n   "language": "sysml",\n   "name": "sysml"\n  },\n  "language_info": {\n   "codemirror_mode": "sysml",\n   "file_extension": ".sysml",\n   "mimetype": "text/x-sysml",\n   "name": "SysML",\n   "pygments_lexer": "java",\n   "version": "1.0.0"\n  }\n },\n "nbformat": 4,\n "nbformat_minor": 5\n}\n')
+         FID.write('{\n "cells": [\n  {\n   "cell_type": "markdown",\n   "id": "237f75ac",\n   "metadata": {},\n   "source": [\n    "FAS for SysMLv2: FAS Input to Repository Writer\\n",\n    "=="\n   ]\n  },\n  {\n   "cell_type": "code",\n   "execution_count": null,\n   "id": "f4fe084d",\n   "metadata": {},\n   "outputs": [],\n   "source": [\n    "<Paste SysMLv2 code here>"\n   ]\n  },\n  {\n   "cell_type": "code",\n   "execution_count": null,\n   "id": "7e04e6fc",\n   "metadata": {},\n   "outputs": [],\n   "source": [\n    "%publish FunctionalModel2"\n   ]\n  }\n ],\n "metadata": {\n  "kernelspec": {\n   "display_name": "SysML",\n   "language": "sysml",\n   "name": "sysml"\n  },\n  "language_info": {\n   "codemirror_mode": "sysml",\n   "file_extension": ".sysml",\n   "mimetype": "text/x-sysml",\n   "name": "SysML",\n   "pygments_lexer": "java",\n   "version": "1.0.0"\n  }\n },\n "nbformat": 4,\n "nbformat_minor": 5\n}\n')
          FID.close()
 
          cOutputFile = os.path.join(cWorkingFolder, 'temp_output.ipynb')
@@ -791,8 +806,14 @@ def write_functional_architecture(cProjectID,cServerName,cSysMLString,cOptionalI
          cErrorMsg = "write_functional_architecture: code is not yet implemented for writing to existing projects"
          messagebox.showwarning("FAS Plugin","fas_transform is missing functionality for tracing functional blocks to functional groups and for re-using the original item defs in the database, instead of composing new ones")
          print(cErrorMsg)
+    
+     finalProjectID = ''
+     if bSuccess:
+         bSuccess=transfer_result_back_to_sourceproject(cServerName.get(),targetProjectID,cProjectID.get())   
+     if bSuccess:
+         finalProjectID = cProjectID.get()
      
-     return bSuccess, cErrorMsg, targetProjectID
+     return bSuccess, cErrorMsg, finalProjectID
 
 
 def render_transform_result(cFormulaOutput, cSysMLString, bSuccess, cTargetProject, cItemDefString):
@@ -831,8 +852,10 @@ def fas_transform(cProjectID,cServerName,cNewProjectID,mainWindow):
      else:
          print('Transforming to functional architecture via FAS-as-a-formula ...')
          cSysMLString, cFormulaOutput,cOptionalDependencySpecification, cItemDefString = run_fas(clActivitiesAndObjectFlows, clFunctionalGroups, clActivityNamesSorted)
-         cOptionalInputModel=ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups, clActivityNamesSorted )
+         cOptionalInputModel= '' #ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups, clActivityNamesSorted )
+         cOptionalDependencySpecification = ''
          bSuccess, cErrorMsg, cTargetProject = write_functional_architecture(cProjectID,cServerName,cSysMLString,cOptionalInputModel,cOptionalDependencySpecification, cItemDefString)
+
 
          sleep(0.1)
          mainWindow.config(cursor="")
