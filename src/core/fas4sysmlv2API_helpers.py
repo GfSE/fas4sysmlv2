@@ -132,8 +132,9 @@ def selectproject(cProjectID, cServerName):
      try:
          response = requests.get(format_servername(cServerName.get()) + "/projects")
          data = response.json()
-         for response in data:
-             tdata.append(response.get("name") + " (" + response.get("@id") + ")" )
+         for currentRecord in data:
+             if str(currentRecord.get('name'))!="None":
+	             tdata.append(currentRecord.get("name") + " (" + currentRecord.get("@id") + ")" )
      except  requests.exceptions.ConnectionError:
          cProjectID.set("Cannot connect to server.")
      
