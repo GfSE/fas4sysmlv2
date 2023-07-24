@@ -27,6 +27,12 @@ cServerName = sys.argv[1]
 
 response = requests.get(cServerName + "/projects" )
 data = response.json()
+while response.headers.get('Link','--NOTFOUND--').find('?page[after]')>-1:
+            cNextPageLink = response.headers.get('Link').replace('<','').replace('; rel="next"','').replace('; rel="prev"','').replace('page[size]=100>','page[size]=10000>').replace('>','')
+            response = requests.get(cNextPageLink)
+            if response.status_code == 200:
+                data = data + response.json()
+
 
  
 if response.status_code!=200:
