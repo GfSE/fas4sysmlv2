@@ -6,7 +6,7 @@ from math import ceil
 
 
 def update_entities_committed(iNum):
-    iNumForScaling = ceil(iNum/100.0)
+    iNumForScaling = ceil(iNum/200.0)
     cEntities = 'entities'
     if iNum == 1:
         cEntities = 'entity'
@@ -41,7 +41,7 @@ def query_sql_entities():
     return iResult
 
 iInitialEntities=query_sql_entities() #These will be subtracted from all query results, because they are not from the current monitoring session.
-print('Database entities committed:')
+print('Database read / write operations executed:')
 while True:
     update_entities_committed(query_sql_entities()-iInitialEntities)
     sleep(1)
