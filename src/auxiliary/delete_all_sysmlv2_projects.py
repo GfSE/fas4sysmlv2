@@ -33,7 +33,7 @@ while response.headers.get('Link','--NOTFOUND--').find('?page[after]')>-1:
             if response.status_code == 200:
                 data = data + response.json()
 
-
+iProjectCount = len(data)
  
 if response.status_code!=200:
     print('Error retrieving projects from host ' + cServerName)
@@ -115,3 +115,6 @@ else:
         else:
             print('Project deleted')
 
+
+
+print('Found ' + str(iProjectCount) + ' projects.')
