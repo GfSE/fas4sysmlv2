@@ -809,9 +809,14 @@ def write_functional_architecture(cProjectID,cServerName,cSysMLString,cOptionalI
     
      finalProjectID = ''
      if bSuccess:
-         bSuccess=transfer_result_back_to_sourceproject(cServerName.get(),targetProjectID,cProjectID.get())   
+         bSuccess = transfer_result_back_to_sourceproject(cServerName.get(),targetProjectID,cProjectID.get())   
+     if bSuccess:
+         print ('Deleting the temporary project (ID: '+ targetProjectID +')')
+         bSuccess = delete_project(cServerName.get(), targetProjectID)
      if bSuccess:
          finalProjectID = cProjectID.get()
+     else:
+         cErrorMsg = 'Project deletion of temporary project failed.'
      
      return bSuccess, cErrorMsg, finalProjectID
 

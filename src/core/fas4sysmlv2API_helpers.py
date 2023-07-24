@@ -31,6 +31,31 @@ def format_servername(cName):
      
      return cName
   
+def delete_project(cServerName, cProjectID):
+##Deletion does not work for non-empty projects, so we will just set the name to None in that case
+     bSuccess = True
+     response = requests.delete(cServerName + "/projects/" + cProjectID)
+     if response.status_code!=200:
+   
+         response = requests.get(cServerName + '/projects/' + cProjectID)
+         if response.status_code!=200: 
+             bSuccess = False
+         else:
+             default_branch_id = response.json().get('defaultBranch').get('@id')
+             project_data = {
+                      "@type": "Project",
+                      "defaultBranch":{"@id": default_branch_id},
+	                  "name": None}
+
+             response = requests.put(cServerName + "/projects/"+cProjectID, 
+                                      headers={"Content-Type": "application/json"}, 
+                                      data=json.dumps(project_data))
+                                      
+             if response.status_code!=200: 
+                 bSuccess = false
+
+     return bSuccess
+
 
 def read_full_repository(cServerName, cProjectID):
 # This function has been created to demonstrate the handling
