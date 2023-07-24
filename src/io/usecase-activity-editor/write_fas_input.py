@@ -35,7 +35,7 @@ def DumpJupyterNotebook(cWorkingFolderAndOutputFile, cWorkingFolderAndInputFile,
              cCodedSysML = cCodedSysML[:(len(cCodedSysML)-len(cCommaBlankAndQuotationMark))]
              FID2.write(cCodedSysML )
          else:
-             FID2.write(tline)
+             FID2.write(tline.replace('UseCaseActivities','FunctionalModel'))
      FID1.close()
      FID2.close()
      return cNotebookFile   
@@ -46,6 +46,8 @@ def main():
      cWorkingFolder = cWorkingFolder.replace('"','').strip()
 
      clActivitiesAndObjectFlows, clFunctionalGroups, cSysMLString, clActivities = fas_frontend(cFileName, cWorkingFolder)
+
+     cSysMLString = 'package FunctionalModel{\r\n' + cSysMLString + '\r\n}\r\n'  
 
      print('')
      print('Storing the result in the repository ...')
