@@ -35,7 +35,7 @@ def DumpJupyterNotebook(cWorkingFolderAndOutputFile, cWorkingFolderAndInputFile,
              cCodedSysML = cCodedSysML[:(len(cCodedSysML)-len(cCommaBlankAndQuotationMark))]
              FID2.write(cCodedSysML )
          else:
-             FID2.write(tline.replace('UseCaseActivities','FunctionalModel'))
+             FID2.write(tline.replace('publish UseCaseActivities','publish FunctionalModel'))
      FID1.close()
      FID2.close()
      return cNotebookFile   
