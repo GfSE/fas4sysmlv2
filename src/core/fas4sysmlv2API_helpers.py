@@ -157,6 +157,11 @@ def selectproject(cProjectID, cServerName):
      try:
          response = requests.get(format_servername(cServerName.get()) + "/projects")
          data = response.json()
+         while response.headers.get('Link','--NOTFOUND--').find('?page[after]')>-1:
+            cNextPageLink = response.headers.get('Link').replace('<','').replace('; rel="next"','').replace('; rel="prev"','').replace('page[size]=100>','page[size]=10000>').replace('>','')
+            response = requests.get(cNextPageLink)
+            if response.status_code == 200:
+                data = data + response.json()
          for currentRecord in data:
              if str(currentRecord.get('name'))!="None":
 	             tdata.append(currentRecord.get("name") + " (" + currentRecord.get("@id") + ")" )
