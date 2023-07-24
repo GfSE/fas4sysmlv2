@@ -57,6 +57,24 @@ def delete_project(cServerName, cProjectID):
      return bSuccess
 
 
+def multi_page_http_get (sUrl):
+     # Processes pagination in htttp responses and returns the full data from all 
+     # pages and the response from getting the last page
+     response = requests.get(sUrl)
+     data = response.json()
+
+         # Handle next pages of mutlti-page HTML responses (when the payload is very large)
+     while response.headers.get('Link','--NOTFOUND--').find('?page[after]')>-1:
+         cNextPageLink = response.headers.get('Link').replace('<','').replace('; rel="next"','').replace('; rel="prev"','').replace('page[size]=100>','page[size]=10000>').replace('>','')
+         response = requests.get(cNextPageLink)
+         if response.status_code == 200:
+             data = data + response.json()
+         else:
+             break
+             
+     return response, data
+
+
 def read_full_repository(cServerName, cProjectID):
 # This function has been created to demonstrate the handling
 # of multiple HTML response pages.
@@ -101,16 +119,9 @@ def read_full_repository(cServerName, cProjectID):
              sHeadCommit = oHeadCommit.get('@id')
 
 
+     data = []
      if bSuccess:
-         response = requests.get(cServerName + "/projects/" + cProjectID + "/commits/"+sHeadCommit+"/elements")
-         data = response.json()
-
-         # Handle next pages of mutlti-page HTML responses (when the payload is very large)
-         while response.headers.get('Link','--NOTFOUND--').find('?page[after]')>-1:
-            cNextPageLink = response.headers.get('Link').replace('<','').replace('; rel="next"','').replace('; rel="prev"','').replace('page[size]=100>','page[size]=10000>').replace('>','')
-            response = requests.get(cNextPageLink)
-            if response.status_code == 200:
-                data = data + response.json()
+         response, data = multi_page_http_get(cServerName + "/projects/" + cProjectID + "/commits/"+sHeadCommit+"/elements")
 
      return data
 
@@ -155,13 +166,8 @@ def selectproject(cProjectID, cServerName):
      cProjectID.set("")
      cProjectID.set("")
      try:
-         response = requests.get(format_servername(cServerName.get()) + "/projects")
-         data = response.json()
-         while response.headers.get('Link','--NOTFOUND--').find('?page[after]')>-1:
-            cNextPageLink = response.headers.get('Link').replace('<','').replace('; rel="next"','').replace('; rel="prev"','').replace('page[size]=100>','page[size]=10000>').replace('>','')
-            response = requests.get(cNextPageLink)
-            if response.status_code == 200:
-                data = data + response.json()
+         response, data = multi_page_http_get(format_servername(cServerName.get()) + "/projects")
+
          for currentRecord in data:
              if str(currentRecord.get('name'))!="None":
 	             tdata.append(currentRecord.get("name") + " (" + currentRecord.get("@id") + ")" )
