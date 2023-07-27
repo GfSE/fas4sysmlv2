@@ -32,7 +32,6 @@ from tkinter import *
 from tkinter import messagebox
 from tkinter import scrolledtext
 from tkinter import ttk
-from time import sleep
 from functools import partial
 import sys
 import json
@@ -40,6 +39,7 @@ import tempfile
 from fas4sysmlv2API_helpers import *
 
 from sympy import *
+from time import *
 
 import requests 
 
@@ -598,11 +598,13 @@ def read_activities_and_functional_groups(strProjectID,strServerName):
      
          for cElementType in clElementTypes:
              data = run_query_for_elementtyp(cElementType, cServerName, cProjectID)
+             if len(data)>200:
+                 print('  -> Found ' +str(len(data))+ ' elements of type '  +  cElementType)
+              
              currentSet = []
              for currentRecord in data:
                  sIdToGet=currentRecord.get('@id')
-                 qresult = requests.get(cServerName + "/projects/" + cProjectID + "/commits/"+sHeadCommit+"/elements/" + sIdToGet)
-                 response = qresult.json()
+                 qresult, response = multi_page_http_get(cServerName + "/projects/" + cProjectID + "/commits/"+sHeadCommit+"/elements/" + sIdToGet)
                  currentSet.append(response)
 
              for response in currentSet:
@@ -855,8 +857,14 @@ def fas_transform(cProjectID,cServerName,cNewProjectID,mainWindow):
          mainWindow.update()
          sleep(0.1)
      else:
+         FAS_StartTime = time()
+         print('--- Clock started. ---')
          print('Transforming to functional architecture via FAS-as-a-formula ...')
          cSysMLString, cFormulaOutput,cOptionalDependencySpecification, cItemDefString = run_fas(clActivitiesAndObjectFlows, clFunctionalGroups, clActivityNamesSorted)
+
+         FAS_EndTime = time()
+         print('--- Clock stopped. --- Elapsed time: ' + str((FAS_EndTime-FAS_StartTime)*1000) + ' milliseconds ---' )
+
          cOptionalInputModel= '' #ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups, clActivityNamesSorted )
          cOptionalDependencySpecification = ''
          bSuccess, cErrorMsg, cTargetProject = write_functional_architecture(cProjectID,cServerName,cSysMLString,cOptionalInputModel,cOptionalDependencySpecification, cItemDefString)
