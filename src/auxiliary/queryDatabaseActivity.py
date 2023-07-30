@@ -34,7 +34,9 @@ def query_sql_entities():
     iCount = 0
     for currentLine in lines:
         iCount = iCount + 1
-        if iCount ==6:
+        if iCount ==3 and currentLine.find('tup')==-1 and  currentLine.find('---')==-1  and currentLine.find('row')==-1 :
+            iResult = int(currentLine.strip())
+        if iCount ==6 and iResult == 0:
             iResult = int(currentLine.strip())
     os.remove(cInfoFile)
     os.rmdir(cWorkingFolder)
