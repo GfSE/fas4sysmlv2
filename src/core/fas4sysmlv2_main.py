@@ -46,11 +46,11 @@ import requests
 import platform
 import os
 
-def transfer_result_back_to_sourceproject(cHost, temporary_project_with_data,target_project_for_merge):
+def transfer_result_back_to_sourceproject(cSourceHost, cDestinationHost, temporary_project_with_data,target_project_for_merge):
     bSuccess = true
     # Todo: instead of just copying: Merge ItemDefs and toplevel Packages and created dependencies between functional blocks and functional groups
-    bSuccess,sInfo = copy_elements(cHost, temporary_project_with_data, cHost, target_project_for_merge)
-    print('Merging from temporary project ' + temporary_project_with_data + ' to project ' + target_project_for_merge)
+    bSuccess,sInfo = copy_elements(cSourceHost, temporary_project_with_data, cDestinationHost, target_project_for_merge)
+    print('Merging from temporary project ' + temporary_project_with_data + ' on host ' + cSourceHost + ' to project ' + target_project_for_merge + ' on host ' + cDestinationHost)
     if bSuccess==True:
         print('Done')
     else:
@@ -532,7 +532,7 @@ def read_activities_and_functional_groups(strProjectID,strServerName):
      cProjectID=strProjectID.get()
      cServerName=format_servername(strServerName.get())
      
-     print('Reading Use Case Activities and Functional Groups from project ' + cProjectID + ' on server ' + cServerName + ' ...')
+     print('Reading Use Case Activities and Functional Groups from project ' + cProjectID + ' on host ' + cServerName + ' ...')
     
      try:
          response = requests.get(cServerName + "/projects/" + cProjectID)
@@ -778,6 +778,7 @@ def write_functional_architecture(cProjectID,cServerName,cSysMLString,cOptionalI
          bStdout = False
          bData = False
          bResultExpected = False
+         cHostOfTemporaryProject = ''
          for tline in FID1:
              if bResultExpected:
                  status = 'STATUS: ' + tline.replace('\\n','').replace('\\r','').strip()
@@ -788,6 +789,11 @@ def write_functional_architecture(cProjectID,cServerName,cSysMLString,cOptionalI
                  bData = True
              if tline.find('"text/plain": [')>-1 and bData:
                  bResultExpected = True
+                 
+             iHostPos = tline.find('API base path:')
+             if iHostPos > -1:
+                 cHostOfTemporaryProject = tline[(iHostPos+15):].replace(',','').replace('"','').replace('\\r','').replace('\\n','').strip()
+
          FID1.close()
          
          os.remove(cResultFile)
@@ -811,10 +817,10 @@ def write_functional_architecture(cProjectID,cServerName,cSysMLString,cOptionalI
     
      finalProjectID = ''
      if bSuccess:
-         bSuccess = transfer_result_back_to_sourceproject(cServerName.get(),targetProjectID,cProjectID.get())   
+         bSuccess = transfer_result_back_to_sourceproject(cHostOfTemporaryProject,cServerName.get(),targetProjectID,cProjectID.get())   
      if bSuccess:
-         print ('Deleting the temporary project (ID: '+ targetProjectID +')')
-         bSuccess = delete_project(cServerName.get(), targetProjectID)
+         print ('Deleting the temporary project (ID: '+ targetProjectID +' on host ' + cHostOfTemporaryProject + ')')
+         bSuccess = delete_project(cHostOfTemporaryProject, targetProjectID)
      if bSuccess:
          finalProjectID = cProjectID.get()
      else:
@@ -905,7 +911,7 @@ def run_fas4sysml(cProjectUUID, cHost):
      ttk.Button(frm, text="Run FAS transformation", command=partial(fas_transform,cProjectID,cServerName,cNewProjectID,mainWindow)).grid(column=1, row=5)
      ttk.Button(frm, text="Quit", command=mainWindow.destroy).grid(column=2, row=5)
      mainWindow.mainloop()
-     return cNewProjectID.get()
+     return cNewProjectID.get(), cServerName.get()
 
 
 def main():
@@ -917,7 +923,7 @@ def main():
          cProjectID=sys.argv[1]
      if len (sys.argv)>2:
          cHost=sys.argv[2]
-     cNewProjectID = run_fas4sysml(cProjectID,cHost)
+     cNewProjectID, cNewServerName = run_fas4sysml(cProjectID,cHost)
 
 
 if __name__ == "__main__":

@@ -43,10 +43,10 @@ for tline in FID1:
         cHost = tline.strip()
 FID1.close()
 
-cNewProjectID = run_fas4sysml(cID, cHost)
+cNewProjectID, cNewHost = run_fas4sysml(cID, cHost)
 
 FID1=open(cProjectIdFile ,'w');
-FID1.write(cNewProjectID+'\r\n'+cHost)
+FID1.write(cNewProjectID+'\r\n'+cNewHost)
 FID1.close()
 
 
