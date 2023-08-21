@@ -30,12 +30,12 @@ def RenderFunctionalGroupsInSysML(clGroupName,clActivities, mMatrixG):
          M=0
          
      for n in range(N):
-         cSysMLString= cSysMLString + '         package ' + clGroupName[n] + '{' + cLF
+         cSysMLString= cSysMLString + '      package ' + clGroupName[n] + '{' + cLF
          for m in range (M):
              if mMatrixG[n][m] > 0:
-                 cSysMLString = cSysMLString + '            import overallUseCase::' + clActivities[m] + ';' + cLF
+                 cSysMLString = cSysMLString + '         import UseCaseActivities::overallUseCase::' + clActivities[m] + ';' + cLF
          
-         cSysMLString= cSysMLString + '         }' + cLF
+         cSysMLString= cSysMLString + '      }' + cLF
 
      
      return cSysMLString
@@ -480,10 +480,10 @@ def ProcessFasCards(clActivitiesAndObjectFlows, clFunctionalGroups, clActivityNa
      sFlows, sItemDefs, clActionNames = RenderFlowsAndItemDefsInSysML(mMatrixO, clActivities, clActivityNamesSorted, sImages)
      cSysMLString=cSysMLString + sItemDefs + cLF  + '   package UseCaseActivities{' + cLF
      cSysMLString = cSysMLString + sFlows
-     cSysMLString = cSysMLString + '      package FunctionalGroups{' + cLF
+     cSysMLString=cSysMLString   + '   }' + cLF
+     cSysMLString = cSysMLString + '   package FunctionalGroups{' + cLF
      cSysMLString = cSysMLString + RenderFunctionalGroupsInSysML(clGroupName ,clActionNames, mMatrixG)
-     cSysMLString=cSysMLString + '      }' + cLF
-     cSysMLString=cSysMLString + '   }' + cLF
+     cSysMLString=cSysMLString   + '   }' + cLF
      return cSysMLString 
 
 

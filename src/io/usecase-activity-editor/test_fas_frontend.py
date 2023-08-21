@@ -116,7 +116,7 @@ def RenderFunctionalArchitecture(F,clFunctionalBlockNames):
     ## Trace Functional Blocks to Functional Groups
      for nBlock in range(F.shape[0]):
          sCurrentName = clFunctionalBlockNames[nBlock]
-         cItemString = cItemString + '   dependency from functionalSystem::' + sCurrentName + ' to UseCaseActivities::FunctionalGroups::' + sCurrentName + ';' + '\r\n'
+         cItemString = cItemString + '   dependency from functionalSystem::' + sCurrentName + ' to FunctionalGroups::' + sCurrentName + ';' + '\r\n'
     
       
      cSysMLstring = cSysMLstring + '   }' + '\r\n' + cItemString 

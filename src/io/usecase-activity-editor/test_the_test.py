@@ -17,5 +17,5 @@ cFileName = 'FAS-Input.txt'
 FID=open(cFileName,'w')
 FID.write('Group\nMusicPlayer\n 10200\n 14400\n 12001\n 4201\nGroup\nStorage\n 10600\n 8000\n 12001\n 4401\nGroup\nAccounting\n 12000\n 1000\n 7401\n 5601\nGroup\nIO_Customer\n 1200\n 1400\n 7401\n 18201\nElement\nGetMoney\n 2400\n 3000\n 5001\n 2601\nConnector\n 7400\n 4300\n 13300\n 4300\nmoney\n\n\n 7400\n 4300\n 5901\n 1\nElement\nMonitorPayment\n 13300\n 3000\n 5001\n 2601\nElement\nProvideMusicTrack\n 11400\n 9400\n 8801\n 2401\nConnector\n 15800\n 5600\n 15800\n 9400\n                   clearance\n 15800\n 5600\n 1\n 3801\nElement\nPlayMusicTrack\n 11400\n 15800\n 8801\n 2401\nConnector\n 15800\n 11800\n 15800\n 15800\n                      music_track\n 15800\n 11800\n 1\n 4001\nElement\nProduceSound\n 2400\n 15700\n 5001\n 2601\nConnector\n 11400\n 17000\n 7400\n 17000\naudio_signal\n\n\n 7400\n 17000\n 4001\n 1\n')
 FID.close();
-os.system('python test_fas_frontend.py "' + cFileName + '" ""' + ' ' + 'c6ad80cec1ed8e1a6fb9b93466322d8f787d6cfaf3ed16366517382304c8feb1');
+os.system('python test_fas_frontend.py "' + cFileName + '" ""' + ' ' + 'f7210aa0caf9308800e78e5d4e74e42c3187435cb0b6a254ddbde39ad816eab4');
 os.remove(cFileName);
