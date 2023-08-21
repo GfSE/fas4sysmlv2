@@ -45,7 +45,9 @@ def main():
      cWorkingFolder = sys.argv[2]
      cWorkingFolder = cWorkingFolder.replace('"','').strip()
 
+     print('package FunctionalModel{\r\n')
      clActivitiesAndObjectFlows, clFunctionalGroups, cSysMLString, clActivities = fas_frontend(cFileName, cWorkingFolder)
+     print('\r\n}\r\n')
 
      cSysMLString = 'package FunctionalModel{\r\n' + cSysMLString + '\r\n}\r\n'  
 
