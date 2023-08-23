@@ -260,3 +260,23 @@ def copy_elements(source_host, source_id, target_host, target_id):
         return False , response.json()
     else:
         return True , response.json()
+
+def dictionary_payload_dependency(element_id, client, owner, membership, quali_name, target):
+    dictionary_payload_dependency = {
+        "payload": {'@type': 'Dependency',
+                    '@id': element_id,
+                    'client': [client],
+                    'elementId': element_id,
+                    'owner': owner,
+                    'owningMembership': membership,
+                    'owningNamespace': owner,
+                    'owningRelationship': membership,
+                    'qualifiedName': quali_name,
+                    'relatedElement': [client, target],
+                    'source': [client],
+                    'supplier': [target],
+                    'target': [target]
+                   },
+        "identity": {"@id": element_id}
+    }
+    return dictionary_payload_dependency
