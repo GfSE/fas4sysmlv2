@@ -45,26 +45,29 @@ def DumpJupyterNotebook(cWorkingFolderAndOutputFile, cWorkingFolderAndInputFile,
 
 cServerName=''
 
-print('NumFlowsInput;NumFlowsReadByQuery;NumFlowsReadByFullRead;Len')
+print('NumDependenciesInput;NumDependenciesReadByQuery;NumDependenciesReadByFullRead;Len')
 
 
-for iNumParts in [2, 10, 1000, 5000]:
+for iNumParts in [2, 10, 5000]:
          if iNumParts == 2:
             # Write a simple example via the SysML reference implementation to obtain the server name that is configured there
             SysMLstring =''
+            DependencyString = ''
 
             clParts = []
             clFlows =  []
             clItems = []
-            SysMLstring = SysMLstring + 'package PartUsages{'
+            SysMLstring = SysMLstring + 'package TestModel{'
+            SysMLstring = SysMLstring + ' package PartUsages{'
             for iCount in (range(iNumParts)):
                 clParts.append('partUsage' + str(iCount))
             for iCount in (range(iNumParts)):
                 cPartUsage = clParts[iCount]
                 SysMLstring = SysMLstring + '\r\n    part ' + cPartUsage + '{'
                 SysMLstring = SysMLstring + '\r\n    }'
+                DependencyString = DependencyString + '\r\ndependency from PartUsages to PartUsages::' + cPartUsage + ';'  
                 
-                
+            SysMLstring = SysMLstring + ' \r\n}\r\n' + DependencyString 
             SysMLstring = SysMLstring + '\r\n}'
                
             SysMLstring = SysMLstring + '\r\n'
@@ -75,7 +78,7 @@ for iNumParts in [2, 10, 1000, 5000]:
             cWorkingFolder=''
             cNotebookFile = cWorkingFolder + 'temp_fas_input_writer.ipynb' 
             FID =open(cNotebookFile ,'w');
-            FID.write('{\n "cells": [\n  {\n   "cell_type": "markdown",\n   "id": "237f75ac",\n   "metadata": {},\n   "source": [\n    "FAS for SysMLv2: FAS Input to Repository Writer\\n",\n    "=="\n   ]\n  },\n  {\n   "cell_type": "code",\n   "execution_count": null,\n   "id": "f4fe084d",\n   "metadata": {},\n   "outputs": [],\n   "source": [\n    "<Paste SysMLv2 code here>"\n   ]\n  },\n  {\n   "cell_type": "code",\n   "execution_count": null,\n   "id": "7e04e6fc",\n   "metadata": {},\n   "outputs": [],\n   "source": [\n    "%publish PartUsages"\n   ]\n  }\n ],\n "metadata": {\n  "kernelspec": {\n   "display_name": "SysML",\n   "language": "sysml",\n   "name": "sysml"\n  },\n  "language_info": {\n   "codemirror_mode": "sysml",\n   "file_extension": ".sysml",\n   "mimetype": "text/x-sysml",\n   "name": "SysML",\n   "pygments_lexer": "java",\n   "version": "1.0.0"\n  }\n },\n "nbformat": 4,\n "nbformat_minor": 5\n}\n')
+            FID.write('{\n "cells": [\n  {\n   "cell_type": "markdown",\n   "id": "237f75ac",\n   "metadata": {},\n   "source": [\n    "FAS for SysMLv2: FAS Input to Repository Writer\\n",\n    "=="\n   ]\n  },\n  {\n   "cell_type": "code",\n   "execution_count": null,\n   "id": "f4fe084d",\n   "metadata": {},\n   "outputs": [],\n   "source": [\n    "<Paste SysMLv2 code here>"\n   ]\n  },\n  {\n   "cell_type": "code",\n   "execution_count": null,\n   "id": "7e04e6fc",\n   "metadata": {},\n   "outputs": [],\n   "source": [\n    "%publish TestModel"\n   ]\n  }\n ],\n "metadata": {\n  "kernelspec": {\n   "display_name": "SysML",\n   "language": "sysml",\n   "name": "sysml"\n  },\n  "language_info": {\n   "codemirror_mode": "sysml",\n   "file_extension": ".sysml",\n   "mimetype": "text/x-sysml",\n   "name": "SysML",\n   "pygments_lexer": "java",\n   "version": "1.0.0"\n  }\n },\n "nbformat": 4,\n "nbformat_minor": 5\n}\n')
             FID.close()
 
             cOutputFile = cWorkingFolder + 'temp_output.ipynb'
@@ -137,9 +140,13 @@ for iNumParts in [2, 10, 1000, 5000]:
                     part_element_id = str(uuid.uuid4())
                     package_element_id = str(uuid.uuid4())
                     owningmembership_element_id = str(uuid.uuid4())
+                    owningmembership_element_id2 = str(uuid.uuid4())
+                    dependency_element_id = str(uuid.uuid4())
                     payloadArray.append(dictionary_payload_package(package_element_id, cPackageName , cPartName))
                     payloadArray.append(dictionary_payload_partusage(part_element_id, cPartName, cPartName))
                     payloadArray.append(dictionary_payload_owningmembership(owningmembership_element_id, {'@id': part_element_id}, part_element_id, {'@id': part_element_id}, part_element_id, {'@id': part_element_id}, '', {'@id': package_element_id}))
+                    payloadArray.append(dictionary_payload_owningmembership(owningmembership_element_id2, {'@id': dependency_element_id}, dependency_element_id, {'@id': dependency_element_id}, dependency_element_id, {'@id': dependency_element_id}, '', {'@id': package_element_id}))
+                    payloadArray.append(dictionary_payload_dependency(dependency_element_id, {'@id': package_element_id}, {'@id': package_element_id}, {'@id': owningmembership_element_id2}, '', {'@id': part_element_id}))
                     #print('--------------')
                     #print(payloadArray)
                     #print('--------------')
@@ -197,16 +204,16 @@ for iNumParts in [2, 10, 1000, 5000]:
                      iCounterQuery = 0
                      iCounterFullRead = 0
 
-                     data = run_query_for_elementtyp('OwningMembership', cServerName, cProjectID)
+                     data = run_query_for_elementtyp('Dependency', cServerName, cProjectID)
                      #print(data)
                      for response in data:
-                         if response.get("@type") == 'OwningMembership':
+                         if response.get("@type") == 'Dependency':
                              iCounterQuery = iCounterQuery + 1
                      
                      data = read_full_repository(cServerName, cProjectID)
                  
                      for response in data:
-                         if response.get("@type") == 'OwningMembership':
+                         if response.get("@type") == 'Dependency':
                              iCounterFullRead = iCounterFullRead + 1
                      
                      

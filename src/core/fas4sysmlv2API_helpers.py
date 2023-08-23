@@ -65,7 +65,11 @@ def multi_page_http_get (sUrl):
 
          # Handle next pages of mutlti-page HTML responses (when the payload is very large)
      while response.headers.get('Link','--NOTFOUND--').find('?page[after]')>-1:
-         cNextPageLink = response.headers.get('Link').replace('<','').replace('; rel="next"','').replace('; rel="prev"','').replace('page[size]=100>','page[size]=10000>').replace('>','')
+         cLink = response.headers.get('Link')
+         iPos = cLink.find(',')
+         if iPos > -1:
+              cLink = cLink[0:iPos]
+         cNextPageLink = cLink.replace('<','').replace('; rel="next"','').replace('; rel="prev"','').replace('>','')
          response = requests.get(cNextPageLink)
          if response.status_code == 200:
              data = data + response.json()
