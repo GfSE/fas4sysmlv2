@@ -242,8 +242,8 @@ def render_images(cProjectID,cServerName,cFolder,mainWindow):
     imagenum = 0
     clReferenceUsages = []
     clReferenceUsageOwners = []
-    clItemUsages = []
-    clItemUsageOwners = []
+    clMetadataUsages = []
+    clMetadataUsageOwners = []
     clActionUsages = []
     clActionUsageNames = []
     clActionUsageOwners = []
@@ -253,9 +253,9 @@ def render_images(cProjectID,cServerName,cFolder,mainWindow):
              clActionUsages.append(myelement.get('@id'))
              clActionUsageOwners.append(myelement.get('owner').get('@id'))
              clActionUsageNames.append(myelement.get('name'))
-        if myelement.get('@type')=='ItemUsage':
-             clItemUsages.append(myelement.get('@id'))
-             clItemUsageOwners.append(myelement.get('owner').get('@id'))
+        if myelement.get('@type')=='MetadataUsage':
+             clMetadataUsages.append(myelement.get('@id'))
+             clMetadataUsageOwners.append(myelement.get('annotatedElement')[0].get('@id'))
         if myelement.get('@type')=='ReferenceUsage':
              clReferenceUsages.append(myelement.get('@id'))
              clReferenceUsageOwners.append(myelement.get('owner').get('@id'))
@@ -270,14 +270,14 @@ def render_images(cProjectID,cServerName,cFolder,mainWindow):
                 cReferenceUsageOwnerId=clReferenceUsageOwners[clReferenceUsages.index(currentOwnerId)]
                 if clReferenceUsages.count(cReferenceUsageOwnerId)>0:                    
                     cReferenceUsageOwnerId=clReferenceUsageOwners[clReferenceUsages.index(cReferenceUsageOwnerId)]
-                    if clItemUsages.count(cReferenceUsageOwnerId)>0:
-                        cItemUsageOwnerId=clItemUsageOwners[clItemUsages.index(cReferenceUsageOwnerId)]
+                    if clMetadataUsages.count(cReferenceUsageOwnerId)>0:
+                        cItemUsageOwnerId=clMetadataUsageOwners[clMetadataUsages.index(cReferenceUsageOwnerId)]
                         if clActionUsages.count(cItemUsageOwnerId)>0:
                             cAction=clActionUsageNames[clActionUsages.index(cItemUsageOwnerId)]
 
                             # Find the coordinates of the image snippet (they are attributes of the item usage) 
                             for myelement2 in data:
-                                if myelement2.get('@id')==clItemUsages[clItemUsages.index(cReferenceUsageOwnerId)]:
+                                if myelement2.get('@id')==clActionUsages[clActionUsages.index(cItemUsageOwnerId)]:
                                     vOwned2=myelement2.get('ownedElement')
                                     for eOwned2 in vOwned2:
                                         idOwned2 = eOwned2.get('@id')
@@ -307,13 +307,13 @@ def render_images(cProjectID,cServerName,cFolder,mainWindow):
             iy2 = 0
             for currentCoordinate in sCoordinates:
                 cCoordinates = cCoordinates + currentCoordinate.get('name') + ' = ' +  str(currentCoordinate.get('value')) +'; ' 
-                if currentCoordinate.get('name')=='x1':
+                if currentCoordinate.get('name')=='samsX1':
                     ix1=currentCoordinate.get('value')
-                if currentCoordinate.get('name')=='y1':
+                if currentCoordinate.get('name')=='samsY1':
                     iy1=currentCoordinate.get('value')
-                if currentCoordinate.get('name')=='x2':
+                if currentCoordinate.get('name')=='samsX2':
                     ix2=currentCoordinate.get('value')
-                if currentCoordinate.get('name')=='y2':
+                if currentCoordinate.get('name')=='samsY2':
                     iy2=currentCoordinate.get('value')
             if ix1>ix2:
                 ixtemp=ix1
@@ -364,7 +364,7 @@ def askForBaseUrl(cProjectID,cServerName,mainWindow,strBaseURLParam):
 
 
 def render_diagram(cProjectID,cServerName,mainWindow,strBaseURLParam):
-     strRenderingURL = '' # Could be http://interactive.blockdiag.com/, if that site exists and is safe to use by the time of running this code
+     strRenderingURL = 'http://interactive.blockdiag.com/' # Could be http://interactive.blockdiag.com/, if that site exists and is safe to use by the time of running this code
      mainWindow.config(cursor="watch")
      sleep(0.1)
      mainWindow.update()

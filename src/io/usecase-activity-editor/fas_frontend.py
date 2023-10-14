@@ -317,19 +317,20 @@ def RenderActivityDefinitionsInSysML(O,clActivities, clActivityNamesSorted, sIma
                      cSysMLString = cSysMLString + '            out ' + wrapNameInCorrectQuotes(sOutput) + ';' + cLF
                      clBufferOfNamesForUniqueness.append(sOutput) 
          
-         cImageSysMLString = ''
+         cImageSysMLString1 = ''
+         cImageSysMLString2 = ''
          for currentImage in sImages:
              if currentImage.get('activity') == clActivities[nText]:
-                 cImageSysMLString = currentImage.get('sysml')
-         cSysMLString = cSysMLString + cImageSysMLString
+                 cImageSysMLString1 = currentImage.get('sysml1')
+                 cImageSysMLString2 = currentImage.get('sysml2')
 
-         cSysMLString = cSysMLString + '         }' + cLF
+         cSysMLString = cSysMLString + cImageSysMLString2 + '         }' + cLF
 
          iSortNumber = -1
          if clActivityNamesSorted.count(clActivities[nText]) > 0:
              iSortNumber = clActivityNamesSorted.index(clActivities[nText]) 
 
-         clSysMLStringsToBeSorted.append({'name' : clActivities[nText], 'sysml' : cSysMLString, 'number' : iSortNumber })
+         clSysMLStringsToBeSorted.append({'name' : clActivities[nText], 'sysml' : cImageSysMLString1 + cSysMLString, 'number' : iSortNumber })
 
      #Process use case activities without object flows
      for nFullListIndex in range(len(clActivityNamesSorted)):
@@ -528,7 +529,8 @@ def GetSamsMethodImages(cPath,clActivityNamesInSortOrder):
                       y1 = 0
                       y2 = 0
 
-                  cSysMLstring = ''
+                  cSysMLstring1 = ''
+                  cSysMLstring2 = ''
                   with open( cPath+cActivity+os.sep+imagename,'rb' ) as file:
                       binContent = file.read()
                       encodedContent = base64.b64encode(binContent).decode()
@@ -536,13 +538,12 @@ def GetSamsMethodImages(cPath,clActivityNamesInSortOrder):
                       cMimeType = '"image/jpeg"'
                       if imagename.find('.png')>-1:
                           cMimeType = '"image/png"'
-                      cSysMLstring = '            item image{'+cNewLine+'               import Metadata::*;'+cNewLine+'               Image{'+cNewLine+'                  content="'+encodedContent+'";'+cNewLine+'                  encoding="base64";'+cNewLine+'                  type='+cMimeType+';'+cNewLine+'               }'+cNewLine
-                  cSysMLstring = cSysMLstring + '               attribute x1 = ' + str(x1)+';'+cNewLine
-                  cSysMLstring = cSysMLstring + '               attribute x2 = ' + str(x2)+';'+cNewLine
-                  cSysMLstring = cSysMLstring + '               attribute y1 = ' + str(y1)+';'+cNewLine
-                  cSysMLstring = cSysMLstring + '               attribute y2 = ' + str(y2)+';'+cNewLine
-                  cSysMLstring = cSysMLstring + '            }'+cNewLine                            
-                  sImages.append({"activity": cActivity, "sysml": cSysMLstring})
+                      cSysMLstring1 = '         import ImageMetadata::*;'+cNewLine+'         metadata '+wrapNameInCorrectQuotes('img'+cActivity)+' : Icon about '+ wrapNameInCorrectQuotes(cActivity) +' {'+cNewLine+'               :>> fullImage = Image(){'+cNewLine+'                  content="'+encodedContent+'";'+cNewLine+'                  encoding="base64";'+cNewLine+'                  type='+cMimeType+';'+cNewLine+'               }'+cNewLine+'         }'+cNewLine
+                  cSysMLstring2 = '            attribute samsX1 = ' + str(x1)+';'+cNewLine
+                  cSysMLstring2 = cSysMLstring2 + '            attribute samsX2 = ' + str(x2)+';'+cNewLine
+                  cSysMLstring2 = cSysMLstring2 + '            attribute samsY1 = ' + str(y1)+';'+cNewLine
+                  cSysMLstring2 = cSysMLstring2 + '            attribute samsY2 = ' + str(y2)+';'+cNewLine
+                  sImages.append({"activity": cActivity, "sysml1": cSysMLstring1, "sysml2": cSysMLstring2})
       
      return sImages
      
