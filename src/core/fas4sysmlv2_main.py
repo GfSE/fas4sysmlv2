@@ -46,6 +46,15 @@ import requests
 import platform
 import os
 
+def isWithSpecialCharacters(cName):
+    return any(not cCurrent.isalnum() for cCurrent in cName)
+
+def wrapNameInCorrectQuotes(cName):
+    cNameNew = cName
+    if isWithSpecialCharacters(cName):
+        cNameNew = "'" + cNameNew + "'" 
+    return cNameNew
+
 def transfer_result_back_to_sourceproject(cSourceHost, cDestinationHost, temporary_project_with_data,target_project_for_merge):
     bSuccess = true
     # Todo: instead of just copying: Merge ItemDefs and toplevel Packages and created dependencies between functional blocks and functional groups
@@ -247,7 +256,7 @@ def RenderActivityDefinitionsInSysML(O,clActivities):
                          if clBufferOfNamesForUniqueness.count(sInput + str(iNumberForUniqueness)) == 0:
                              sInput = sInput  + str(iNumberForUniqueness)
                          iNumberForUniqueness=iNumberForUniqueness+1
-                     cSysMLString=cSysMLString + '            in ' + sInput + ';' + cLF
+                     cSysMLString=cSysMLString + '            in ' + wrapNameInCorrectQuotes(sInput) + ';' + cLF
                      clBufferOfNamesForUniqueness.append(sInput)
               
           
@@ -265,7 +274,7 @@ def RenderActivityDefinitionsInSysML(O,clActivities):
                          if clBufferOfNamesForUniqueness.count(sOutput + str(iNumberForUniqueness)) == 0:
                              sOutput = sOutput  + str(iNumberForUniqueness)
                          iNumberForUniqueness=iNumberForUniqueness+1
-                     cSysMLString = cSysMLString + '            out ' + sOutput + ';' + cLF
+                     cSysMLString = cSysMLString + '            out ' + wrapNameInCorrectQuotes(sOutput) + ';' + cLF
                      clBufferOfNamesForUniqueness.append(sOutput) 
 
          cSysMLString = cSysMLString + '         }' + cLF
@@ -294,11 +303,11 @@ def RenderFlowsAndItemDefsInSysML(O,clActivities):
                      sResult = sCurrentFlowName.lower() 
                      sInput = sCurrentFlowName.lower() 
 
-                     cSysMLString = cSysMLString + '         flow of ' + sCurrentFlowName + ' from ' + clActionNames[n1] + '.' + sResult + ' to '  + clActionNames[n2] + '.' + sInput + ';' + cLF
+                     cSysMLString = cSysMLString + '         flow of ' + wrapNameInCorrectQuotes(sCurrentFlowName) + ' from ' + wrapNameInCorrectQuotes(clActionNames[n1]) + '.' + wrapNameInCorrectQuotes(sResult) + ' to '  + wrapNameInCorrectQuotes(clActionNames[n2]) + '.' + wrapNameInCorrectQuotes(sInput) + ';' + cLF
 
                      if clBufferOfAllUsedItemDefs.count(sCurrentFlowName) < 1:
                          clBufferOfAllUsedItemDefs.append(sCurrentFlowName)
-                         cItemString = cItemString + '   item def ' + sCurrentFlowName + ';' + '\n'
+                         cItemString = cItemString + '   item def ' + wrapNameInCorrectQuotes(sCurrentFlowName) + ';' + '\n'
               
 
      cSysMLString = cSysMLString + '      }' + cLF
@@ -379,7 +388,7 @@ def RenderFunctionalArchitecture(F,clFunctionalBlockNames):
      clTargetPortNames = [['' for col in range(F.shape[0])] for row in range(F.shape[0])]
      for nBlock in range(F.shape[0]):
          cCurrentBlock = clFunctionalBlockNames[nBlock]
-         cSysMLstring = cSysMLstring + '      part ' + cCurrentBlock + '{' + '\n'
+         cSysMLstring = cSysMLstring + '      part ' + wrapNameInCorrectQuotes(cCurrentBlock) + '{' + '\n'
          iPortNo = 0
          for nPortOut in range(F.shape[0]):
              if F[nBlock,nPortOut]!= 0: 
@@ -390,7 +399,7 @@ def RenderFunctionalArchitecture(F,clFunctionalBlockNames):
                      for nPort in range(iNumPorts):
                          iPortNo = iPortNo  + 1
                          cPortName = 'p' + str(iPortNo)
-                         cSysMLstring = cSysMLstring + '         port ' + cPortName + ';' + '\n'
+                         cSysMLstring = cSysMLstring + '         port ' + wrapNameInCorrectQuotes(cPortName) + ';' + '\n'
                          clPortCell[nPort]=cPortName
             
                          clSourcePortNames[nBlock][nPortOut]=clPortCell
@@ -404,7 +413,7 @@ def RenderFunctionalArchitecture(F,clFunctionalBlockNames):
                      for nPort in range(iNumPorts):
                          iPortNo = iPortNo + 1
                          cPortName = 'p' + str(iPortNo)
-                         cSysMLstring = cSysMLstring + '         port ' + cPortName + ';' + '\n'
+                         cSysMLstring = cSysMLstring + '         port ' + wrapNameInCorrectQuotes(cPortName) + ';' + '\n'
                          clPortCell[nPort]=cPortName
                
                          clTargetPortNames[nPortIn][nBlock]=clPortCell
@@ -426,17 +435,17 @@ def RenderFunctionalArchitecture(F,clFunctionalBlockNames):
                  clTargetPorts = clTargetPortNames[nBlock1][nBlock2]
                  for nPort in range(len(clSourcePorts)):
                      sCurrentFlowName = SubFlow(sFlowName,nPort)
-                     cSysMLstring = cSysMLstring + '      flow of ' + sCurrentFlowName + ' from ' + clFunctionalBlockNames[nBlock1] + '.' + clSourcePorts[nPort] + ' to ' + clFunctionalBlockNames[nBlock2] + '.' + clTargetPorts[nPort] + ';' + '\n'
+                     cSysMLstring = cSysMLstring + '      flow of ' + wrapNameInCorrectQuotes(sCurrentFlowName) + ' from ' + wrapNameInCorrectQuotes(clFunctionalBlockNames[nBlock1]) + '.' + wrapNameInCorrectQuotes(clSourcePorts[nPort]) + ' to ' + wrapNameInCorrectQuotes(clFunctionalBlockNames[nBlock2]) + '.' + wrapNameInCorrectQuotes(clTargetPorts[nPort]) + ';' + '\n'
 
                      if clBufferOfAllUsedItemDefs.count(sCurrentFlowName) < 1:
                          clBufferOfAllUsedItemDefs.append(sCurrentFlowName)
-                         cItemDefString = cItemDefString + '   item def ' + sCurrentFlowName + ';' + '\n'
+                         cItemDefString = cItemDefString + '   item def ' + wrapNameInCorrectQuotes(sCurrentFlowName) + ';' + '\n'
            
     
     ## Trace Functional Blocks to Functional Groups
      for nBlock in range(F.shape[0]):
          sCurrentName = clFunctionalBlockNames[nBlock]
-         cDependencySpecification = cDependencySpecification + '   dependency from functionalSystem::' + sCurrentName + ' to UseCaseActivities::FunctionalGroups::' + sCurrentName + ';' + '\n'
+         cDependencySpecification = cDependencySpecification + '   dependency from functionalSystem::' + wrapNameInCorrectQuotes(sCurrentName) + ' to UseCaseActivities::FunctionalGroups::' + wrapNameInCorrectQuotes(sCurrentName) + ';' + '\n'
     
       
      cSysMLstring = cSysMLstring + '   }' + '\n' + cItemString 

@@ -66,7 +66,7 @@ def RenderFunctionalArchitecture(F,clFunctionalBlockNames):
      clTargetPortNames = [['' for col in range(F.shape[0])] for row in range(F.shape[0])]
      for nBlock in range(F.shape[0]):
          cCurrentBlock = clFunctionalBlockNames[nBlock]
-         cSysMLstring = cSysMLstring + '      part ' + cCurrentBlock + '{' + '\r\n'
+         cSysMLstring = cSysMLstring + '      part ' + wrapNameInCorrectQuotes(cCurrentBlock) + '{' + '\r\n'
          iPortNo = 0
          for nPortOut in range(F.shape[0]):
              if F[nBlock,nPortOut]!= 0: 
@@ -77,7 +77,7 @@ def RenderFunctionalArchitecture(F,clFunctionalBlockNames):
                      for nPort in range(iNumPorts):
                          iPortNo = iPortNo  + 1
                          cPortName = 'p' + str(iPortNo)
-                         cSysMLstring = cSysMLstring + '         port ' + cPortName + ';' + '\r\n'
+                         cSysMLstring = cSysMLstring + '         port ' + wrapNameInCorrectQuotes(cPortName) + ';' + '\r\n'
                          clPortCell[nPort]=cPortName
             
                          clSourcePortNames[nBlock][nPortOut]=clPortCell
@@ -91,7 +91,7 @@ def RenderFunctionalArchitecture(F,clFunctionalBlockNames):
                      for nPort in range(iNumPorts):
                          iPortNo = iPortNo + 1
                          cPortName = 'p' + str(iPortNo)
-                         cSysMLstring = cSysMLstring + '         port ' + cPortName + ';' + '\r\n'
+                         cSysMLstring = cSysMLstring + '         port ' + wrapNameInCorrectQuotes(cPortName) + ';' + '\r\n'
                          clPortCell[nPort]=cPortName
                
                          clTargetPortNames[nPortIn][nBlock]=clPortCell
@@ -110,13 +110,13 @@ def RenderFunctionalArchitecture(F,clFunctionalBlockNames):
                  clTargetPorts = clTargetPortNames[nBlock1][nBlock2]
                  for nPort in range(len(clSourcePorts)):
                      sCurrentFlowName = SubFlow(sFlowName,nPort)
-                     cSysMLstring = cSysMLstring + '      flow of ' + sCurrentFlowName + ' from ' + clFunctionalBlockNames[nBlock1] + '.' + clSourcePorts[nPort] + ' to ' + clFunctionalBlockNames[nBlock2] + '.' + clTargetPorts[nPort] + ';' + '\r\n'
+                     cSysMLstring = cSysMLstring + '      flow of ' + wrapNameInCorrectQuotes(sCurrentFlowName) + ' from ' + wrapNameInCorrectQuotes(clFunctionalBlockNames[nBlock1]) + '.' + wrapNameInCorrectQuotes(clSourcePorts[nPort]) + ' to ' + wrapNameInCorrectQuotes(clFunctionalBlockNames[nBlock2]) + '.' + wrapNameInCorrectQuotes(clTargetPorts[nPort]) + ';' + '\r\n'
            
     
     ## Trace Functional Blocks to Functional Groups
      for nBlock in range(F.shape[0]):
          sCurrentName = clFunctionalBlockNames[nBlock]
-         cItemString = cItemString + '   dependency from functionalSystem::' + sCurrentName + ' to FunctionalGroups::' + sCurrentName + ';' + '\r\n'
+         cItemString = cItemString + '   dependency from functionalSystem::' + wrapNameInCorrectQuotes(sCurrentName) + ' to FunctionalGroups::' + wrapNameInCorrectQuotes(sCurrentName) + ';' + '\r\n'
     
       
      cSysMLstring = cSysMLstring + '   }' + '\r\n' + cItemString 

@@ -20,6 +20,15 @@ import json
 import base64
 
 
+def isWithSpecialCharacters(cName):
+    return any(not cCurrent.isalnum() for cCurrent in cName)
+
+def wrapNameInCorrectQuotes(cName):
+    cNameNew = cName
+    if isWithSpecialCharacters(cName):
+        cNameNew = "'" + cNameNew + "'" 
+    return cNameNew
+
 def RenderFunctionalGroupsInSysML(clGroupName,clActivities, mMatrixG):
      cSysMLString=''
      cLF = '\r\n'
@@ -30,10 +39,10 @@ def RenderFunctionalGroupsInSysML(clGroupName,clActivities, mMatrixG):
          M=0
          
      for n in range(N):
-         cSysMLString= cSysMLString + '      package ' + clGroupName[n] + '{' + cLF
+         cSysMLString= cSysMLString + '      package ' + wrapNameInCorrectQuotes(clGroupName[n]) + '{' + cLF
          for m in range (M):
              if mMatrixG[n][m] > 0:
-                 cSysMLString = cSysMLString + '         import UseCaseActivities::overallUseCase::' + clActivities[m] + ';' + cLF
+                 cSysMLString = cSysMLString + '         import UseCaseActivities::overallUseCase::' + wrapNameInCorrectQuotes(clActivities[m]) + ';' + cLF
          
          cSysMLString= cSysMLString + '      }' + cLF
 
@@ -273,7 +282,7 @@ def RenderActivityDefinitionsInSysML(O,clActivities, clActivityNamesSorted, sIma
      for nText in range(len(clActivities)):      
          clBufferOfNamesForUniqueness = [] # Remember all parameter names to be able to ensure uniqueness
 
-         cSysMLString = '         action ' + clActivities[nText] + ' {' + cLF
+         cSysMLString = '         action ' + wrapNameInCorrectQuotes(clActivities[nText]) + ' {' + cLF
          for nIn in range(len(clActivities)):
              if O[nIn][nText] != '':
                  sTemp = O[nIn][nText]
@@ -287,7 +296,7 @@ def RenderActivityDefinitionsInSysML(O,clActivities, clActivityNamesSorted, sIma
                          if clBufferOfNamesForUniqueness.count(sInput + str(iNumberForUniqueness)) == 0:
                              sInput = sInput  + str(iNumberForUniqueness)
                          iNumberForUniqueness=iNumberForUniqueness+1
-                     cSysMLString=cSysMLString + '            in ' + sInput + ';' + cLF
+                     cSysMLString=cSysMLString + '            in ' + wrapNameInCorrectQuotes(sInput) + ';' + cLF
                      clBufferOfNamesForUniqueness.append(sInput)
               
           
@@ -305,7 +314,7 @@ def RenderActivityDefinitionsInSysML(O,clActivities, clActivityNamesSorted, sIma
                          if clBufferOfNamesForUniqueness.count(sOutput + str(iNumberForUniqueness)) == 0:
                              sOutput = sOutput  + str(iNumberForUniqueness)
                          iNumberForUniqueness=iNumberForUniqueness+1
-                     cSysMLString = cSysMLString + '            out ' + sOutput + ';' + cLF
+                     cSysMLString = cSysMLString + '            out ' + wrapNameInCorrectQuotes(sOutput) + ';' + cLF
                      clBufferOfNamesForUniqueness.append(sOutput) 
          
          cImageSysMLString = ''
@@ -325,7 +334,7 @@ def RenderActivityDefinitionsInSysML(O,clActivities, clActivityNamesSorted, sIma
      #Process use case activities without object flows
      for nFullListIndex in range(len(clActivityNamesSorted)):
          if clActivities.count(clActivityNamesSorted[nFullListIndex]) < 1:
-             cSysMLStringTemp = '         action ' + clActivityNamesSorted[nFullListIndex] + ' {' + cLF + '         }' + cLF 
+             cSysMLStringTemp = '         action ' + wrapNameInCorrectQuotes(clActivityNamesSorted[nFullListIndex]) + ' {' + cLF + '         }' + cLF 
              clSysMLStringsToBeSorted.append({'name' : clActivityNamesSorted[nFullListIndex], 'sysml' : cSysMLStringTemp, 'number' : nFullListIndex })
 
      clSysMLStringsSorted = sorted(clSysMLStringsToBeSorted, key=lambda act: act.get('number'))
@@ -436,11 +445,11 @@ def RenderFlowsAndItemDefsInSysML(O,clActivities,clActivityNamesSorted, sImages)
                      sResult = sCurrentFlowName.lower() 
                      sInput = sCurrentFlowName.lower() 
 
-                     cSysMLString = cSysMLString + '         flow of ' + sCurrentFlowName + ' from ' + clActionNames[n1] + '.' + sResult + ' to '  + clActionNames[n2] + '.' + sInput + ';' + cLF
+                     cSysMLString = cSysMLString + '         flow of ' + wrapNameInCorrectQuotes(sCurrentFlowName) + ' from ' + wrapNameInCorrectQuotes(clActionNames[n1]) + '.' + wrapNameInCorrectQuotes(sResult) + ' to '  + wrapNameInCorrectQuotes(clActionNames[n2]) + '.' + wrapNameInCorrectQuotes(sInput) + ';' + cLF
 
                      if clBufferOfAllUsedItemDefs.count(sCurrentFlowName) < 1:
                          clBufferOfAllUsedItemDefs.append(sCurrentFlowName)
-                         cItemString = cItemString + '   item def ' + sCurrentFlowName + ';' + '\r\n'
+                         cItemString = cItemString + '   item def ' + wrapNameInCorrectQuotes(sCurrentFlowName) + ';' + '\r\n'
               
 
      cSysMLString = cSysMLString + '      }' + cLF

@@ -40,7 +40,14 @@ import os
 from fas4sysmlv2API_helpers import * 
 
 
+def isWithSpecialCharacters(cName):
+    return any(not cCurrent.isalnum() for cCurrent in cName)
 
+def wrapNameInCorrectQuotes(cName):
+    cNameNew = cName
+    if isWithSpecialCharacters(cName):
+        cNameNew = "'" + cNameNew + "'" 
+    return cNameNew
 
 def read_functional_architecture(strProjectID,strServerName):
 
@@ -418,10 +425,10 @@ def render_diagram(cProjectID,cServerName,mainWindow,strBaseURLParam):
                  if len(cLine.get('target_to_source_flows'))>0:
                      #Flows in both directions exist
                      cItemDefinitionName = cLine.get('target_to_source_flows') + '   <-->   ' + cLine.get('source_to_target_flows')
-                     cDiagLine = cLine.get('source')  + ' <-> ' + cLine.get('target')   + ' [label = "' + cItemDefinitionName + '" ]'                
+                     cDiagLine = wrapNameInCorrectQuotes(cLine.get('source'))  + ' <-> ' + wrapNameInCorrectQuotes(cLine.get('target'))   + ' [label = "' + wrapNameInCorrectQuotes(cItemDefinitionName) + '" ]'                
                  else:
                      cItemDefinitionName = cLine.get('source_to_target_flows')                 
-                     cDiagLine = cLine.get('source') + ' -> '  + cLine.get('target')   + ' [label = "' + cItemDefinitionName + '" ]'                
+                     cDiagLine = wrapNameInCorrectQuotes(cLine.get('source')) + ' -> '  + wrapNameInCorrectQuotes(cLine.get('target'))   + ' [label = "' + wrapNameInCorrectQuotes(cItemDefinitionName) + '" ]'                
                     
 
                  cDiag = cDiag + cSpace + cDiagLine  + cNewLine
