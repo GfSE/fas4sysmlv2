@@ -364,7 +364,7 @@ def askForBaseUrl(cProjectID,cServerName,mainWindow,strBaseURLParam):
 
 
 def render_diagram(cProjectID,cServerName,mainWindow,strBaseURLParam):
-     strRenderingURL = 'http://interactive.blockdiag.com/' # Could be http://interactive.blockdiag.com/, if that site exists and is safe to use by the time of running this code
+     strRenderingURL = '' # Could be http://interactive.blockdiag.com/, if that site exists and is safe to use by the time of running this code
      mainWindow.config(cursor="watch")
      sleep(0.1)
      mainWindow.update()
