@@ -21,7 +21,7 @@ import base64
 
 
 def isWithSpecialCharacters(cName):
-    return any(not cCurrent.isalnum() for cCurrent in cName)
+    return any(not (cCurrent.isalnum() or cCurrent=='_') for cCurrent in cName)
 
 def wrapNameInCorrectQuotes(cName):
     cNameNew = cName
