@@ -425,10 +425,10 @@ def render_diagram(cProjectID,cServerName,mainWindow,strBaseURLParam):
                  if len(cLine.get('target_to_source_flows'))>0:
                      #Flows in both directions exist
                      cItemDefinitionName = cLine.get('target_to_source_flows') + '   <-->   ' + cLine.get('source_to_target_flows')
-                     cDiagLine = wrapNameInCorrectQuotes(cLine.get('source'))  + ' <-> ' + wrapNameInCorrectQuotes(cLine.get('target'))   + ' [label = "' + wrapNameInCorrectQuotes(cItemDefinitionName) + '" ]'                
+                     cDiagLine = wrapNameInCorrectQuotes(cLine.get('source'))  + ' <-> ' + wrapNameInCorrectQuotes(cLine.get('target'))   + ' [label = "' + cItemDefinitionName + '" ]'                
                  else:
                      cItemDefinitionName = cLine.get('source_to_target_flows')                 
-                     cDiagLine = wrapNameInCorrectQuotes(cLine.get('source')) + ' -> '  + wrapNameInCorrectQuotes(cLine.get('target'))   + ' [label = "' + wrapNameInCorrectQuotes(cItemDefinitionName) + '" ]'                
+                     cDiagLine = wrapNameInCorrectQuotes(cLine.get('source')) + ' -> '  + wrapNameInCorrectQuotes(cLine.get('target'))   + ' [label = "' + cItemDefinitionName + '" ]'                
                     
 
                  cDiag = cDiag + cSpace + cDiagLine  + cNewLine
