@@ -248,14 +248,76 @@ def dictionary_payload_package(element_id, name = None, quali_name = None, membe
     }
     return dictionary_payload_package
 
-def copy_elements(source_host, source_id, target_host, target_id):
+def merge_duplicate_itemdefs(target_payload, rep_source, rep_target):
+    # Merges duplicate object in the domain model, which are present both 
+    # in the use case analysis model and in the functional architecture model.
+    # To be called before commiting the functional architecture model, to clean it before commit.
     
+    rep_src = rep_source
+    obsolete_ids=[]
+    replacement_ids=[]
+    skipped_ids=[]
+    rep_t=[]
+    
+    for i in range(len(rep_src)):
+         if rep_src[i].get("@type") == "ItemDefinition":
+            for o in rep_target:
+                if o.get("@type") == "ItemDefinition" and rep_src[i]!={}:
+                    if o.get('name')==rep_src[i].get('name'):
+                        # Remember Ids of duplicate ItemDef for replacement
+                        obsolete_ids.append(rep_src[i].get('@id'))
+                        replacement_ids.append(o.get('@id'))
+                        rep_src[i]={}
+                        
+                        
+                        
+    # We also need to remove potential package memberships it is those 
+    # OwningMemberships where 'ownedMemberElementId' is the id of the ItemDef
+    for i in range(len(rep_src)):                        
+         if rep_src[i]!={}:      
+            bAppend = True
+            if rep_src[i].get('@type') == 'OwningMembership':
+                for obs in obsolete_ids:
+                    if rep_src[i].get('ownedMemberElementId') == obs:
+                        bAppend = False
+                        skipped_ids.append(rep_src[i].get('@id'))
+            if bAppend == True:             
+                rep_t.append({"payload": rep_src[i],
+                      "identity": {"@id": rep_src[i]['@id']}})
+        
+        
+    #Replace all references to duplicates by references to the existing ItemDefs
+    rep_t_string = json.dumps(rep_t)
+    for irep in range(len(obsolete_ids)):
+        rep_t_string = rep_t_string.replace(obsolete_ids[irep],replacement_ids[irep])
+        
+    #Remove all references to removed OweningMemberships
+    for irep in range(len(skipped_ids)):
+        rep_t_string = rep_t_string.replace('{"@id": "'+skipped_ids[irep]+'"},','').replace('{"@id": "'+skipped_ids[irep]+'"}','')
+
+
+    return json.loads(rep_t_string)   
+
+
+
+def copy_elements(source_host, source_id, target_host, target_id, bMerge = False):
+
     rep = read_full_repository(source_host, source_id)
+
+    #If we want to merge or link source and target data then we should read the target repository
+    if bMerge==True:
+        rep_target = read_full_repository(target_host, target_id)
+
     
     rep_t = []
     for i in range(len(rep)):
         rep_t.append({"payload": rep[i],
                       "identity": {"@id": rep[i]['@id']}})
+                      
+                      
+    #Merge ItemDefs, if required by setting bMerge == True                      
+    if bMerge==True:
+        rep_t = merge_duplicate_itemdefs(rep_t, rep, rep_target)
         
     commit_body1 = '{"change":' + json.dumps(rep_t) + '}'
     response = requests.post(target_host + "/projects/" +target_id+ "/commits", headers={"Content-Type": "application/json"}, data = commit_body1)
@@ -264,6 +326,7 @@ def copy_elements(source_host, source_id, target_host, target_id):
         return False , response.json()
     else:
         return True , response.json()
+
 
 def dictionary_payload_dependency(element_id, client, owner, membership, quali_name, target):
     dictionary_payload_dependency = {
