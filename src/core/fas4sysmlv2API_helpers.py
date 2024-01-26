@@ -301,26 +301,69 @@ def merge_duplicate_itemdefs(target_payload, rep_source, rep_target):
 
 
 
-def copy_elements(source_host, source_id, target_host, target_id, bMerge = False):
-    #a,b=link_function(target_host, target_id , source_host, source_id)
-    #return a,b
+def copy_elements(source_host, source_id, target_host, target_id, bMerge = False, bLink = False):
+    rep_t = []
 
-    rep = read_full_repository(source_host, source_id)
+    rep_source = read_full_repository(source_host, source_id)
 
     #If we want to merge or link source and target data then we should read the target repository
-    if bMerge==True:
+    if bMerge==True or bLink==True:
         rep_target = read_full_repository(target_host, target_id)
+        
 
     
-    rep_t = []
-    for i in range(len(rep)):
-        rep_t.append({"payload": rep[i],
-                      "identity": {"@id": rep[i]['@id']}})
+    for i in range(len(rep_source)):
+        rep_t.append({"payload": rep_source[i],
+                      "identity": {"@id": rep_source[i]['@id']}})
                       
                       
     #Merge ItemDefs, if required by setting bMerge == True                      
     if bMerge==True:
-        rep_t = merge_duplicate_itemdefs(rep_t, rep, rep_target)
+        rep_t = merge_duplicate_itemdefs(rep_t, rep_source, rep_target)
+        
+        
+        
+    if bLink == True:
+        source_names = [item.get('name') for item in rep_target if item.get('name') is not None]
+        
+        # Initialize source_ok and target_ok to None or a default value
+        source_ok = None
+        target_ok = None
+        t = None
+        tar = None
+        n = None
+        
+        IdOfPackageForDependencies = ''
+        for i in range(len(rep_source)):
+            if rep_source[i].get('@type') == 'Package' :
+                IdOfPackageForDependencies = rep_source[i].get('@id')
+           
+            
+        for source_name in source_names:
+        
+            source_ok = '';
+            target_ok = '';
+        
+            for i in range(len(rep_source)):
+                if rep_source[i].get('@type') == 'PartUsage' and rep_source[i].get('name') == source_name:
+                    t = rep_source[i].get('@id')
+                    n = rep_source[i].get('name')
+                    source_ok = rep_source[i]
+
+            for i in range(len(rep_target)):
+                if rep_target[i].get('@type') == 'Package' and rep_target[i].get('name') == source_name:
+                    tar = rep_target[i].get('@id')
+                    target_ok = rep_target[i]
+
+
+            if source_ok != '' and target_ok != '':
+                ele_id=str(uuid.uuid4())
+                owningmembership_element = str(uuid.uuid4())
+                rep_t.append(dictionary_payload_owningmembership(owningmembership_element, {'@id': ele_id}, ele_id, {'@id': ele_id}, ele_id, {'@id': ele_id}, '', {'@id':IdOfPackageForDependencies}))
+                d_payload_dependency = dictionary_payload_dependency(ele_id, {'@id': t}, {'@id': tar}, {'@id': owningmembership_element}, n, {'@id': tar})    
+                rep_t.append(d_payload_dependency)
+    
+
         
     commit_body1 = '{"change":' + json.dumps(rep_t) + '}'
     response = requests.post(target_host + "/projects/" +target_id+ "/commits", headers={"Content-Type": "application/json"}, data = commit_body1)
@@ -330,70 +373,6 @@ def copy_elements(source_host, source_id, target_host, target_id, bMerge = False
     else:
         return True , response.json()
 
-def link_function(target_host, target_id , source_host, source_id):
-    
-    rep_source = read_full_repository(source_host, source_id)
-    rep_target = read_full_repository(target_host, target_id)
-    
-    name_values = [item.get('name') for item in rep_target if item.get('name') is not None]
-    source_names = name_values
-    
-    d_list = []
-    
-    # Initialize source_ok and target_ok to None or a default value
-    source_ok = None
-    target_ok = None
-    t = None
-    tar = None
-    n = None
-    
-    for source_name in source_names:
-    
-        source_ok = '';
-        target_ok = '';
-    
-        for i in range(len(rep_source)):
-            if rep_source[i].get('@type') == 'PartUsage' and rep_source[i].get('name') == source_name:
-                t = rep_source[i].get('@id')
-                n = rep_source[i].get('name')
-
-                source_ok = rep_source[i]
-
-        for i in range(len(rep_target)):
-            if rep_target[i].get('@type') == 'Package' and rep_target[i].get('name') == source_name:
-                tar = rep_target[i].get('@id')
-
-                target_ok = rep_target[i]
-
-
-        if source_ok != '' and target_ok != '':
-            ele_id=str(uuid.uuid4())
-            owningmembership_element = str(uuid.uuid4())
-            d_list.append(dictionary_payload_owningmembership(owningmembership_element, {'@id': ele_id}, ele_id, {'@id': ele_id}, ele_id, {'@id': ele_id}, '', {'@id':tar}))
-            d_payload_dependency = dictionary_payload_dependency(ele_id, {'@id': t}, {'@id': tar}, {'@id': owningmembership_element}, n, {'@id': tar})    
-            d_list.append(d_payload_dependency)
-        
-        
-    for i in range(len(rep_source)):
-        t = rep_source[i].get('@id')
-        source_ok = rep_source[i]
-
-        source_ok = {'payload': source_ok,'identity': {'@id': t} }
-        d_list.append(source_ok)
- 
-    commit_body =  '{"change": ' + json.dumps(d_list) +'}'
-    commit_url = f"{target_host}/projects/{target_id}/commits" 
-  
-    
-    response = requests.post(commit_url, 
-                      headers={"Content-Type": "application/json"}, 
-                      data=commit_body)
-    
-    
-    if response.status_code != 200:
-        return False , response.json()
-    else:
-        return True , response.json()
 
 def dictionary_payload_dependency(element_id, client, owner, membership, quali_name, target):
     dictionary_payload_dependency = {

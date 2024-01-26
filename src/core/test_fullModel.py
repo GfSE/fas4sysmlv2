@@ -633,25 +633,44 @@ def read_relationships(strProjectID,strServerName):
              sHeadCommit = oHeadCommit.get('@id')
 
 
-     clElementTypes = ['Dependency']
+     clElementTypes = ['Dependency','OwningMembership','Package']
      
      if bSuccess:
      
+         currentSet = []
          for cElementType in clElementTypes:
              data = run_query_for_elementtyp(cElementType, cServerName, cProjectID)
              if len(data)>200:
                  print('  -> Found ' +str(len(data))+ ' elements of type '  +  cElementType)
               
-             currentSet = []
              for currentRecord in data:
                  sIdToGet=currentRecord.get('@id')
                  qresult, response = multi_page_http_get(cServerName + "/projects/" + cProjectID + "/commits/"+sHeadCommit+"/elements/" + sIdToGet)
                  currentSet.append(response)
 
-             for response in currentSet:
+         print('')
+         print('Packages: ')
+          
+         for response in currentSet:
+                 if response.get("@type") == "Package":
+                     print(response.get("name") + ' --> ' + response.get('@id'))
+ 
+         print('')
+         print('OwningMemberships: ')
+
+         for response in currentSet:
+                 if response.get("@type") == "OwningMembership": 
+                     OwnerId = response.get('membershipOwningNamespace')
+                     OwnedId = response.get('ownedMemberElementId')
+                     print('Owner -> ' + OwnerId.get('@id') + ' --- Owned -> ' + OwnedId);
+
+         print('')
+         print('Dependencies: ')
+
+         for response in currentSet:
 
                  if response.get("@type") == "Dependency": 
-                     print('Dependency from ' + response.get('source')[0].get('@id')  + ' to '  + response.get('target')[0].get('@id') )
+                     print('Dependency '+response.get('@id')+  ' from ' + response.get('source')[0].get('@id')  + ' to '  + response.get('target')[0].get('@id') )
 
 
 

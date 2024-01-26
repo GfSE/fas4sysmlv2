@@ -58,7 +58,7 @@ def wrapNameInCorrectQuotes(cName):
 def transfer_result_back_to_sourceproject(cSourceHost, cDestinationHost, temporary_project_with_data,target_project_for_merge):
     bSuccess = true
     # Todo: instead of just copying: Merge ItemDefs and toplevel Packages and created dependencies between functional blocks and functional groups
-    bSuccess,sInfo = copy_elements(cSourceHost, temporary_project_with_data, cDestinationHost, target_project_for_merge, True)
+    bSuccess,sInfo = copy_elements(cSourceHost, temporary_project_with_data, cDestinationHost, target_project_for_merge, True, True)
     print('Merging from temporary project ' + temporary_project_with_data + ' on host ' + cSourceHost + ' to project ' + target_project_for_merge + ' on host ' + cDestinationHost)
     if bSuccess==True:
         print('Done')
