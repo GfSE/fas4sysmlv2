@@ -327,6 +327,73 @@ def copy_elements(source_host, source_id, target_host, target_id, bMerge = False
     else:
         return True , response.json()
 
+def link_function(target_host, target_id , source_host, source_id):
+    
+    rep_source = read_full_repository(source_host, source_id)
+    rep_target = read_full_repository(target_host, target_id)
+    
+    name_values = [item.get('name') for item in rep_target if item.get('name') is not None]
+    source_names = name_values
+    
+    d_list = []
+    
+    # Initialize source_ok and target_ok to None or a default value
+    source_ok = None
+    target_ok = None
+    t = None
+    tar = None
+    n = None
+    
+    for source_name in source_names:
+    
+        for i in range(len(rep_source)):
+            if rep_source[i].get('@type') == 'PartUsage' and rep_source[i].get('name') == source_name:
+                t = rep_source[i].get('@id')
+                n = rep_source[i].get('name')
+
+                source_ok = rep_source[i]
+
+        for i in range(len(rep_target)):
+            if rep_target[i].get('@type') == 'Package' and rep_target[i].get('name') == source_name:
+                tar = rep_target[i].get('@id')
+
+                target_ok = rep_target[i]
+
+
+    
+
+        #Now we create an owningmembership with an ID that we will later use to create the dependency
+        ele_id=str(uuid.uuid4())
+        owningmembership_element = str(uuid.uuid4())
+        d_list.append(dictionary_payload_owningmembership(owningmembership_element, {'@id': ele_id}, ele_id, {'@id': ele_id}, ele_id, {'@id': ele_id}, '', {'@id':tar}))
+
+        # Note that the id of the dependency is now the one that was used further above in the owningmembership
+        # and the owningmembership is the one we created ourselves
+        d_payload_dependency = dictionary_payload_dependency(ele_id, {'@id': t}, {'@id': tar}, {'@id': owningmembership_element}, n, {'@id': tar})
+
+    
+        d_list.append(d_payload_dependency)
+        
+        
+    #we need to add a "payload" with an "identity" to enforce the ID of source_ok
+    source_ok = {'payload': source_ok,'identity': {'@id': t} }
+    d_list.append(source_ok)
+    #The commit code was missing here, so I added it.
+    commit_body =  '{"change": ' + json.dumps(d_list) +'}'
+    commit_url = f"{target_host}/projects/{target_id}/commits" 
+
+    
+    response = requests.post(commit_url, 
+                      headers={"Content-Type": "application/json"}, 
+                      data=commit_body)
+    
+    print(response)
+    print(response.json())
+    
+    if response.status_code != 200:
+        return False , response.json()
+    else:
+        return True , response.json()
 
 def dictionary_payload_dependency(element_id, client, owner, membership, quali_name, target):
     dictionary_payload_dependency = {
