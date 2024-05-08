@@ -43,7 +43,8 @@ for tline in FID1:
         cHost = tline.strip()
 FID1.close()
 
-cNewProjectID, cNewHost = run_fas4sysml(cID, cHost)
+cNewProjectID, cNewHost, cMirrorServerName= run_fas4sysml(cID, cHost)
+
 
 FID1=open(cProjectIdFile ,'w');
 FID1.write(cNewProjectID+'\r\n'+cNewHost)
