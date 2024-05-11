@@ -13,10 +13,12 @@
 :: Replace with your own path:
 set SYSMLV2APIPATH=C:\temp\SysML-v2-API-Services-master
 
+path C:\Program Files\Java\jdk-11\bin;%PATH%
+
 echo Starting docker desktop...
 :: Adapt path if necessary ...
 start "x" "C:\Program Files\Docker\Docker\Docker Desktop.exe"
-timeout 30 > nul
+timeout 40 > nul
 echo Done.
 
 echo Starting docker container...
@@ -43,7 +45,7 @@ c:
 echo Starting SysML v2 API services ...
 cd %SYSMLV2APIPATH%
 start /b sbt run > nul 2>&1
-timeout 15 > nul
+timeout 20 > nul
 echo Done.
 echo Loading the the REST API interface in a web browser to initialize the API ..
 start "x" "http://localhost:9000/docs/"
