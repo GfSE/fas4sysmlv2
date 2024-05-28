@@ -42,6 +42,25 @@ sys.path.insert(1,cFolderName.strip().replace('auxiliary','core').replace('auxil
 from fas4sysmlv2API_helpers import * 
 
 
+def dictionary_payload_allocationusage(element_id, client, owner, membership, quali_name, target):
+    dictionary_payload_allocationusage = {
+        "payload": {'@type': 'AllocationUsage',
+                    '@id': element_id,
+                    'client': [client],
+                    'elementId': element_id,
+                    'owner': owner,
+                    'owningMembership': membership,
+                    'owningNamespace': owner,
+                    'owningRelationship': membership,
+                    'qualifiedName': quali_name,
+                    'relatedElement': [client, target],
+                    'source': [client],
+                    'supplier': [target],
+                    'target': [target]
+                   },
+        "identity": {"@id": element_id}
+    }
+    return dictionary_payload_allocationusage
 
 
 
@@ -123,11 +142,30 @@ def target_object_lookup(source_name):
     
     if source_name == 'engines':
         target_name = 'liftAndThrustGeneration'
+
+    if source_name == 'engine1':
+        target_name = 'liftAndThrustGeneration'
+
+    if source_name == 'engine2':
+        target_name = 'liftAndThrustGeneration'
+
+    if source_name == 'engine3':
+        target_name = 'liftAndThrustGeneration'
+
+    if source_name == 'engine4':
+        target_name = 'liftAndThrustGeneration'
+
+    if source_name == 'engine5':
+        target_name = 'liftAndThrustGeneration'
+
+    if source_name == 'engine6':
+        target_name = 'liftAndThrustGeneration'
+
     
-    if source_name == 'charger':
+    if source_name == 'body':
         target_name = 'ioElectrical'
     
-    if source_name == 'powerManagementModule':
+    if source_name == 'battery':
         target_name = 'energyStorageAndDistribution'
     
     return target_name;
@@ -189,7 +227,7 @@ def copy_and_trace_elements(source_host, source_id, target_host, target_id, cTra
                 ele_id=str(uuid.uuid4())
                 owningmembership_element = str(uuid.uuid4())
                 rep_t.append(dictionary_payload_owningmembership(owningmembership_element, {'@id': ele_id}, ele_id, {'@id': ele_id}, ele_id, {'@id': ele_id}, '', {'@id':IdOfPackageForDependencies}))
-                d_payload_dependency = dictionary_payload_dependency(ele_id, {'@id': t}, {'@id': tar}, {'@id': owningmembership_element}, n, {'@id': tar})    
+                d_payload_dependency = dictionary_payload_allocationusage(ele_id, {'@id': t}, {'@id': tar}, {'@id': owningmembership_element}, n, {'@id': tar})    
                 rep_t.append(d_payload_dependency)
     
 
