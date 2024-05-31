@@ -859,7 +859,7 @@ def render_transform_result(cFormulaOutput, cSysMLString, bSuccess, cTargetProje
      scr.configure(state ='disabled')
      renderingWindow.mainloop()
 
-def fas_transform(cProjectID,cServerName,cNewProjectID,cMirrorServerName,mainWindow):
+def fas_transform(cProjectID,cServerName,cNewProjectID,cMirrorServerName,cMirrorProjectID,mainWindow):
      mainWindow.config(cursor="watch")
      sleep(0.1)
      mainWindow.update()
@@ -896,21 +896,23 @@ def fas_transform(cProjectID,cServerName,cNewProjectID,cMirrorServerName,mainWin
          else:    
              print("Writing to the repository succeeded.") ##In that case the GUI representation of the success message will be generated elsewhere
          cNewProjectID.set(cTargetProject)
+         print('Mirror Server: ' + cMirrorServerName.get())
          if cMirrorServerName.get()!='':
-             print('Writing to the mirror server ...')
-             timestamp = datetime.now()
-             cMirrorProject = f"FAS Functional Model - {timestamp}"
-             response = requests.post(cMirrorServerName.get() + "/projects", headers={"Content-Type": "application/json"}, data=json.dumps({"name":cMirrorProject}))
-             if response.status_code != 200:
-                 bSuccess = False
-                 print("Failed creating project " + cMirrorProject  )
-             else:
-                 data = response.json() 
-                 bSuccess,sInfo = copy_elements(cServerName.get(), cProjectID.get(), cMirrorServerName.get(), data.get("@id"), False, False)
+             #print('Writing to the mirror server ...')
+             #timestamp = datetime.now()
+             #cMirrorProject = f"FAS Functional Model - {timestamp}"
+             #response = requests.post(cMirrorServerName.get() + "/projects", headers={"Content-Type": "application/json"}, data=json.dumps({"name":cMirrorProject}))
+             #if response.status_code != 200:
+             #    bSuccess = False
+             #    print("Failed creating project " + cMirrorProject  )
+             #else:
+             #    data = response.json() 
+             #    bSuccess,sInfo = copy_elements(cServerName.get(), cProjectID.get(), cMirrorServerName.get(), data.get("@id"), False, False)
+                 bSuccess,sInfo = copy_elements(cServerName.get(), cTargetProject, cMirrorServerName.get(), cMirrorProjectID.get(), False, False)
                  if bSuccess:
-                     print("Successfully wrote to project '" + cMirrorProject + "' - Id: " + data.get("@id") )
+                     print("Successfully wrote to project Id: " + cMirrorProjectID.get() )
                  else:
-                     print("Writing failed to project " + cMirrorProject + " - Id: " + data.get("@id"))
+                     print("Writing failed to project Id: " + cMirrorProjectID.get())
 
          
 def run_fas4sysml(cProjectUUID, cHost):
@@ -928,6 +930,8 @@ def run_fas4sysml(cProjectUUID, cHost):
      cServerName.set(cHost)
      cMirrorServerName = StringVar()
      cMirrorServerName.set('')
+     cMirrorProjectID = StringVar()
+     cMirrorProjectID.set('')
      ttk.Label(frm, text="").grid(column=0, row=1)
      ttk.Label(frm, text="Server").grid(column=0, row=2)
      ttk.Entry(frm, textvariable = cServerName, width = 50).grid(column=1, row=2)
@@ -938,8 +942,12 @@ def run_fas4sysml(cProjectUUID, cHost):
      ttk.Label(frm, text="Mirror Server").grid(column=0, row=5)
      ttk.Entry(frm, textvariable = cMirrorServerName, width = 50).grid(column=1, row=5)
      ttk.Label(frm, text="(empty = none)").grid(column=2, row=5)
-     ttk.Label(frm, text="").grid(column=0, row=6)
-     ttk.Button(frm, text="Run FAS transformation", command=partial(fas_transform,cProjectID,cServerName,cNewProjectID,cMirrorServerName,mainWindow)).grid(column=1, row=7)
+     ttk.Label(frm, text="Mirror Project UUID").grid(column=0, row=6)
+     ttk.Entry(frm, textvariable = cMirrorProjectID, width = 50).grid(column=1, row=6)
+     ttk.Button(frm, text="Select", command=partial(selectproject,cMirrorProjectID,cMirrorServerName)).grid(column=2, row=6)
+
+     ttk.Label(frm, text="").grid(column=0, row=7)
+     ttk.Button(frm, text="Run FAS transformation", command=partial(fas_transform,cProjectID,cServerName,cNewProjectID,cMirrorServerName,cMirrorProjectID,mainWindow)).grid(column=1, row=7)
      ttk.Button(frm, text="Quit", command=mainWindow.destroy).grid(column=2, row=7)
      mainWindow.mainloop()
      return cNewProjectID.get(), cServerName.get(), cMirrorServerName.get()
