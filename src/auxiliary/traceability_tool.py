@@ -108,7 +108,7 @@ def WriteSysML(cSysMLString, strModelName):
      cHost = ''
      cStatus = ''
      
-     ##New parsing needed for a model with 2 main packages ...
+   
      for tline in FID1:
          if bResultExpected:
              cStatus = 'STATUS: ' + tline.replace('\\n','').replace('\\r','').strip()
