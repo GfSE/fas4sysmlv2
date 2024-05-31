@@ -107,6 +107,8 @@ def WriteSysML(cSysMLString, strModelName):
      bResultExpected = False
      cHost = ''
      cStatus = ''
+     
+     ##New parsing needed for a model with 2 main packages ...
      for tline in FID1:
          if bResultExpected:
              cStatus = 'STATUS: ' + tline.replace('\\n','').replace('\\r','').strip()
@@ -246,10 +248,13 @@ def copy_and_trace_elements(source_host, source_id, target_host, target_id, cTra
 def execute_writing(cMirrorProjectID,cServerName,scr,strModelName):
     cMirrorProject=cMirrorProjectID.get()
     cMirrorServerName=cServerName.get()
+    print('Reading Base Architecture from mirror server '+ cMirrorServerName + '...')
+    cSysMLBaseArch = readBaseArchitecture(cMirrorProject,cMirrorServerName)
+    print(cSysMLBaseArch)
     cTraceabilityPackageName = 'TraceabilityLinks'
     #cSysMLString = (scr.get('1.0', tk.END)+ " ").replace('\\n','\\r\\n').strip()+"\r\n"
     cSysMLString = (scr.get('1.0', tk.END)+ " ").strip()+"\r\n"
-    cHost,cProjectID = WriteSysML(cSysMLString, strModelName)
+    cHost,cProjectID = WriteSysML(cSysMLBaseArch + cSysMLString, strModelName)
     if cServerName.get()!='':
        print('Writing to the mirror server '+ cMirrorServerName + '...')
        bSuccess,sInfo = copy_and_trace_elements(cHost, cProjectID, cMirrorServerName, cMirrorProject,cTraceabilityPackageName)
@@ -258,6 +263,53 @@ def execute_writing(cMirrorProjectID,cServerName,scr,strModelName):
        else:
            print("Writing failed to project " + cMirrorProject + " - Id: " + cMirrorProject)
 
+def readBaseArchitecture(cMirrorProjectID,cServerName):
+    PackageName = ''
+    PartName = ''
+    AttributeName = ''
+    AttributeType = ''
+    ItemName = ''
+    ItemType = ''
+    Multiplicity = ''
+    ItemUsage = ''
+    rep = read_full_repository(cServerName, cMirrorProjectID)
+    for i in range(len(rep)):
+        currentRecord=rep[i]
+        if str(currentRecord.get('shortName'))!="None":
+           if currentRecord.get('shortName') == 'BA':
+               print('Found ' + currentRecord.get('@type'))
+               if currentRecord.get('@type') == 'Package':
+                   PackageName = currentRecord.get('name')
+               if currentRecord.get('@type') == 'PartDefinition':
+                   PartName = currentRecord.get('name')
+               if currentRecord.get('@type') == 'AttributeUsage':
+                   AttributeName = currentRecord.get('name')
+               if currentRecord.get('@type') == 'LiteralInteger':
+                   Multiplicity = str(currentRecord.get('value'))
+               if currentRecord.get('@type') == 'AttributeDefinition':
+                   AttributeType = currentRecord.get('qualifiedName').replace('Base','')
+               if currentRecord.get('@type') == 'ItemUsage':
+                  print('ItemUsage ' + str(len(str(currentRecord.get('featuringType')))))
+                  if len(str(currentRecord.get('featuringType')))>2:
+                      ItemName = currentRecord.get('name')
+                  else:
+                      ItemUsage = currentRecord.get('name')
+                     
+               if currentRecord.get('@type') == 'ItemDefinition':
+                  ItemType = currentRecord.get('qualifiedName').replace('RectangularCuboid','Box')
+              
+
+        
+    
+    cSysML='package <BA> ' + PackageName + ' {\r\n'
+    cSysML = cSysML + '    abstract part def <BApart> ' + PartName +' {\r\n'
+    cSysML = cSysML + '        attribute  <BAattribute> ' + AttributeName + ' : ' + AttributeType +';\r\n'
+    cSysML = cSysML + '        item  <BAitem> ' + ItemName + ' : ' + ItemType + ' ['+ Multiplicity +'] :> ' + ItemUsage + ';\r\n'
+    cSysML = cSysML + '    }\r\n'
+    cSysML = cSysML + '}\r\n'
+
+
+    return cSysML
 
 
 def run_traceability_tool(cProjectUUID, cHost, cFolder):
@@ -284,7 +336,8 @@ def run_traceability_tool(cProjectUUID, cHost, cFolder):
      bSuccess = True
      ttk.Button(frm, text="Select", command=partial(selectproject,cProjectID,cServerName)).grid(column=2, row=3)
      ttk.Label(frm, text="").grid(column=0, row=4)
-     scr = scrolledtext.ScrolledText(mainWindow, width = 200, height = 40, font = ("Courier", 9))
+     ttk.Label(frm, text="Write Physical Architecture here:").grid(column=0, row=6)
+     scr = scrolledtext.ScrolledText(mainWindow, width = 150, height = 35, font = ("Courier", 9))
      scr.grid(column = 0, pady = 10, padx = 10)
 
 
