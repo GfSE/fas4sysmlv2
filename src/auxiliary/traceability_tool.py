@@ -171,6 +171,214 @@ def target_object_lookup(source_name):
         target_name = 'energyStorageAndDistribution'
     
     return target_name;
+    
+def determine_source_base_architecture_elements(data,target_elements):
+     target_base_arch_elements = []
+
+     for currentRecord in data:
+                 recordToAdd = '';
+                 sIdToGet=currentRecord.get('@id')
+                 sName = currentRecord.get('shortName')
+                 if str(currentRecord.get('shortName')) != 'None':
+                  if len(sName) > 2:
+                    if sName[0:2] == 'BA':
+                       if currentRecord.get('@type') == 'AttributeUsage':
+                           if str(currentRecord.get('declaredName')) != 'None':
+                               recordToAdd = currentRecord
+                       else:
+                           recordToAdd = currentRecord
+                       if recordToAdd != '':
+                          target_base_arch_elements.append(recordToAdd)
+                            
+                          if len(currentRecord.get('ownedMembership')) >0:
+                            ownId = currentRecord.get('ownedMembership')[0].get('@id')
+                            for currentRecord2 in data:
+                                if str(currentRecord2.get('@id'))==ownId:
+                                    iCount = 0
+                                    for currentRecord3 in target_base_arch_elements:
+                                        if currentRecord3.get('@id') == currentRecord2.get('@id'):
+                                            iCount = iCount + 1
+                                            break
+                                    if iCount == 0 and currentRecord2.get('@type')!='FeatureValue':
+                                        target_base_arch_elements.append(currentRecord2)  
+     for currentRecord in target_base_arch_elements:
+            if 'multiplicity' in currentRecord:               
+                if str(type(currentRecord.get('multiplicity')))!="<class 'list'>":
+                   if str(currentRecord.get('multiplicity'))!='None':
+                        #print(currentRecord)
+                        if '@id' in currentRecord.get('multiplicity'):
+                            ownId = currentRecord.get('multiplicity').get('@id')
+                            for currentRecord2 in data:
+                                if str(currentRecord2.get('@id'))==ownId:
+                                    iCount = 0
+                                    for currentRecord3 in target_base_arch_elements:
+                                        if currentRecord3.get('@id') == currentRecord2.get('@id'):
+                                            iCount = iCount + 1
+                                            break
+                                    if iCount == 0:
+                                        target_base_arch_elements.append(currentRecord2)       
+                                    
+     for currentRecord in target_base_arch_elements:
+            if 'bound' in currentRecord:               
+                if str(type(currentRecord.get('bound')))=="<class 'list'>":
+                   if len(currentRecord.get('bound'))>0:
+                        #print(currentRecord)
+                        if '@id' in currentRecord.get('bound')[0]:
+                            ownId = currentRecord.get('bound')[0].get('@id')
+                            for currentRecord2 in data:
+                                if str(currentRecord2.get('@id'))==ownId:
+                                    iCount = 0
+                                    for currentRecord3 in target_base_arch_elements:
+                                        if currentRecord3.get('@id') == currentRecord2.get('@id'):
+                                            iCount = iCount + 1
+                                            break
+                                    if iCount == 0 and currentRecord2.get('@type')!='Redefinition' and currentRecord2.get('@type')!='FeatureValue':
+                                        target_base_arch_elements.append(currentRecord2)       
+                                    
+     for currentRecord in target_base_arch_elements:
+            if 'ownedRelationship' in currentRecord:               
+                if str(type(currentRecord.get('ownedRelationship')))=="<class 'list'>":
+                    #print('list')
+                    for r in currentRecord.get('ownedRelationship'):
+                        #print(currentReownedRelationshipownedRelationshipcord)
+                        if '@id' in r:
+                            ownId = r.get('@id')
+                            for currentRecord2 in data:
+                                if str(currentRecord2.get('@id'))==ownId:
+                                    iCount = 0
+                                    for currentRecord3 in target_base_arch_elements:
+                                        if currentRecord3.get('@id') == currentRecord2.get('@id'):
+                                            iCount = iCount + 1
+                                            break
+                                    if iCount == 0 and currentRecord2.get('@type')!='Redefinition' and currentRecord2.get('@type')!='FeatureValue':
+                                        target_base_arch_elements.append(currentRecord2)       
+                                    
+     for currentRecord in target_base_arch_elements:
+            if 'feature' in currentRecord:               
+                
+                if str(type(currentRecord.get('feature')))=="<class 'list'>":
+                        if len(currentRecord.get('feature'))>0:
+                           for f in currentRecord.get('feature'):
+                            ownId = f.get('@id')
+                            for currentRecord2 in data:
+                                if str(currentRecord2.get('@id'))==ownId:
+                                    iCount = 0
+                                    for currentRecord3 in target_base_arch_elements:
+                                        if currentRecord3.get('@id') == currentRecord2.get('@id'):
+                                            iCount = iCount + 1
+                                            break
+                                    if iCount == 0 and currentRecord2.get('@type')!='Redefinition' and currentRecord2.get('@type')!='FeatureValue':
+                                        if currentRecord2.get('@type')!='ItemUsage':
+                                            target_base_arch_elements.append(currentRecord2) 
+                                        else:
+                                            for t in target_elements:
+                                                if 'declaredName' in t:
+                                                     if str(t.get('declaredName'))!='None' and str(currentRecord2.get('declaredName'))!='None':
+                                                        if t.get('declaredName') == currentRecord2.get('declaredName'):
+                                                             target_base_arch_elements.append(currentRecord2) 
+                                                                          
+                else:
+                   if str(currentRecord.get('feature'))!='None':
+                        #print(currentRecord)
+                        if '@id' in currentRecord.get('feature'):
+                            ownId = currentRecord.get('feature').get('@id')
+                            for currentRecord2 in data:
+                                if str(currentRecord2.get('@id'))==ownId:
+                                    iCount = 0
+                                    for currentRecord3 in target_base_arch_elements:
+                                        if currentRecord3.get('@id') == currentRecord2.get('@id'):
+                                            iCount = iCount + 1
+                                            break
+                                    if iCount == 0 and currentRecord2.get('@type')!='Redefinition' and currentRecord2.get('@type')!='FeatureValue':
+                                        target_base_arch_elements.append(currentRecord2)       
+
+     target_base_arch_elements_old = target_base_arch_elements                              
+     target_base_arch_elements = []
+     bPartDefinitionFound = False
+     for currentRecord in target_base_arch_elements_old:
+            if currentRecord.get('@type')=='PartDefinition':
+                continue
+            if currentRecord.get('@type')=='ItemUsage':
+                if str(currentRecord.get('declaredName'))=='None':
+                   continue
+            if currentRecord.get('@type')=='AttributeUsage':
+                 sName = currentRecord.get('shortName')
+                 if str(currentRecord.get('shortName')) == 'None':
+                     continue
+                 if len(sName) <2:
+                     continue
+                 if sName[0:2] != 'BA':
+                   continue
+            target_base_arch_elements.append(currentRecord)
+            if 'owner' in currentRecord:               
+                if str(type(currentRecord.get('owner')))!="<class 'list'>":
+                   if str(currentRecord.get('owner'))!='None':
+                        #print(currentRecord)
+                        if '@id' in currentRecord.get('owner'):
+                            ownId = currentRecord.get('owner').get('@id')
+                            for currentRecord2 in data:
+                                if str(currentRecord2.get('@id'))==ownId:
+                                    iCount = 0
+                                    #print('Owner: ')
+                                    #print(currentRecord2)
+                                    #for currentRecord3 in target_base_arch_elements:
+                                    #    if currentRecord3.get('@id') == currentRecord2.get('@id'):
+                                    #        iCount = iCount + 1
+                                    #        break
+                                    #print( currentRecord2.get('@type'))
+                                    if iCount == 0 and currentRecord2.get('@type')=='PartDefinition':
+                                       if bPartDefinitionFound == False and str(currentRecord2.get('shortName'))!='None':
+                                          if len(currentRecord2.get('shortName'))>1:
+                                                sName = currentRecord2.get('shortName')
+                                                if sName[0:2] == 'BA':
+                                                    bPartDefinitionFound = True
+                                                    target_base_arch_elements.append(currentRecord2)       
+                                        
+                                        
+                                       
+                                       # Package does not exist when not explicitly publishing the base architecture, it seems 
+                                       #packageRecord = currentRecord2.get('owningNamespace')
+                                       #if str(packageRecord)!='None':  
+                                       #     packageId = packageRecord.get('@id')
+                                       #     #print(packageId)
+                                       #     for currentRecord4 in data:
+                                       #         if currentRecord4.get('@id')==packageId:
+                                       #            owningM = currentRecord4.get('owningMembership').get('@id')
+                                       #            target_base_arch_elements.append(currentRecord4)  
+                                       #            for currentRecord5 in data:
+                                       #                 if currentRecord5.get('@id')==owningM:
+                                       #                    target_base_arch_elements.append(currentRecord5)  
+                                                   
+                                    
+
+     for currentRecord in target_base_arch_elements:
+            if 'definition' in currentRecord:     
+                #print(currentRecord)
+                #print(str(type(currentRecord.get('definition'))))
+                if str(type(currentRecord.get('definition')))=="<class 'list'>":
+                   if len(currentRecord.get('definition'))>0:
+                        #print(currentRecord)
+                        if '@id' in currentRecord.get('definition')[0]:
+                            ownId = currentRecord.get('definition')[0].get('@id')
+                            for currentRecord2 in data:
+                                if str(currentRecord2.get('@id'))==ownId:
+                                    iCount = 0
+                                    for currentRecord3 in target_base_arch_elements:
+                                        if currentRecord3.get('@id') == currentRecord2.get('@id'):
+                                            iCount = iCount + 1
+                                            break
+                                    if iCount == 0 and currentRecord2.get('@type')!='Redefinition' and currentRecord2.get('@type')!='FeatureValue':
+                                        target_base_arch_elements.append(currentRecord2)       
+
+     if True:
+        TypeList = []
+        for r in target_base_arch_elements:
+            TypeList.append(r.get('@type'))
+            print(r.get('@id'))
+        TypeList.sort()
+        for t in TypeList:
+            print(t)     
+     return target_base_arch_elements
 
 def copy_and_trace_elements(source_host, source_id, target_host, target_id, cTraceabilityPackageName):
     rep_t = []
@@ -178,14 +386,220 @@ def copy_and_trace_elements(source_host, source_id, target_host, target_id, cTra
     rep_source = read_full_repository(source_host, source_id)
 
     rep_target = read_full_repository(target_host, target_id)
-        
+     
+    target_base_arch_elements = [] 
+    # Find Base Architecture elements in the target repository     
+    for i in range(len(rep_target)):
+        currentRecord = rep_target[i]
+        if str(currentRecord.get('shortName')) != 'None':
+          sName = currentRecord.get('shortName')
+          if len(sName) > 1:
+            if sName[0:2] == 'BA':     
+               target_base_arch_elements.append(currentRecord)            
 
     
+    source_base_arch_elements = determine_source_base_architecture_elements(rep_source,target_base_arch_elements)
+       
+    baSourceIds = []       
+    print('Source Base architecture elements:')
+    for el in source_base_arch_elements:
+       baSourceIds.append(el.get('@id'))       
+
+       print (el)
+       print('---------------')
+       
+       
+    print('Target Base architecture elements:')
+    for el in target_base_arch_elements:
+       print (el)
+       print('---------------')
+       
+    basearch_corresponding_ids_source = [];  
+    basearch_corresponding_ids_target = [];  
+    print('ANALYZING OBJECTS THAT DEPEND ON BASE ARCHITECTURE')   
+    for source_el in rep_source:
+       for baseArchId in baSourceIds:
+            if baseArchId in basearch_corresponding_ids_source:
+                continue
+            if baseArchId in json.dumps(source_el):
+                print (source_el.get('@type') + ' (' + source_el.get('@id') +')') 
+                print('depends on ' + baseArchId) 
+                for el in source_base_arch_elements:
+                    if el.get('@id') == baseArchId:
+                       baseArchType = el.get('@type');
+                       print ('  = ' + el.get('@type') + ' (' + el.get('@id') +')') 
+                       bNameAvailable = False
+                       if 'name' in el:
+                           if str(el.get('name'))!='None':
+                               print('     BaseArch Name: ' + el.get('name'))
+                               bNameAvailable = True
+                               for te in target_base_arch_elements:
+                                   if str(te.get('name'))!='None':
+                                       if el.get('name') == te.get('name'):
+                                           basearch_corresponding_ids_source.append(baseArchId)
+                                           basearch_corresponding_ids_target.append(te.get('@id'))
+                                           print('==> Mapping source:' + baseArchType + ' ('+ baseArchId + ') to target:' + te.get('@type') + ' (' + te.get('@id') +' )')
+                       if bNameAvailable==False:
+                           if el.get('@type')=='OwningMembership':
+                                OwningId = el.get('owningRelatedElement').get('@id')
+                                print ('  => owningRelatedElement: ' + OwningId)
+                                for el2 in source_base_arch_elements:
+                                    if el2.get('@id') == OwningId:
+                                       print ('  => owningRelatedElement ' + el2.get('@type') + ' (' + el2.get('@id') +')') 
+                                       if 'name' in el2:
+                                           if str(el2.get('name'))!='None':
+                                               print('     BaseArch Name of owningRelatedElement: ' + el2.get('name'))
+                                               bNameAvailable = True
+                                               bMapped = False
+                                               for te in target_base_arch_elements:
+                                                   
+                                                   if te.get('@type')=='OwningMembership':
+                                                     for te2 in target_base_arch_elements:
+                                                         if te2.get('@id')==te.get('owningRelatedElement').get('@id'):
+                                                             if str(te2.get('name')) != 'None':
+                                                                 teOwningName = te2.get('name')
+                                                                 print('Name: '+ el2.get('name') + ' vs. OwningName: ' + teOwningName)
+                                                                 if el2.get('name') == teOwningName:
+                                                                     basearch_corresponding_ids_source.append(baseArchId)
+                                                                     basearch_corresponding_ids_target.append(te.get('@id'))
+                                                                     print('==> Mapping source:' + baseArchType + ' ('+ baseArchId + ') to target:' + te.get('@type') + ' (' + te.get('@id') +' )')
+                                                                     bMapped = True
+                                               if bMapped == False:
+                                                   print(ErrorMappingFailed)
+
+                                           else:
+                                               if el2.get('@type')=='AttributeDefinition' or  el2.get('@type')=='AttributeUsage' or  el2.get('@type')=='Feature' or  el2.get('@type')=='ItemDefinition' or  el2.get('@type')=='LiteralInteger' or el2.get('@type')=='Multiplicity' or el2.get('@type')=='MultiplicityRange' or el2.get('@type')=='Package' or el2.get('@type')=='PartDefinition' or el2.get('@type')=='ReturnParameterMembership' or el2.get('@type')=='Subsetting':
+                                                   print('     BaseArch Name of owningRelatedElement not needed, because type is unique')
+                                                   bMapped = False
+                                                   for te in target_base_arch_elements:
+                                                   
+                                                     if te.get('@type')=='OwningMembership':
+                                                        for te2 in target_base_arch_elements:
+                                                           if te2.get('@id')==te.get('owningRelatedElement').get('@id'):
+                                                                 teOwningType = te2.get('@type')
+                                                                 print('Type: '+ el2.get('@type') + ' vs. OwningName: ' + teOwningType)
+                                                                 if el2.get('@type') == teOwningType:
+                                                                     basearch_corresponding_ids_source.append(baseArchId)
+                                                                     basearch_corresponding_ids_target.append(te.get('@id'))
+                                                                     print('==> Mapping source:' + baseArchType + ' ('+ baseArchId + ') to target:' + te.get('@type') + ' (' + te.get('@id') +' )')
+                                                                     bMapped = True
+                                               if bMapped == False:
+                                                   print(ErrorMappingFailed)
+                                                   
+
+                       if bNameAvailable==False:
+                           if el.get('@type')=='FeatureMembership':
+                                OwningId = el.get('ownedRelatedElement')[0].get('@id')
+                                print ('  => ownedRelatedElement: ' + OwningId)
+                                for el2 in source_base_arch_elements:
+                                    if el2.get('@id') == OwningId:
+                                       print ('  => ownedRelatedElement ' + el2.get('@type') + ' (' + el2.get('@id') +')') 
+                                       if 'name' in el2:
+                                           if str(el2.get('name'))!='None':
+                                               print('     BaseArch Name of ownedRelatedElement: ' + el2.get('name'))
+                                               bNameAvailable = True
+                                               bMapped = False
+                                               for te in target_base_arch_elements:
+                                                   
+                                                   if te.get('@type')=='FeatureMembership':
+                                                     for te2 in target_base_arch_elements:
+                                                         if te2.get('@id')==te.get('ownedRelatedElement')[0].get('@id'):
+                                                             if str(te2.get('name')) != 'None':
+                                                                 teOwningName = te2.get('name')
+                                                                 print('Name: '+ el2.get('name') + ' vs. OwningName: ' + teOwningName)
+                                                                 if el2.get('name') == teOwningName:
+                                                                     basearch_corresponding_ids_source.append(baseArchId)
+                                                                     basearch_corresponding_ids_target.append(te.get('@id'))
+                                                                     print('==> Mapping source:' + baseArchType + ' ('+ baseArchId + ') to target:' + te.get('@type') + ' (' + te.get('@id') +' )')
+                                                                     bMapped = True
+                                               if bMapped == False:
+                                                   print(ErrorMappingFailed)
+                                           else:
+                                               if el2.get('@type')=='AttributeDefinition' or  el2.get('@type')=='AttributeUsage' or  el2.get('@type')=='Feature' or  el2.get('@type')=='ItemDefinition' or  el2.get('@type')=='LiteralInteger' or el2.get('@type')=='Multiplicity' or el2.get('@type')=='MultiplicityRange' or el2.get('@type')=='Package' or el2.get('@type')=='PartDefinition' or el2.get('@type')=='ReturnParameterMembership' or el2.get('@type')=='Subsetting':
+                                                   print('     BaseArch Name of ownedRelatedElement not needed, because type is unique')
+                                                   
+                                                   bMapped = False
+                                                   for te in target_base_arch_elements:
+                                                   
+                                                     if te.get('@type')=='FeatureMembership':
+                                                        for te2 in target_base_arch_elements:
+                                                           if te2.get('@id')==te.get('ownedRelatedElement')[0].get('@id'):
+                                                                 teOwningType = te2.get('@type')
+                                                                 print('Type: '+ el2.get('@type') + ' vs. OwningName: ' + teOwningType)
+                                                                 if el2.get('@type') == teOwningType:
+                                                                     basearch_corresponding_ids_source.append(baseArchId)
+                                                                     basearch_corresponding_ids_target.append(te.get('@id'))
+                                                                     print('==> Mapping source:' + baseArchType + ' ('+ baseArchId + ') to target:' + te.get('@type') + ' (' + te.get('@id') +' )')
+                                                                     bMapped = True
+                                               if bMapped == False:
+                                                   print(ErrorMappingFailed)
+
+                                                   
+
+                       if bNameAvailable==False:
+                           if el.get('@type')=='AttributeDefinition' or  el.get('@type')=='AttributeUsage' or  el.get('@type')=='Feature' or  el.get('@type')=='ItemDefinition' or  el.get('@type')=='LiteralInteger' or el.get('@type')=='Multiplicity' or el.get('@type')=='MultiplicityRange' or el.get('@type')=='Package' or el.get('@type')=='PartDefinition' or el.get('@type')=='ReturnParameterMembership' or el.get('@type')=='Subsetting':
+                                               print('     BaseArch Name not needed because type is unique')
+                                               for te in target_base_arch_elements:
+                                                       if el.get('@type') == te.get('@type'):
+                                                           basearch_corresponding_ids_source.append(baseArchId)
+                                                           basearch_corresponding_ids_target.append(te.get('@id'))
+                                                           print('==> Mapping source:' + baseArchType + ' ('+ baseArchId + ') to target:' + te.get('@type') + ' (' + te.get('@id') +' )')
+                                               
+                                               
+                                               
+                                               
+                       if bNameAvailable==False:
+                           if el.get('@type')=='FeatureTyping':
+                                TypedId = el.get('typedFeature').get('@id')
+                                print ('  => typedFeature: ' + TypedId)
+                                for el2 in source_base_arch_elements:
+                                    if el2.get('@id') == TypedId:
+                                       print ('  => typedFeature ' + el2.get('@type') + ' (' + el2.get('@id') +')') 
+                                       if 'name' in el2:
+                                           if str(el2.get('name'))!='None':
+                                               print('     BaseArch Name of typedFeature: ' + el2.get('name'))
+                                               bNameAvailable = True
+                                               for te in target_base_arch_elements:
+                                                       if te.get('@type')=='FeatureTyping':
+                                                           targetTypedId = te.get('typedFeature').get('@id')
+                                                           for te2 in target_base_arch_elements:
+                                                               if te2.get('@id')==targetTypedId:
+                                                                   if 'name' in te2:
+                                                                       if str(te2.get('name'))!='None':
+                                                                           if te2.get('name')==el2.get('name'):                                                                   
+                                                                               basearch_corresponding_ids_source.append(baseArchId)
+                                                                               basearch_corresponding_ids_target.append(te.get('@id'))
+                                                                               print('==> Mapping source:' + baseArchType + ' ('+ baseArchId + ') to target:' + te.get('@type') + ' (' + te.get('@id') +' )')
+                         
+
+                                
+                print('======================================================')
+            
+    
+
+       
     for i in range(len(rep_source)):
+        if rep_source[i].get('@id') in basearch_corresponding_ids_source:
+            print('SKIPPING ' + rep_source[i].get('@type') + ' (' + rep_source[i].get('@id') + '), because it is in the base architecture.')
+            continue
+            #Skip writing base architecture, because base architecture is already in the repository.
+            #Instead, we need to redirect references to base architecture objects to corresponding existing objects in the repository.
+            
+        rep_source_as_string=json.dumps(rep_source[i])
+        for mapIdIndex in range(len(basearch_corresponding_ids_source)):
+            sourceIdToFind = basearch_corresponding_ids_source[mapIdIndex]
+            targetIdSubstituting = basearch_corresponding_ids_target[mapIdIndex]       
+            rep_source_as_string_new=rep_source_as_string.replace(sourceIdToFind, targetIdSubstituting)
+            if rep_source_as_string_new!= rep_source_as_string:
+                print('IN ' + rep_source[i].get('@type') + ' (' + rep_source[i].get('@id') +') - REPLACED ' + sourceIdToFind + ' WITH ' +   targetIdSubstituting)  
+                
+            rep_source_as_string=rep_source_as_string_new
+            
+        rep_source[i]=json.loads(rep_source_as_string)
+                         
+            
         rep_t.append({"payload": rep_source[i],
                       "identity": {"@id": rep_source[i]['@id']}})
-                      
-                      
         
     bLink = True    
     if bLink == True:
