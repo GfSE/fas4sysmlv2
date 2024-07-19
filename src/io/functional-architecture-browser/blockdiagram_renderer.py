@@ -438,7 +438,7 @@ def render_diagram(cProjectID,cServerName,mainWindow,strBaseURLParam, clFunction
              cDiag = ''
              cNewLine = '\n'
              if bGraphViz:
-                cDiag = cDiag + 'digraph {node [shape=box];' 
+                cDiag = cDiag + 'digraph {node [shape=box margin=0.1];' 
              else:
                 cDiag = cDiag + 'blockdiag {' + cNewLine
              cSpace = '  '
@@ -453,8 +453,10 @@ def render_diagram(cProjectID,cServerName,mainWindow,strBaseURLParam, clFunction
                  if len(cLine.get('target_to_source_flows'))>0:
                      #Flows in both directions exist
                      if bGraphViz:
-                         cDiagLine = wrapNameInCorrectQuotesForGraphViz(cLine.get('source'))   + ' -> ' + wrapNameInCorrectQuotesForGraphViz(cLine.get('target'))   + ' [label = "' + cLine.get('source_to_target_flows') + '" ];'                
-                         cDiagLine = cDiagLine + wrapNameInCorrectQuotesForGraphViz(cLine.get('target'))   + ' -> ' + wrapNameInCorrectQuotesForGraphViz(cLine.get('source'))   + ' [label = "' + cLine.get('target_to_source_flows') + '" ];'                
+                         cLabelPrefix = '<<table cellpadding="3" border="0" cellborder="0"><tr><td>'
+                         cLabelPostfix = '&nbsp;&nbsp;&nbsp;</td></tr></table>>'
+                         cDiagLine = wrapNameInCorrectQuotesForGraphViz(cLine.get('source'))   + ' -> ' + wrapNameInCorrectQuotesForGraphViz(cLine.get('target'))   + ' [label = '+cLabelPrefix + cLine.get('source_to_target_flows') + cLabelPostfix + ' ];'                
+                         cDiagLine = cDiagLine + wrapNameInCorrectQuotesForGraphViz(cLine.get('target'))   + ' -> ' + wrapNameInCorrectQuotesForGraphViz(cLine.get('source'))   + ' [label = ' +cLabelPrefix + cLine.get('target_to_source_flows') + cLabelPostfix +' ];'                
                      else:
                          cItemDefinitionName = cLine.get('target_to_source_flows') + '   <-->   ' + cLine.get('source_to_target_flows')
                          cDiagLine = wrapNameInCorrectQuotes(cLine.get('source'))  + ' <-> ' + wrapNameInCorrectQuotes(cLine.get('target'))   + ' [label = "' + cItemDefinitionName + '" ]'                
