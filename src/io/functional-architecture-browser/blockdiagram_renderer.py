@@ -534,7 +534,7 @@ def run_renderer(cProjectUUID, cHost, cFolder):
      if bShowBlockdiag:
          strBaseURLParam = StringVar()
          strBaseURLParam.set('')
-         ttk.Button(frm, text="Render block diagram", command=partial(render_diagram,cProjectID,cServerName,mainWindow,strBaseURLParam)).grid(column=1, row=5)
+         ttk.Button(frm, text="Render block diagram", command=partial(render_diagram,cProjectID,cServerName,mainWindow,strBaseURLParam,[],False,cFolder)).grid(column=1, row=5)
      if bShowImage:
          if bShowBlockdiag:
             iColumn = 2
