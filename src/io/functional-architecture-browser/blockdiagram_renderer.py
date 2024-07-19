@@ -438,7 +438,7 @@ def render_diagram(cProjectID,cServerName,mainWindow,strBaseURLParam, clFunction
              cDiag = ''
              cNewLine = '\n'
              if bGraphViz:
-                cDiag = cDiag + 'digraph {node [shape=box margin=0.1];' 
+                cDiag = cDiag + 'digraph {node [shape=box margin=0.3];' 
              else:
                 cDiag = cDiag + 'blockdiag {' + cNewLine
              cSpace = '  '
