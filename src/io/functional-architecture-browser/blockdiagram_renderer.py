@@ -49,6 +49,13 @@ def wrapNameInCorrectQuotes(cName):
         cNameNew = "'" + cNameNew + "'" 
     return cNameNew
 
+def wrapNameInCorrectQuotesForGraphViz(cName):
+    cNameNew = cName
+    if isWithSpecialCharacters(cName):
+        cNameNew = '"' + cNameNew + '"' 
+    return cNameNew
+
+
 def read_functional_architecture(strProjectID,strServerName):
 
      clFunctionalBlocksAndFlows= []           
@@ -335,29 +342,33 @@ def render_images(cProjectID,cServerName,cFolder,mainWindow):
     mainWindow.config(cursor="")
 
 def ProcessUrlInput(subWindow,theText,cProjectID,cServerName,mainWindow,strBaseURLParam):
-    strBaseURLParam.set(theText.get())
+    sText = theText.get()
+    strBaseURLParam.set(sText)
     print('URL for rendering: ' + strBaseURLParam.get())
     subWindow.destroy()
     print('Rendering ...')
     render_diagram(cProjectID,cServerName,mainWindow,strBaseURLParam)
     print('done')
+    strBaseURLParam.set('')
 
 def askForBaseUrl(cProjectID,cServerName,mainWindow,strBaseURLParam):
      subWindow = Tk()
      subWindow.title("URL Input")
      frm = ttk.Frame(subWindow)
      strURL = StringVar()
-     strURL.set('')
+     strURL.set("")
      frm.grid(row=0, column=0, columnspan=3)
      ttk.Label(frm, text="Please specify an URL to use for block diagram rendering.").grid(column=0, row=0)
      ttk.Label(frm, text="You can get rid of this dialog by hard-coding the URL in the variable strRenderingUrl").grid(column=1, row=1)
      ttk.Label(frm, text="in the first line of render_diagram in blockdiagram_renderer.py.").grid(column=1, row=2)
      ttk.Label(frm, text="                                                                           URL: ").grid(column=0, row=3)
      theText = ttk.Entry(frm, textvariable = strURL, width = 80)
+     theText.insert(END, 'graphviz')
      theText.grid(column=1, row=3)
      ttk.Label(frm, text="You must ensure yourself that any URL you enter or hard-code raises no security concerns.").grid(column=1, row=4)
      ttk.Label(frm, text="You can try http://interactive.blockdiag.com/ if you can be sure it is safe to open.").grid(column=1, row=5)
-     ttk.Button(frm, text="OK", command=partial(ProcessUrlInput,subWindow,theText,cProjectID,cServerName,mainWindow,strBaseURLParam)).grid(column=3, row=6)
+     ttk.Label(frm, text="Enter 'graphviz' to use grpahviz locally instead of a remote resource.").grid(column=1, row=6)
+     ttk.Button(frm, text="OK", command=partial(ProcessUrlInput,subWindow,theText,cProjectID,cServerName,mainWindow,strBaseURLParam)).grid(column=3, row=7)
      subWindow.mainloop()
 
  
@@ -410,41 +421,68 @@ def render_diagram(cProjectID,cServerName,mainWindow,strBaseURLParam):
                          clNormalizedBlocksAndFlows.append({ 'source': cNewSource, 'target' :  cNewTarget, 'source_to_target_flows' : cNewFlow, 'target_to_source_flows': '' })
 
                          
-
+             if strRenderingURL == 'graphviz':
+                 bGraphViz = True
+             else:
+                 bGraphViz = False
+                 
              cDiag = ''
              cNewLine = '\n'
-             cDiag = cDiag + 'blockdiag {' + cNewLine
-             cSpace = '  '
-             if len(clNormalizedBlocksAndFlows) < len(clFunctionalBlocksAndFlows):
-                 # Some flows are labled with multiple items. The font size needs to be reduced
-                 cDiag = cDiag + cSpace + 'default_fontsize = 3' + cNewLine
+             if bGraphViz:
+                cDiag = cDiag + 'digraph {node [shape=box];' 
              else:
-                 cDiag = cDiag + cSpace + 'default_fontsize = 5' + cNewLine
+                cDiag = cDiag + 'blockdiag {' + cNewLine
+             cSpace = '  '
+             if bGraphViz == False:
+                 if len(clNormalizedBlocksAndFlows) < len(clFunctionalBlocksAndFlows):
+                     # Some flows are labled with multiple items. The font size needs to be reduced
+                     cDiag = cDiag + cSpace + 'default_fontsize = 3' + cNewLine
+                 else:
+                     cDiag = cDiag + cSpace + 'default_fontsize = 5' + cNewLine
              for cLine in clNormalizedBlocksAndFlows: 
                  cDiagLine = ''             
                  if len(cLine.get('target_to_source_flows'))>0:
                      #Flows in both directions exist
-                     cItemDefinitionName = cLine.get('target_to_source_flows') + '   <-->   ' + cLine.get('source_to_target_flows')
-                     cDiagLine = wrapNameInCorrectQuotes(cLine.get('source'))  + ' <-> ' + wrapNameInCorrectQuotes(cLine.get('target'))   + ' [label = "' + cItemDefinitionName + '" ]'                
+                     if bGraphViz:
+                         cDiagLine = wrapNameInCorrectQuotesForGraphViz(cLine.get('source'))   + ' -> ' + wrapNameInCorrectQuotesForGraphViz(cLine.get('target'))   + ' [label = "' + cLine.get('source_to_target_flows') + '" ];'                
+                         cDiagLine = cDiagLine + wrapNameInCorrectQuotesForGraphViz(cLine.get('target'))   + ' -> ' + wrapNameInCorrectQuotesForGraphViz(cLine.get('source'))   + ' [label = "' + cLine.get('target_to_source_flows') + '" ];'                
+                     else:
+                         cItemDefinitionName = cLine.get('target_to_source_flows') + '   <-->   ' + cLine.get('source_to_target_flows')
+                         cDiagLine = wrapNameInCorrectQuotes(cLine.get('source'))  + ' <-> ' + wrapNameInCorrectQuotes(cLine.get('target'))   + ' [label = "' + cItemDefinitionName + '" ]'                
                  else:
-                     cItemDefinitionName = cLine.get('source_to_target_flows')                 
-                     cDiagLine = wrapNameInCorrectQuotes(cLine.get('source')) + ' -> '  + wrapNameInCorrectQuotes(cLine.get('target'))   + ' [label = "' + cItemDefinitionName + '" ]'                
+                     cItemDefinitionName = cLine.get('source_to_target_flows')
+                     if bGraphViz:      
+                         cDiagLine = wrapNameInCorrectQuotesForGraphViz(cLine.get('source')) + ' -> '  + wrapNameInCorrectQuotesForGraphViz(cLine.get('target'))   + ' [label = "' + cItemDefinitionName + '" ];'                
+                     else:                         
+                         cDiagLine = wrapNameInCorrectQuotes(cLine.get('source')) + ' -> '  + wrapNameInCorrectQuotes(cLine.get('target'))   + ' [label = "' + cItemDefinitionName + '" ]'                
                     
 
-                 cDiag = cDiag + cSpace + cDiagLine  + cNewLine
+                 if bGraphViz:
+                     cDiag = cDiag + cDiagLine
+                 else:
+                     cDiag = cDiag + cSpace + cDiagLine  + cNewLine
 
-             cDiag = cDiag + '}'  + cNewLine
-
+             cDiag = cDiag + '}'  
+             if bGraphViz == False:
+                 cDiag = cDiag + cNewLine
+ 
 
 
              encoded = base64.b64encode(zlib.compress(bytes(cDiag, "utf-8"))).decode("ascii")
              cURL = strRenderingURL + 'image?compression=deflate&encoding=base64&src=' + encoded.replace('/','_').replace('+','-')
 
-             print('Opening ' + cURL)
-             mainWindow.config(cursor="")
+             if bGraphViz:
+                 sCmd = "echo '" + cDiag + "' | dot -Tsvg  > output.svg"
+                 print (sCmd)
+                 os.system(sCmd)
+                 webbrowser.open_new('output.svg')
+             else:
+                 print('Opening ' + cURL)
+                 mainWindow.config(cursor="")
              
-             webbrowser.open_new(cURL)
+                 webbrowser.open_new(cURL)
 
+     mainWindow.config(cursor="arrow")
 
 def run_renderer(cProjectUUID, cHost, cFolder):
      mainWindow = Tk()
