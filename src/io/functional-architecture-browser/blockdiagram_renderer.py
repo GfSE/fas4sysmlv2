@@ -341,17 +341,17 @@ def render_images(cProjectID,cServerName,cFolder,mainWindow):
             webbrowser.open_new(cImageName)
     mainWindow.config(cursor="")
 
-def ProcessUrlInput(subWindow,theText,cProjectID,cServerName,mainWindow,strBaseURLParam):
+def ProcessUrlInput(subWindow,theText,cProjectID,cServerName,mainWindow,strBaseURLParam,clFunctionalBlocksAndFlows,bIsDemoRun):
     sText = theText.get()
     strBaseURLParam.set(sText)
-    print('URL for rendering: ' + strBaseURLParam.get())
+    print('     URL for rendering: ' + strBaseURLParam.get())
     subWindow.destroy()
-    print('Rendering ...')
-    render_diagram(cProjectID,cServerName,mainWindow,strBaseURLParam)
-    print('done')
+    print('     Rendering ...')
+    render_diagram(cProjectID,cServerName,mainWindow,strBaseURLParam,clFunctionalBlocksAndFlows,bIsDemoRun)
+    print('        Rendering done.')
     strBaseURLParam.set('')
 
-def askForBaseUrl(cProjectID,cServerName,mainWindow,strBaseURLParam):
+def askForBaseUrl(cProjectID,cServerName,mainWindow,strBaseURLParam,clFunctionalBlocksAndFlows,bIsDemoRun):
      subWindow = Tk()
      subWindow.title("URL Input")
      frm = ttk.Frame(subWindow)
@@ -368,13 +368,18 @@ def askForBaseUrl(cProjectID,cServerName,mainWindow,strBaseURLParam):
      ttk.Label(frm, text="You must ensure yourself that any URL you enter or hard-code raises no security concerns.").grid(column=1, row=4)
      ttk.Label(frm, text="You can try http://interactive.blockdiag.com/ if you can be sure it is safe to open.").grid(column=1, row=5)
      ttk.Label(frm, text="Enter 'graphviz' to use grpahviz locally instead of a remote resource.").grid(column=1, row=6)
-     ttk.Button(frm, text="OK", command=partial(ProcessUrlInput,subWindow,theText,cProjectID,cServerName,mainWindow,strBaseURLParam)).grid(column=3, row=7)
+     ttk.Button(frm, text="OK", command=partial(ProcessUrlInput,subWindow,theText,cProjectID,cServerName,mainWindow,strBaseURLParam,clFunctionalBlocksAndFlows,bIsDemoRun)).grid(column=3, row=7)
      subWindow.mainloop()
 
  
 
 
-def render_diagram(cProjectID,cServerName,mainWindow,strBaseURLParam):
+def render_diagram(cProjectID,cServerName,mainWindow,strBaseURLParam, clFunctionalBlocksAndFlows=[], bIsDemoRun = False):
+     if len(clFunctionalBlocksAndFlows) != 0:
+         bDemoRun = True
+     else:
+         bDemoRun = bIsDemoRun
+         
      strRenderingURL = '' # Could be http://interactive.blockdiag.com/, if that site exists and is safe to use by the time of running this code
      mainWindow.config(cursor="watch")
      sleep(0.1)
@@ -383,9 +388,13 @@ def render_diagram(cProjectID,cServerName,mainWindow,strBaseURLParam):
      if strBaseURLParam.get() != '':
          strRenderingURL = strBaseURLParam.get()
      if strRenderingURL == '':
-         askForBaseUrl(cProjectID,cServerName,mainWindow,strBaseURLParam)
+         askForBaseUrl(cProjectID,cServerName,mainWindow,strBaseURLParam,clFunctionalBlocksAndFlows,bDemoRun)
      else:
-         bSuccess, cErrorMsg, clFunctionalBlocksAndFlows = read_functional_architecture(cProjectID,cServerName)
+         if len(clFunctionalBlocksAndFlows) == 0:
+             bSuccess, cErrorMsg, clFunctionalBlocksAndFlows = read_functional_architecture(cProjectID,cServerName)
+         else:
+             bSuccess = True
+             
          if bSuccess == False:
              messagebox.showerror("Diagram Renderer","Reading from the repository failed with the following error message: " + cErrorMsg)
          else:
@@ -473,16 +482,20 @@ def render_diagram(cProjectID,cServerName,mainWindow,strBaseURLParam):
 
              if bGraphViz:
                  sCmd = "echo '" + cDiag + "' | dot -Tsvg  > output.svg"
-                 print (sCmd)
+                 print ('     Executing ' + sCmd)
                  os.system(sCmd)
                  webbrowser.open_new('output.svg')
              else:
-                 print('Opening ' + cURL)
+                 
+                 print('     Opening ' + cURL)
                  mainWindow.config(cursor="")
              
                  webbrowser.open_new(cURL)
+             if bDemoRun:
+                 mainWindow.destroy()                 
 
-     mainWindow.config(cursor="arrow")
+     if bDemoRun == False:
+         mainWindow.config(cursor="arrow")
 
 def run_renderer(cProjectUUID, cHost, cFolder):
      mainWindow = Tk()
