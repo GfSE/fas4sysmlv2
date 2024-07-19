@@ -367,7 +367,7 @@ def askForBaseUrl(cProjectID,cServerName,mainWindow,strBaseURLParam,clFunctional
      theText.grid(column=1, row=3)
      ttk.Label(frm, text="You must ensure yourself that any URL you enter or hard-code raises no security concerns.").grid(column=1, row=4)
      ttk.Label(frm, text="You can try http://interactive.blockdiag.com/ if you can be sure it is safe to open.").grid(column=1, row=5)
-     ttk.Label(frm, text="Enter 'graphviz' to use grpahviz locally instead of a remote resource.").grid(column=1, row=6)
+     ttk.Label(frm, text="Enter 'graphviz' to use graphviz locally instead of a remote resource.").grid(column=1, row=6)
      ttk.Button(frm, text="OK", command=partial(ProcessUrlInput,subWindow,theText,cProjectID,cServerName,mainWindow,strBaseURLParam,clFunctionalBlocksAndFlows,bIsDemoRun,cImageFolder)).grid(column=3, row=7)
      subWindow.mainloop()
 
