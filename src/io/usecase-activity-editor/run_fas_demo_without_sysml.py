@@ -258,7 +258,7 @@ cServerName=StringVar()
 strBaseURLParam.set('')
 cProjectID.set('')
 cServerName.set('')
-mainWindow.after_idle(partial(render_diagram,cProjectID,cServerName,mainWindow,strBaseURLParam, clFunctionalBlocksAndFlows))
+mainWindow.after_idle(partial(render_diagram,cProjectID,cServerName,mainWindow,strBaseURLParam, clFunctionalBlocksAndFlows, True, cWorkingFolder))
 
 mainWindow.mainloop()
 

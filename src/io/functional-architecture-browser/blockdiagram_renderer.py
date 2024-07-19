@@ -341,17 +341,17 @@ def render_images(cProjectID,cServerName,cFolder,mainWindow):
             webbrowser.open_new(cImageName)
     mainWindow.config(cursor="")
 
-def ProcessUrlInput(subWindow,theText,cProjectID,cServerName,mainWindow,strBaseURLParam,clFunctionalBlocksAndFlows,bIsDemoRun):
+def ProcessUrlInput(subWindow,theText,cProjectID,cServerName,mainWindow,strBaseURLParam,clFunctionalBlocksAndFlows,bIsDemoRun,cImageFolder):
     sText = theText.get()
     strBaseURLParam.set(sText)
     print('     URL for rendering: ' + strBaseURLParam.get())
     subWindow.destroy()
     print('     Rendering ...')
-    render_diagram(cProjectID,cServerName,mainWindow,strBaseURLParam,clFunctionalBlocksAndFlows,bIsDemoRun)
+    render_diagram(cProjectID,cServerName,mainWindow,strBaseURLParam,clFunctionalBlocksAndFlows,bIsDemoRun,cImageFolder)
     print('        Rendering done.')
     strBaseURLParam.set('')
 
-def askForBaseUrl(cProjectID,cServerName,mainWindow,strBaseURLParam,clFunctionalBlocksAndFlows,bIsDemoRun):
+def askForBaseUrl(cProjectID,cServerName,mainWindow,strBaseURLParam,clFunctionalBlocksAndFlows,bIsDemoRun,cImageFolder):
      subWindow = Tk()
      subWindow.title("URL Input")
      frm = ttk.Frame(subWindow)
@@ -368,13 +368,13 @@ def askForBaseUrl(cProjectID,cServerName,mainWindow,strBaseURLParam,clFunctional
      ttk.Label(frm, text="You must ensure yourself that any URL you enter or hard-code raises no security concerns.").grid(column=1, row=4)
      ttk.Label(frm, text="You can try http://interactive.blockdiag.com/ if you can be sure it is safe to open.").grid(column=1, row=5)
      ttk.Label(frm, text="Enter 'graphviz' to use grpahviz locally instead of a remote resource.").grid(column=1, row=6)
-     ttk.Button(frm, text="OK", command=partial(ProcessUrlInput,subWindow,theText,cProjectID,cServerName,mainWindow,strBaseURLParam,clFunctionalBlocksAndFlows,bIsDemoRun)).grid(column=3, row=7)
+     ttk.Button(frm, text="OK", command=partial(ProcessUrlInput,subWindow,theText,cProjectID,cServerName,mainWindow,strBaseURLParam,clFunctionalBlocksAndFlows,bIsDemoRun,cImageFolder)).grid(column=3, row=7)
      subWindow.mainloop()
 
  
 
 
-def render_diagram(cProjectID,cServerName,mainWindow,strBaseURLParam, clFunctionalBlocksAndFlows=[], bIsDemoRun = False):
+def render_diagram(cProjectID,cServerName,mainWindow,strBaseURLParam, clFunctionalBlocksAndFlows=[], bIsDemoRun = False, cImageFolder=''):
      if len(clFunctionalBlocksAndFlows) != 0:
          bDemoRun = True
      else:
@@ -388,7 +388,7 @@ def render_diagram(cProjectID,cServerName,mainWindow,strBaseURLParam, clFunction
      if strBaseURLParam.get() != '':
          strRenderingURL = strBaseURLParam.get()
      if strRenderingURL == '':
-         askForBaseUrl(cProjectID,cServerName,mainWindow,strBaseURLParam,clFunctionalBlocksAndFlows,bDemoRun)
+         askForBaseUrl(cProjectID,cServerName,mainWindow,strBaseURLParam,clFunctionalBlocksAndFlows,bDemoRun,cImageFolder)
      else:
          if len(clFunctionalBlocksAndFlows) == 0:
              bSuccess, cErrorMsg, clFunctionalBlocksAndFlows = read_functional_architecture(cProjectID,cServerName)
@@ -481,10 +481,10 @@ def render_diagram(cProjectID,cServerName,mainWindow,strBaseURLParam, clFunction
              cURL = strRenderingURL + 'image?compression=deflate&encoding=base64&src=' + encoded.replace('/','_').replace('+','-')
 
              if bGraphViz:
-                 sCmd = "echo '" + cDiag + "' | dot -Tsvg  > output.svg"
+                 sCmd = "echo '" + cDiag + "' | dot -Tsvg  > " + cImageFolder + "output.svg"
                  print ('     Executing ' + sCmd)
                  os.system(sCmd)
-                 webbrowser.open_new('output.svg')
+                 webbrowser.open_new(cImageFolder + 'output.svg')
              else:
                  
                  print('     Opening ' + cURL)
