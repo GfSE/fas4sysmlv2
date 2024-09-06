@@ -44,6 +44,7 @@ def main():
      cFileName = sys.argv[1]
      cWorkingFolder = sys.argv[2]
      cWorkingFolder = cWorkingFolder.replace('"','').strip()
+     cPythonFolder = sys.argv[3].replace('"','').strip()
 
      print('package FunctionalModel{\r\n')
      clActivitiesAndObjectFlows, clFunctionalGroups, cSysMLString, clActivities = fas_frontend(cFileName, cWorkingFolder)
@@ -64,7 +65,7 @@ def main():
          os.system('exec /bin/bash -i -c "jupyter nbconvert --to notebook --execute ' + cOutputFile + ' --stdout >' + cResultFile + ' ' + cSilencer +'"')
      else:
          cSilencer='>nul 2>&1';
-         os.system('jupyter nbconvert --to notebook --execute ' + cOutputFile + ' --output=' + cResultFile + ' ' + cSilencer)
+         os.system('PATH ' + cPythonFolder + ';' + cPythonFolder + '\\Library\\bin;' + cPythonFolder + '\\Scripts& jupyter nbconvert --to notebook --execute ' + cOutputFile + ' --output=' + cResultFile + ' ' + cSilencer)
 
      FID1=open(cResultFile ,'r');
      bStdout = False
