@@ -205,7 +205,7 @@ def run_traceability_tool(cProjectUUID, cHost, cFolder):
 
      cProjectName = StringVar()
      timestamp = datetime.now()
-     cMirrorProject = f"TdSE2024 Demo Project - {timestamp}"
+     cMirrorProject = f"Interoperability Demo Project - {timestamp}"
      cProjectName.set(cMirrorProject)
      strFolder= StringVar()
      strFolder.set(cFolder)
