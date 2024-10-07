@@ -682,6 +682,7 @@ def readBaseArchitecture(cMirrorProjectID,cServerName):
     PartName = ''
     AttributeName = ''
     AttributeType = ''
+    AttributeUsage = ''
     ItemName = ''
     ItemType = ''
     Multiplicity = ''
@@ -696,12 +697,14 @@ def readBaseArchitecture(cMirrorProjectID,cServerName):
                    PackageName = currentRecord.get('name')
                if currentRecord.get('@type') == 'PartDefinition':
                    PartName = currentRecord.get('name')
-               if currentRecord.get('@type') == 'AttributeUsage':
+               if currentRecord.get('@type') == 'AttributeUsage' and currentRecord.get('qualifiedName').count('ISQ')==0:
                    AttributeName = currentRecord.get('name')
                if currentRecord.get('@type') == 'LiteralInteger':
                    Multiplicity = str(currentRecord.get('value'))
                if currentRecord.get('@type') == 'AttributeDefinition':
                    AttributeType = currentRecord.get('qualifiedName').replace('Base','')
+               if currentRecord.get('@type') == 'AttributeUsage':
+                   AttributeUsage = currentRecord.get('qualifiedName').replace('Base','')
                if currentRecord.get('@type') == 'ItemUsage':
                   print('ItemUsage ' + str(len(str(currentRecord.get('featuringType')))))
                   if len(str(currentRecord.get('featuringType')))>2:
@@ -717,7 +720,10 @@ def readBaseArchitecture(cMirrorProjectID,cServerName):
     
     cSysML='package <BA> ' + PackageName + ' {\r\n'
     cSysML = cSysML + '    abstract part def <BApart> ' + PartName +' {\r\n'
-    cSysML = cSysML + '        attribute  <BAattribute> ' + AttributeName + ' : ' + AttributeType +';\r\n'
+    if len(AttributeUsage) > 0:
+	    cSysML = cSysML + '        attribute  <BAattribute> ' + AttributeName + ' :> ' + AttributeUsage +';\r\n'
+    else:
+            cSysML = cSysML + '        attribute  <BAattribute> ' + AttributeName + ' : ' + AttributeType +';\r\n'
     cSysML = cSysML + '        item  <BAitem> ' + ItemName + ' : ' + ItemType + ' ['+ Multiplicity +'] :> ' + ItemUsage + ';\r\n'
     cSysML = cSysML + '    }\r\n'
     cSysML = cSysML + '}\r\n'
