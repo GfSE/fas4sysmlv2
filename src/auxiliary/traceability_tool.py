@@ -399,7 +399,9 @@ def copy_and_trace_elements(source_host, source_id, target_host, target_id, cTra
 
     
     source_base_arch_elements = determine_source_base_architecture_elements(rep_source,target_base_arch_elements)
-       
+    print(len(source_base_arch_elements))        
+    print(len(target_base_arch_elements))
+        
     baSourceIds = []       
     print('Source Base architecture elements:')
     for el in source_base_arch_elements:
@@ -465,7 +467,7 @@ def copy_and_trace_elements(source_host, source_id, target_host, target_id, cTra
                                                                      print('==> Mapping source:' + baseArchType + ' ('+ baseArchId + ') to target:' + te.get('@type') + ' (' + te.get('@id') +' )')
                                                                      bMapped = True
                                                if bMapped == False:
-                                                   print(ErrorMappingFailed)
+                                                   print('ErrorMappingFailed')
 
                                            else:
                                                if el2.get('@type')=='AttributeDefinition' or  el2.get('@type')=='AttributeUsage' or  el2.get('@type')=='Feature' or  el2.get('@type')=='ItemDefinition' or  el2.get('@type')=='LiteralInteger' or el2.get('@type')=='Multiplicity' or el2.get('@type')=='MultiplicityRange' or el2.get('@type')=='Package' or el2.get('@type')=='PartDefinition' or el2.get('@type')=='ReturnParameterMembership' or el2.get('@type')=='Subsetting':
@@ -680,9 +682,11 @@ def execute_writing(cMirrorProjectID,cServerName,scr,strModelName):
 def readBaseArchitecture(cMirrorProjectID,cServerName):
     PackageName = ''
     PartName = ''
-    AttributeName = ''
+    PowerAttributeName = ''
+    MassAttributeName = ''
     AttributeType = ''
-    AttributeUsage = ''
+    PowerAttributeUsage = ''
+    MassAttributeUsage = ''
     ItemName = ''
     ItemType = ''
     Multiplicity = ''
@@ -698,13 +702,23 @@ def readBaseArchitecture(cMirrorProjectID,cServerName):
                if currentRecord.get('@type') == 'PartDefinition':
                    PartName = currentRecord.get('name')
                if currentRecord.get('@type') == 'AttributeUsage' and currentRecord.get('qualifiedName').count('ISQ')==0:
-                   AttributeName = currentRecord.get('name')
+                   currentAttributeName = currentRecord.get('name')
+                   if currentAttributeName.count('ower')>0:
+                       PowerAttributeName = currentAttributeName
+                   else:
+                       MassAttributeName = currentAttributeName
+
                if currentRecord.get('@type') == 'LiteralInteger':
                    Multiplicity = str(currentRecord.get('value'))
                if currentRecord.get('@type') == 'AttributeDefinition':
                    AttributeType = currentRecord.get('qualifiedName').replace('Base','')
-               if currentRecord.get('@type') == 'AttributeUsage':
-                   AttributeUsage = currentRecord.get('qualifiedName').replace('Base','')
+               if currentRecord.get('@type') == 'AttributeUsage' and currentRecord.get('qualifiedName').count('ISQ')>0:
+                   currentAttributeUsage = currentRecord.get('qualifiedName').replace('Base','').replace('Mechanics','')
+                   if currentAttributeUsage.count('ower')>0:
+                       PowerAttributeUsage = currentAttributeUsage
+                   else:
+                       MassAttributeUsage = currentAttributeUsage
+
                if currentRecord.get('@type') == 'ItemUsage':
                   print('ItemUsage ' + str(len(str(currentRecord.get('featuringType')))))
                   if len(str(currentRecord.get('featuringType')))>2:
@@ -718,15 +732,17 @@ def readBaseArchitecture(cMirrorProjectID,cServerName):
 
         
     
-    cSysML='package <BA> ' + PackageName + ' {\r\n'
-    cSysML = cSysML + '    abstract part def <BApart> ' + PartName +' {\r\n'
-    if len(AttributeUsage) > 0:
-	    cSysML = cSysML + '        attribute  <BAattribute> ' + AttributeName + ' :> ' + AttributeUsage +';\r\n'
+    cSysML='/*Line 1*/ package <BA> ' + PackageName + ' {\r\n'
+    cSysML = cSysML + '/*Line 2*/     part def <BApart> ' + PartName +' {\r\n'
+    if len(MassAttributeUsage) > 0:
+	    cSysML = cSysML + '/*Line 3*/          attribute  <BAattribute> ' + MassAttributeName + ' :> ' + MassAttributeUsage +';\r\n'
     else:
-            cSysML = cSysML + '        attribute  <BAattribute> ' + AttributeName + ' : ' + AttributeType +';\r\n'
-    cSysML = cSysML + '        item  <BAitem> ' + ItemName + ' : ' + ItemType + ' ['+ Multiplicity +'] :> ' + ItemUsage + ';\r\n'
-    cSysML = cSysML + '    }\r\n'
-    cSysML = cSysML + '}\r\n'
+            cSysML = cSysML + '/*Line 3*/         attribute  <BAattribute1> ' + MassAttributeName + ' : ' + AttributeType +';\r\n'
+    if len(PowerAttributeUsage) > 0:
+	    cSysML = cSysML + '/*Line 4*/         attribute  <BAattribute2> ' + PowerAttributeName + ' :> ' + PowerAttributeUsage +';\r\n'
+    cSysML = cSysML + '/*Line 5*/         item  <BAitem> ' + ItemName + ' : ' + ItemType + ' ['+ Multiplicity +'] :> ' + ItemUsage + ';\r\n'
+    cSysML = cSysML + '/*Line 6*/     }\r\n'
+    cSysML = cSysML + '/*Line 7*/ }\r\n'
 
 
     return cSysML
@@ -734,7 +750,7 @@ def readBaseArchitecture(cMirrorProjectID,cServerName):
 
 def run_traceability_tool(cProjectUUID, cHost, cFolder):
      mainWindow = Tk()
-     mainWindow.title("Traceability tool")
+     mainWindow.title("Physical Architecture writer tool")
      frm = ttk.Frame(mainWindow)
      frm.grid(row=0, column=0, columnspan=3)
 
@@ -745,7 +761,7 @@ def run_traceability_tool(cProjectUUID, cHost, cFolder):
      cServerName = StringVar()
      cServerName.set(cHost)
      strModelName= StringVar()
-     strModelName.set('')
+     strModelName.set('DroneModel')
      ttk.Label(frm, text="Model Name").grid(column=0, row=0)
      ttk.Entry(frm, textvariable = strModelName, width = 50).grid(column=1, row=0)
      ttk.Label(frm, text="").grid(column=0, row=1)
@@ -759,6 +775,7 @@ def run_traceability_tool(cProjectUUID, cHost, cFolder):
      ttk.Label(frm, text="Write Physical Architecture here:").grid(column=0, row=6)
      scr = scrolledtext.ScrolledText(mainWindow, width = 150, height = 35, font = ("Courier", 9))
      scr.grid(column = 0, pady = 10, padx = 10)
+     scr.insert(tk.INSERT,'')
 
 
      ttk.Button(frm, text="Go", command=partial(execute_writing,cProjectID,cServerName,scr,strModelName)).grid(column=1, row=5)
@@ -768,7 +785,7 @@ def run_traceability_tool(cProjectUUID, cHost, cFolder):
 
 def main(): 
     cProject= ''
-    cHost = ''
+    cHost = 'http://sysml2.intercax.com:9000'
     cFolder = ''
 
 
