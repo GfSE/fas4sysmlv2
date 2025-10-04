@@ -228,7 +228,7 @@ def parseGroupLine (sLine):
              else:
                  clGroupNew = ['' for col in range(len(clGroup)+1)]
                  for nFillIndex in range(len(clGroup)):
-                     clGroupNew[nFillIndex] = clGroup[nFillIndex][0] 
+                     clGroupNew[nFillIndex] = clGroup[nFillIndex] 
                  clGroupNew[len(clGroupNew)-1] = sComposedString 
                  clGroup = clGroupNew 
              sComposedString = '';
