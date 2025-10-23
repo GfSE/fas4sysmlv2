@@ -133,21 +133,20 @@ def read_full_repository(cServerName, cProjectID):
 def run_query_for_elementtyp(cElementType, cServerName, cProjectID):
     qresponse_json=json.dumps('')
     qinput = {
-      '@type':'Query',
-      'select': ['name','@id','@type','owner'],
-      'where': {
-        '@type': 'CompositeConstraint',
-        'operator': 'and',
-        'constraint': [
-            {
-                '@type': 'PrimitiveConstraint',
-                'inverse': False,
-                'operator': '=',
-                'property': '@type',
-                'value': cElementType
-            }
-        ]
-      }
+        "@type": "Query",
+        "name": "string",
+        "select": [
+          "@id"
+        ],
+        "where": {
+          "@type": "PrimitiveConstraint",
+          "operator": "=",
+          "property": "@type",
+          "value": [
+            cElementType
+          ]
+        }
+      
     }
 
     payload = json.dumps(qinput)

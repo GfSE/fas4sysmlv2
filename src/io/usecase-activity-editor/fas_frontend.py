@@ -42,7 +42,7 @@ def RenderFunctionalGroupsInSysML(clGroupName,clActivities, mMatrixG):
          cSysMLString= cSysMLString + '      package ' + wrapNameInCorrectQuotes(clGroupName[n]) + '{' + cLF
          for m in range (M):
              if mMatrixG[n][m] > 0:
-                 cSysMLString = cSysMLString + '         import UseCaseActivities::overallUseCase::' + wrapNameInCorrectQuotes(clActivities[m]) + ';' + cLF
+                 cSysMLString = cSysMLString + '         public import UseCaseActivities::overallUseCase::' + wrapNameInCorrectQuotes(clActivities[m]) + ';' + cLF
          
          cSysMLString= cSysMLString + '      }' + cLF
 
