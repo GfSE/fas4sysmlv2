@@ -639,10 +639,10 @@ def read_activities_and_functional_groups(strProjectID,strServerName):
                          if response.get("@id") == cOwnerID:
                              bIgnoreAction = True #If the action owns other actions it is not a leaf and must be ignored.
                      if bIgnoreAction == False:
-                         clActions.append(response.get("name"))
+                         clActions.append(response.get("declaredName"))
                          clActionIds.append(response.get("elementId"))
                  if response.get("@type") == "ItemDefinition":
-                     clItemDefs.append(response.get("name"))
+                     clItemDefs.append(response.get("declaredName"))
                      clItemDefIds.append(response.get("elementId"))
                  if response.get("@type") == "FlowConnectionUsage":
                      clFlowIds.append(response.get("elementId"))
@@ -655,7 +655,7 @@ def read_activities_and_functional_groups(strProjectID,strServerName):
                  if response.get("@type") == "Package":
                      clPackageIds.append(response.get("elementId"))
                      clPackageImportedMemberships.append(response.get("importedMembership"))
-                     clPackageNames.append(response.get("name"))
+                     clPackageNames.append(response.get("declaredName"))
          
                  
 
@@ -780,8 +780,8 @@ def write_functional_architecture(cProjectID,cServerName,cSysMLString,cOptionalI
              os.system('/bin/bash -i -c "jupyter nbconvert --to notebook --execute ' + cOutputFile + ' --stdout >' + cResultFile + ' ' + cSilencer+'"')
          else:
              cSilencer='>nul 2>&1';
-             #os.system('jupyter nbconvert --to notebook --execute ' + cOutputFile + ' --output=' + cResultFile + ' ' + cSilencer)
-             convert_notebook(cOutputFile, cResultFile) #under Windows, this saves some time, at the cost of messy stdout output
+             os.system('jupyter nbconvert --to notebook --execute ' + cOutputFile + ' --output=' + cResultFile + ' ' + cSilencer)
+             #convert_notebook(cOutputFile, cResultFile) #under Windows, this saves some time, at the cost of messy stdout output
 
          status = ''
          FID1=open(cResultFile ,'r');
