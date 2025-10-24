@@ -124,8 +124,9 @@ def read_functional_architecture(strProjectID,strServerName):
      clPackageImportedMemberships=[]
      clReferenceSubSettingIds=[]
      clReferenceSubSettingReferencedFeatures=[]
+     clFeatureTypings = []
 
-     clElementTypes = ['ReferenceSubsetting','EndFeatureMembership','FeatureMembership','ItemFlowEnd','PartUsage','ItemDefinition','FlowConnectionUsage','ItemFeature','Package']
+     clElementTypes = ['ReferenceSubsetting','EndFeatureMembership','FeatureMembership','FlowEnd','PartUsage','ItemDefinition','FlowUsage','PayloadFeature','Package','FeatureTyping']
      
      if bSuccess:
      
@@ -136,6 +137,8 @@ def read_functional_architecture(strProjectID,strServerName):
                  qresult = requests.get(cServerName + "/projects/" + cProjectID + "/commits/"+sHeadCommit+"/elements/" + sIdToGet)
                  response = qresult.json()
 
+                 if response.get("@type") == "FeatureTyping":
+                     clFeatureTypings.append(response)
 
                  if response.get("@type") == "ReferenceSubsetting": #As ownedRelationship of target of FeatureEndMembership
                      clReferenceSubSettingReferencedFeatures.append(response.get("referencedFeature"))
@@ -147,26 +150,26 @@ def read_functional_architecture(strProjectID,strServerName):
                      clFeatureMembershipTargets.append(response.get("target"))
                      clFeatureMembershipIds.append(response.get("elementId"))
                      clFeatureMembershipOwnedRelatedElements.append(response.get("ownedRelatedElement"))
-                 if response.get("@type") == "ItemFlowEnd":  #As target of EndFeatureMembership
+                 if response.get("@type") == "FlowEnd":  #As target of EndFeatureMembership
                      clItemFlowEndOwnedRelationships.append(response.get("ownedRelationship"))
                      clItemsFlowEndIds.append(response.get("elementId"))
                  if response.get("@type") == "PartUsage":
-                     clFunctionalBlocks.append(response.get("name"))
+                     clFunctionalBlocks.append(response.get("declaredName"))
                      clFunctionalBlockIds.append(response.get("elementId"))
                  if response.get("@type") == "ItemDefinition":
-                     clItemDefs.append(response.get("name"))
+                     clItemDefs.append(response.get("declaredName"))
                      clItemDefIds.append(response.get("elementId"))
-                 if response.get("@type") == "FlowConnectionUsage":
+                 if response.get("@type") == "FlowUsage":
                      clFlowIds.append(response.get("elementId"))
                      clFlowTargets.append(response.get("relatedElement"))
                      clFlowItems.append(response.get("itemFeature"))
                      clFlowOwnedRelationships.append(response.get("ownedRelationship"))
-                 if response.get("@type") == "ItemFeature":
+                 if response.get("@type") == "PayloadFeature":
                      clItemFeatureIds.append(response.get("elementId"))
                      clItemFeatureTypes.append(response.get("type"))
                  if response.get("@type") == "Package":
                      clPackageIds.append(response.get("elementId"))
-                     clPackageImportedMemberships.append(response.get("importedMembership"))
+                     clPackageImportedMemberships.append(response.get("ownedRelationship"))
                      clPackageNames.append(response.get("name"))
          
                  
@@ -209,13 +212,17 @@ def read_functional_architecture(strProjectID,strServerName):
                                  clPair.append(cBlock)
                                  
                                  
+
+
                  if clItemFeatureIds.count(cFeatureMembershipTarget)>0:
-                     cItemFeatureTypeId=clItemFeatureTypes[clItemFeatureIds.index(cFeatureMembershipTarget)]
-                     #print (cItemFeatureTypeId)
-                     if clItemDefIds.count(cItemFeatureTypeId[0].get('@id'))>0:
-                         cItemDefinitionName = clItemDefs[clItemDefIds.index(cItemFeatureTypeId[0].get('@id'))]
-                     else:
-                         cItemDefinitionName = ''
+                     cItemFeatureTypeId=clItemFeatureIds[clItemFeatureIds.index(cFeatureMembershipTarget)]
+                     for cFeatureT in clFeatureTypings:
+                        if cFeatureT.get('specific').get('@id')==cItemFeatureTypeId:
+                           cItemDefinitionName = clItemDefs[clItemDefIds.index(cFeatureT.get('general').get('@id'))]
+                           break
+                        else:
+                           cItemDefinitionName = ''
+
 
                  if len(clPair) == 2:
                     clFunctionalBlocksAndFlows.append({"source": clPair[0], "flow": cItemDefinitionName, "target":   clPair[1]})
