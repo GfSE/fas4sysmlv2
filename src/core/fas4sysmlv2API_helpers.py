@@ -263,7 +263,7 @@ def merge_duplicate_itemdefs(target_payload, rep_source, rep_target):
          if rep_src[i].get("@type") == "ItemDefinition":
             for o in rep_target:
                 if o.get("@type") == "ItemDefinition" and rep_src[i]!={}:
-                    if o.get('name')==rep_src[i].get('name'):
+                    if o.get('name')==rep_src[i].get('declaredName'):
                         # Remember Ids of duplicate ItemDef for replacement
                         obsolete_ids.append(rep_src[i].get('@id'))
                         replacement_ids.append(o.get('@id'))
