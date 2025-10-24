@@ -21,8 +21,11 @@ from fas_frontend import *
 import sys
 import os
 import platform
+import uuid
  
 def DumpJupyterNotebook(cWorkingFolderAndOutputFile, cWorkingFolderAndInputFile, cSysMLString):
+     sUniqueid=str(uuid.uuid4())
+     sUniqueid=sUniqueid.replace('-','')
      cNotebookFile = cWorkingFolderAndOutputFile
      FID1=open(cWorkingFolderAndInputFile,'r');
      FID2=open(cNotebookFile,'w');
@@ -33,9 +36,9 @@ def DumpJupyterNotebook(cWorkingFolderAndOutputFile, cWorkingFolderAndInputFile,
              cCodedSysML='    "' + cSysMLString.replace('"','\\"').replace('\r\n','\\n"' + cCommaBlankAndQuotationMark)   
              #Remove final comma, blank and quotation mark 
              cCodedSysML = cCodedSysML[:(len(cCodedSysML)-len(cCommaBlankAndQuotationMark))]
-             FID2.write(cCodedSysML )
+             FID2.write(cCodedSysML.replace('FunctionalModel','FunctionalModel' + sUniqueid) )
          else:
-             FID2.write(tline.replace('publish UseCaseActivities','publish FunctionalModel'))
+             FID2.write(tline.replace('publish UseCaseActivities','publish FunctionalModel' + sUniqueid))
      FID1.close()
      FID2.close()
      return cNotebookFile   
