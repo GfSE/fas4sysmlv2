@@ -491,6 +491,16 @@ def render_diagram(cProjectID,cServerName,mainWindow,strBaseURLParam, clFunction
 
              if bGraphViz:
                  sCmd = "echo '" + cDiag + "' | dot -Tsvg  > " + cImageFolder + "output.svg"
+
+                 if os.name == 'nt':
+                    sCmd=sCmd.replace("echo '",'echo ');
+                    sCmd=sCmd.replace("' | dot",' | dot');
+                    sCmd=sCmd.replace(">",'^^^>');
+                    sCmd=sCmd.replace("<",'^^^<');
+                    sCmd=sCmd.replace("&",'^^^&');
+                    sCmd=sCmd.replace("-Tsvg  ^^^",'-Tsvg  ');
+
+
                  print ('     Executing ' + sCmd)
                  os.system(sCmd)
                  webbrowser.open_new(cImageFolder + 'output.svg')
